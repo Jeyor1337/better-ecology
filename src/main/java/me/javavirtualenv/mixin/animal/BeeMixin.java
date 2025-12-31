@@ -36,9 +36,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * bee YAML config at data/better-ecology/mobs/passive/bee/mod_registry.yaml
  */
 @Mixin(Bee.class)
-public abstract class BeeMixin extends AnimalMixin {
+public abstract class BeeMixin {
 
     private static final String BEE_COMPONENT_KEY = "better-ecology:bee-data";
+    private static boolean behaviorsRegistered = false;
+
+    /**
+     * Check if behaviors have been registered for this animal type.
+     */
+    private boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    /**
+     * Mark behaviors as registered for this animal type.
+     */
+    private void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
+    }
 
     /**
      * Registers bee behaviors from YAML configuration.
@@ -62,8 +77,7 @@ public abstract class BeeMixin extends AnimalMixin {
      * <p>
      * All configuration values are loaded from the YAML profile.
      */
-    @Override
-    protected void registerBehaviors() {
+    private void registerBehaviors() {
         if (areBehaviorsRegistered()) {
             return;
         }

@@ -1,4 +1,4 @@
-package me.javavirtualenv.ecology.mixin;
+package me.javavirtualenv.mixin.ecology;
 
 import me.javavirtualenv.ecology.spatial.ChunkBlockIndex;
 import net.minecraft.core.BlockPos;
@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Mixin to hook into block place/break events for ChunkBlockIndex invalidation.
@@ -29,7 +29,7 @@ public class BlockChangeEventMixin {
      */
     @Inject(method = "setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z",
             at = @At("RETURN"))
-    private void onBlockSet(BlockPos pos, BlockState newState, int flags, int maxUpdateDepth, CallbackInfo ci) {
+    private void onBlockSet(BlockPos pos, BlockState newState, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
         // Only process on server side
         Level level = (Level) (Object) this;
         if (level.isClientSide()) {
@@ -63,7 +63,7 @@ public class BlockChangeEventMixin {
      */
     @Inject(method = "removeBlock(Lnet/minecraft/core/BlockPos;Z)Z",
             at = @At("RETURN"))
-    private void onBlockRemoved(BlockPos pos, boolean isMoving, CallbackInfo ci) {
+    private void onBlockRemoved(BlockPos pos, boolean isMoving, CallbackInfoReturnable<Boolean> cir) {
         Level level = (Level) (Object) this;
         if (level.isClientSide()) {
             return;

@@ -5,12 +5,11 @@ import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
-import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.animal.Parrot;
-import net.minecraft.world.entity.ai.goal.GoalSelector;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -70,7 +69,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * parrot JSON config.
  */
 @Mixin(Parrot.class)
-public abstract class ParrotMixin extends AnimalMixin {
+public abstract class ParrotMixin {
+
+    @Unique
+    private static boolean behaviorsRegistered = false;
 
     /**
      * Registers parrot behaviors with comprehensive special behavior support.
@@ -100,7 +102,7 @@ public abstract class ParrotMixin extends AnimalMixin {
      * - Diet: Seeds (cookie poisoning behavior handled separately)
      * - ParrotBehavior: Special parrot behaviors (mimic, dance, perch, music)
      */
-    @Override
+    @Unique
     protected void registerBehaviors() {
         if (areBehaviorsRegistered()) {
             return;
@@ -142,7 +144,24 @@ public abstract class ParrotMixin extends AnimalMixin {
             .build();
 
         AnimalBehaviorRegistry.register(parrotId, config);
-        markBehaviorsRegistered();
+        setBehaviorsRegistered();
+    }
+
+    /**
+     * Check if behaviors have been registered for this animal type.
+     * This prevents duplicate registrations.
+     */
+    @Unique
+    private boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    /**
+     * Mark behaviors as registered for this animal type.
+     */
+    @Unique
+    private void setBehaviorsRegistered() {
+        behaviorsRegistered = true;
     }
 
     /**

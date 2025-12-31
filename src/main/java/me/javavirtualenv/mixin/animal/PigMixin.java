@@ -23,6 +23,7 @@ import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.PathType;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -45,17 +46,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Special behaviors: rooting, truffle hunting, mud bathing, crop feeding
  */
 @Mixin(Pig.class)
-public abstract class PigMixin extends AnimalMixin {
+public abstract class PigMixin {
 
-    /**
-     * Constructor injection point for behavior registration.
-     */
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(EntityType<? extends Pig> entityType, Level level, CallbackInfo ci) {
-        if (!areBehaviorsRegistered()) {
-            registerBehaviors();
-            markBehaviorsRegistered();
-        }
+    @Unique
+    private static boolean behaviorsRegistered = false;
+
+    @Unique
+    protected boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    @Unique
+    protected void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
     }
 
     /**
@@ -82,7 +85,7 @@ public abstract class PigMixin extends AnimalMixin {
      *   <li>Special: rooting, truffle hunting, mud bathing, crop feeding</li>
      * </ul>
      */
-    @Override
+    @Unique
     protected void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(ResourceLocation.withDefaultNamespace("pig"))
                 .addHandle(new PigHungerHandle())
@@ -99,6 +102,17 @@ public abstract class PigMixin extends AnimalMixin {
                 .build();
 
         AnimalBehaviorRegistry.register("minecraft:pig", config);
+    }
+
+    /**
+     * Constructor injection point for behavior registration.
+     */
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void onInit(EntityType<? extends Pig> entityType, Level level, CallbackInfo ci) {
+        if (!areBehaviorsRegistered()) {
+            registerBehaviors();
+            markBehaviorsRegistered();
+        }
     }
 
     // ============================================================================

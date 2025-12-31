@@ -25,13 +25,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Hunt aquatic fish
  */
 @Mixin(Axolotl.class)
-public abstract class AxolotlMixin extends AnimalMixin {
+public abstract class AxolotlMixin {
 
     private AxolotlProductionGoal productionGoal;
+    private boolean behaviorsRegistered = false;
 
-    @Override
     protected void registerBehaviors() {
-        if (areBehaviorsRegistered()) {
+        if (behaviorsRegistered) {
             return;
         }
 
@@ -70,7 +70,7 @@ public abstract class AxolotlMixin extends AnimalMixin {
             .build();
 
         AnimalBehaviorRegistry.register(axolotlId, config);
-        markBehaviorsRegistered();
+        behaviorsRegistered = true;
     }
 
     /**

@@ -17,6 +17,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -51,7 +52,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * </ul>
  */
 @Mixin(Rabbit.class)
-public abstract class RabbitMixin extends AnimalMixin {
+public abstract class RabbitMixin {
+
+    @Unique
+    private static boolean behaviorsRegistered = false;
 
     /**
      * Constructor injection point for behavior registration.
@@ -77,6 +81,22 @@ public abstract class RabbitMixin extends AnimalMixin {
         // Food caching goal - lower priority, runs when safe
         RabbitBurrowCachingGoal cachingGoal = new RabbitBurrowCachingGoal(rabbit, component);
         accessor.betterEcology$getGoalSelector().addGoal(6, cachingGoal);
+    }
+
+    /**
+     * Check if behaviors have been registered.
+     */
+    @Unique
+    private boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    /**
+     * Mark behaviors as registered.
+     */
+    @Unique
+    private void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
     }
 
     /**
@@ -132,8 +152,8 @@ public abstract class RabbitMixin extends AnimalMixin {
      *   <li>Foraging: eats crops (carrots, wheat, etc.), digs through snow</li>
      * </ul>
      */
-    @Override
-    protected void registerBehaviors() {
+    @Unique
+    private void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(ResourceLocation.withDefaultNamespace("rabbit"))
                 .build();
 

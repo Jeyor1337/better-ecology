@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * This provides a code-based alternative to the YAML-driven configuration system.
  */
 @Mixin(Sheep.class)
-public abstract class SheepMixin extends AnimalMixin {
+public abstract class SheepMixin {
 
     private static final String SHEEP_ID = "minecraft:sheep";
     private static boolean behaviorsRegistered = false;
@@ -51,10 +51,9 @@ public abstract class SheepMixin extends AnimalMixin {
     }
 
     /**
-     * Override to register sheep-specific behaviors and configurations.
+     * Register sheep-specific behaviors and configurations.
      * All values are taken from the sheep YAML configuration.
      */
-    @Override
     protected void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(
             net.minecraft.resources.ResourceLocation.parse(SHEEP_ID)

@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - No thirst system (water-conserving adaptation)
  */
 @Mixin(Camel.class)
-public abstract class CamelMixin extends AnimalMixin {
+public abstract class CamelMixin {
 
     private static final ResourceLocation CAMEL_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "camel");
 
@@ -73,12 +73,7 @@ public abstract class CamelMixin extends AnimalMixin {
      * - Social: Solitary (group size 1), but forms caravans
      * - Spawning: Weight 8, spawns individually on sand/terracotta in desert
      */
-    @Override
-    protected void registerBehaviors() {
-        if (areBehaviorsRegistered()) {
-            return;
-        }
-
+    private void registerBehaviors() {
         // Create configuration using builder pattern with camel-specific handles
         AnimalConfig config = AnimalConfig.builder(CAMEL_ID)
                 .addHandle(new CamelBehaviorHandle())
@@ -87,7 +82,5 @@ public abstract class CamelMixin extends AnimalMixin {
 
         // Register the configuration with the global registry
         AnimalBehaviorRegistry.register(CAMEL_ID.toString(), config);
-
-        markBehaviorsRegistered();
     }
 }

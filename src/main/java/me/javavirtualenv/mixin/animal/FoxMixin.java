@@ -3,19 +3,15 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.behavior.fox.*;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
-import me.javavirtualenv.ecology.EcologyComponent;
-import me.javavirtualenv.ecology.EcologyHandle;
-import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.animal.Fox;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -44,7 +40,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * fox configuration.
  */
 @Mixin(Fox.class)
-public abstract class FoxMixin extends AnimalMixin {
+public abstract class FoxMixin {
 
     // Behavior instances (created per fox in registerFoxGoals)
     private FoxPursuitBehavior pursuitBehavior;
@@ -52,13 +48,16 @@ public abstract class FoxMixin extends AnimalMixin {
     private FoxItemCarryBehavior itemCarryBehavior;
     private FoxSleepingBehavior sleepingBehavior;
 
+    @Unique
+    private static boolean behaviorsRegistered = false;
+
     /**
      * Registers fox behaviors from configuration.
      * Creates an AnimalConfig with handles for all fox-specific behaviors.
      */
-    @Override
-    protected void registerBehaviors() {
-        if (areBehaviorsRegistered()) {
+    @Unique
+    private void registerBehaviors() {
+        if (behaviorsRegistered) {
             return;
         }
 
@@ -93,7 +92,7 @@ public abstract class FoxMixin extends AnimalMixin {
             .build();
 
         AnimalBehaviorRegistry.register(foxId, config);
-        markBehaviorsRegistered();
+        behaviorsRegistered = true;
     }
 
     /**

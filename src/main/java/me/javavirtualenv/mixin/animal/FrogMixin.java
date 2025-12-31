@@ -53,7 +53,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - FrogHandle: Integrates behaviors with the ecology system
  */
 @Mixin(Frog.class)
-public abstract class FrogMixin extends AnimalMixin {
+public abstract class FrogMixin {
 
     private static final ResourceLocation FROG_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "frog");
     private static boolean behaviorsRegistered = false;
@@ -61,8 +61,7 @@ public abstract class FrogMixin extends AnimalMixin {
     /**
      * Register frog behaviors using code-based handles.
      */
-    @Override
-    protected void registerBehaviors() {
+    private void registerBehaviors() {
         if (behaviorsRegistered) {
             return;
         }

@@ -55,7 +55,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Aesthetics: Various idle behaviors (head shake, tail swish, ear twitch)
  */
 @Mixin(Horse.class)
-public abstract class HorseMixin extends AnimalMixin {
+public abstract class HorseMixin {
 
     private static final ResourceLocation HORSE_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "horse");
     private static boolean behaviorsRegistered = false;
@@ -78,7 +78,6 @@ public abstract class HorseMixin extends AnimalMixin {
      * - Spawn: Weight 5, groups of 2-6, requires grass blocks in plains/savanna
      * - Behaviors: Head shake, tail swish, ear twitch, graze animation
      */
-    @Override
     protected void registerBehaviors() {
         if (behaviorsRegistered) {
             return;

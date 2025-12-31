@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.handles.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Ocelot;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -33,17 +34,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Play behavior with prey and environmental objects
  */
 @Mixin(Ocelot.class)
-public abstract class OcelotMixin extends AnimalMixin {
+public abstract class OcelotMixin {
 
+    @Unique
     private static boolean ocelotBehaviorsRegistered = false;
 
     /**
      * Registers ocelot behaviors from JSON configuration.
      * Creates an AnimalConfig with handles for all ocelot-specific behaviors.
      */
-    @Override
-    protected void registerBehaviors() {
-        if (areBehaviorsRegistered()) {
+    @Unique
+    private void registerBehaviors() {
+        if (ocelotBehaviorsRegistered) {
             return;
         }
 
@@ -80,7 +82,7 @@ public abstract class OcelotMixin extends AnimalMixin {
             .build();
 
         AnimalBehaviorRegistry.register(ocelotId, config);
-        markBehaviorsRegistered();
+        ocelotBehaviorsRegistered = true;
     }
 
     /**

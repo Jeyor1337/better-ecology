@@ -10,6 +10,7 @@ import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,13 +29,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Remember good digging spots
  */
 @Mixin(Sniffer.class)
-public abstract class SnifferMixin extends AnimalMixin {
+public abstract class SnifferMixin {
 
+    @Unique
+    private static boolean behaviorsRegistered = false;
+
+    @Unique
     private SnifferDiggingGoal diggingGoal;
+    @Unique
     private SniffingGoal sniffingGoal;
+    @Unique
     private SnifferSocialGoal socialGoal;
 
-    @Override
+    @Unique
     protected void registerBehaviors() {
         if (areBehaviorsRegistered()) {
             return;
@@ -76,6 +83,23 @@ public abstract class SnifferMixin extends AnimalMixin {
 
         AnimalBehaviorRegistry.register(snifferId, config);
         markBehaviorsRegistered();
+    }
+
+    /**
+     * Check if behaviors have been registered for this animal type.
+     * This prevents duplicate registrations.
+     */
+    @Unique
+    protected boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    /**
+     * Mark behaviors as registered for this animal type.
+     */
+    @Unique
+    protected void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
     }
 
     /**

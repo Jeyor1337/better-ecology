@@ -12,6 +12,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.animal.Turtle;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -39,7 +40,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * turtle YAML config.
  */
 @Mixin(Turtle.class)
-public abstract class TurtleMixin extends AnimalMixin {
+public abstract class TurtleMixin {
+
+    @Unique
+    private static boolean behaviorsRegistered = false;
 
     /**
      * Registers turtle behaviors from YAML configuration.
@@ -60,7 +64,7 @@ public abstract class TurtleMixin extends AnimalMixin {
      * - Diet: Seagrass and other aquatic plants
      * - Behavior: Swimming, beach nesting, homing
      */
-    @Override
+    @Unique
     protected void registerBehaviors() {
         if (areBehaviorsRegistered()) {
             return;
@@ -100,6 +104,16 @@ public abstract class TurtleMixin extends AnimalMixin {
 
         AnimalBehaviorRegistry.register(turtleId, config);
         markBehaviorsRegistered();
+    }
+
+    @Unique
+    protected boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    @Unique
+    protected void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
     }
 
     /**

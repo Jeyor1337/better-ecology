@@ -75,7 +75,7 @@ import java.util.UUID;
  * - HerdCohesionGoal: Herd following and leader behavior
  */
 @Mixin(Cow.class)
-public abstract class CowMixin extends AnimalMixin {
+public abstract class CowMixin {
 
     private static final ResourceLocation COW_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "cow");
     private static boolean behaviorsRegistered = false;
@@ -83,7 +83,6 @@ public abstract class CowMixin extends AnimalMixin {
     /**
      * Register cow behaviors using code-based handles and AI goals.
      */
-    @Override
     protected void registerBehaviors() {
         if (behaviorsRegistered) {
             return;

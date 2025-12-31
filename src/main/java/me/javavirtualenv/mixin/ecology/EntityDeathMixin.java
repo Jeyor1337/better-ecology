@@ -1,4 +1,4 @@
-package me.javavirtualenv.ecology.mixin;
+package me.javavirtualenv.mixin.ecology;
 
 import me.javavirtualenv.ecology.conservation.PopulationRegistry;
 import net.minecraft.world.entity.Entity;

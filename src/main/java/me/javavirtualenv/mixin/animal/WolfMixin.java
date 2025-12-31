@@ -37,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Behaviors are based on scientific research into wolf pack dynamics.
  */
 @Mixin(Wolf.class)
-public abstract class WolfMixin extends AnimalMixin {
+public abstract class WolfMixin {
 
     private static final String WOLF_ID = "minecraft:wolf";
     private static boolean behaviorsRegistered = false;
@@ -48,11 +48,6 @@ public abstract class WolfMixin extends AnimalMixin {
             registerWolfBehaviors();
             behaviorsRegistered = true;
         }
-    }
-
-    @Override
-    protected void registerBehaviors() {
-        registerWolfBehaviors();
     }
 
     private void registerWolfBehaviors() {

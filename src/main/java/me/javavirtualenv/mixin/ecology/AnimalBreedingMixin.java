@@ -1,4 +1,4 @@
-package me.javavirtualenv.ecology.mixin;
+package me.javavirtualenv.mixin.ecology;
 
 import java.util.UUID;
 import me.javavirtualenv.ecology.EcologyComponent;

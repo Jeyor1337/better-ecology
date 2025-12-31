@@ -9,6 +9,7 @@ import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.allay.Allay;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -29,11 +30,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Bring items to player or note block
  */
 @Mixin(Allay.class)
-public abstract class AllayMixin extends AnimalMixin {
+public abstract class AllayMixin {
 
+    @Unique
+    private static boolean behaviorsRegistered = false;
+
+    @Unique
     private AllayCollectionGoal collectionGoal;
 
-    @Override
+    @Unique
     protected void registerBehaviors() {
         if (areBehaviorsRegistered()) {
             return;
@@ -75,6 +80,23 @@ public abstract class AllayMixin extends AnimalMixin {
 
         AnimalBehaviorRegistry.register(allayId, config);
         markBehaviorsRegistered();
+    }
+
+    /**
+     * Check if behaviors have been registered for this animal type.
+     * This prevents duplicate registrations.
+     */
+    @Unique
+    protected boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    /**
+     * Mark behaviors as registered for this animal type.
+     */
+    @Unique
+    protected void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
     }
 
     /**

@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * YAML configuration: src/main/resources/data/better-ecology/mobs/passive/donkey/mod_registry.yaml
  */
 @Mixin(net.minecraft.world.entity.animal.horse.Donkey.class)
-public abstract class DonkeyMixin extends AnimalMixin {
+public abstract class DonkeyMixin {
 
     private static final String DONKEY_ID = "minecraft:donkey";
     private static boolean behaviorsRegistered = false;
@@ -50,11 +50,10 @@ public abstract class DonkeyMixin extends AnimalMixin {
     }
 
     /**
-     * Override to register donkey-specific behaviors and configurations.
+     * Register donkey-specific behaviors and configurations.
      * All values are taken from the donkey YAML configuration.
      */
-    @Override
-    protected void registerBehaviors() {
+    private void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(
             net.minecraft.resources.ResourceLocation.parse(DONKEY_ID)
         )

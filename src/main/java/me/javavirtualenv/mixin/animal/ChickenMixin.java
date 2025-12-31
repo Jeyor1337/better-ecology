@@ -7,6 +7,7 @@ import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Chicken;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,7 +29,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * chicken YAML config at data/better-ecology/mobs/passive/chicken/mod_registry.yaml
  */
 @Mixin(Chicken.class)
-public abstract class ChickenMixin extends AnimalMixin {
+public abstract class ChickenMixin {
+
+    @Unique
+    private static boolean behaviorsRegistered = false;
+
+    /**
+     * Check if behaviors have been registered for chickens.
+     * This prevents duplicate registrations.
+     */
+    @Unique
+    private boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    /**
+     * Mark behaviors as registered for chickens.
+     */
+    @Unique
+    private void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
+    }
 
     /**
      * Registers chicken behaviors from YAML configuration.
@@ -53,8 +74,7 @@ public abstract class ChickenMixin extends AnimalMixin {
      * <p>
      * All configuration values are loaded from the YAML profile.
      */
-    @Override
-    protected void registerBehaviors() {
+    private void registerBehaviors() {
         if (areBehaviorsRegistered()) {
             return;
         }

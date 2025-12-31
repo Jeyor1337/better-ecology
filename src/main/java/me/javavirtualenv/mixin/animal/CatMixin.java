@@ -36,7 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Play behavior with items and players
  */
 @Mixin(Cat.class)
-public abstract class CatMixin extends AnimalMixin {
+public abstract class CatMixin {
 
     private static final String CAT_ID = "minecraft:cat";
     private static boolean catBehaviorsRegistered = false;
@@ -46,7 +46,6 @@ public abstract class CatMixin extends AnimalMixin {
         registerBehaviors();
     }
 
-    @Override
     protected void registerBehaviors() {
         if (catBehaviorsRegistered) {
             return;
@@ -70,12 +69,10 @@ public abstract class CatMixin extends AnimalMixin {
         catBehaviorsRegistered = true;
     }
 
-    @Override
     protected boolean areBehaviorsRegistered() {
         return catBehaviorsRegistered;
     }
 
-    @Override
     protected void markBehaviorsRegistered() {
         catBehaviorsRegistered = true;
     }

@@ -8,7 +8,6 @@ import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.handles.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,9 +29,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - LavaWalkingBehavior: Enables lava walking and heat resistance
  * - TemperatureSeekingBehavior: Seeks warmth, freezes when cold
  * - RidingBehavior: Handles player riding and steering mechanics
+ *
+ * Note: Strider extends Monster, not Animal, so this is a standalone mixin.
  */
 @Mixin(Strider.class)
-public abstract class StriderMixin extends AnimalMixin {
+public abstract class StriderMixin {
 
     private static final ResourceLocation STRIDER_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "strider");
     private static boolean behaviorsRegistered = false;
@@ -40,8 +41,7 @@ public abstract class StriderMixin extends AnimalMixin {
     /**
      * Register strider behaviors using code-based handles.
      */
-    @Override
-    protected void registerBehaviors() {
+    private void registerBehaviors() {
         if (behaviorsRegistered) {
             return;
         }
@@ -76,7 +76,7 @@ public abstract class StriderMixin extends AnimalMixin {
      * Registers strider behaviors once when the first Strider entity is created.
      */
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(EntityType<? extends Animal> entityType, Level level, CallbackInfo ci) {
+    private void onInit(EntityType<? extends Strider> entityType, Level level, CallbackInfo ci) {
         registerBehaviors();
     }
 }

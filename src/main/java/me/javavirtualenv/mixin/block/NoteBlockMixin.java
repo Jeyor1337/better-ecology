@@ -3,8 +3,10 @@ package me.javavirtualenv.mixin.block;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.NoteBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,7 +23,7 @@ public class NoteBlockMixin {
      * Inject after note block is played to notify nearby parrots.
      */
     @Inject(method = "playNote", at = @At("TAIL"))
-    private void onNotePlayed(Level level, BlockPos pos, CallbackInfo ci) {
+    private void onNotePlayed(Entity entity, BlockState state, Level level, BlockPos pos, CallbackInfo ci) {
         // Notify nearby parrots that a note was played
         notifyNearbyParrots(level, pos);
     }

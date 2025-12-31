@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Ramming attack when provoked
  */
 @Mixin(Goat.class)
-public abstract class GoatMixin extends AnimalMixin {
+public abstract class GoatMixin {
 
     private static final ResourceLocation GOAT_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "goat");
     private static boolean behaviorsRegistered = false;
@@ -41,8 +41,7 @@ public abstract class GoatMixin extends AnimalMixin {
      * movement capabilities, predation responses, breeding, temporal behaviors,
      * and milk production.
      */
-    @Override
-    protected void registerBehaviors() {
+    private void registerBehaviors() {
         if (behaviorsRegistered) {
             return;
         }

@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.minecraft.world.entity.animal.horse.Mule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
  * all ecology behaviors defined in the YAML at:
  * src/main/resources/data/better-ecology/mobs/passive/mule/mod_registry.yaml
  */
-@Mixin(targets = "net.minecraft.world.entity.animal.horse.Mule")
+@Mixin(Mule.class)
 public abstract class MuleMixin {
 
     @Unique

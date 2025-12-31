@@ -54,10 +54,13 @@ import net.minecraft.world.level.pathfinder.PathType;
  * - HerdCohesionGoal: Herd following and leader behavior
  */
 @Mixin(MushroomCow.class)
-public abstract class MooshroomMixin extends AnimalMixin {
+public abstract class MooshroomMixin {
 
     @Unique
     private static final ResourceLocation MOOSHROOM_ID = ResourceLocation.fromNamespaceAndPath("minecraft", "mooshroom");
+
+    @Unique
+    private static boolean behaviorsRegistered = false;
 
     /**
      * Injection point after constructor to register behaviors.
@@ -75,12 +78,22 @@ public abstract class MooshroomMixin extends AnimalMixin {
         registerMooshroomGoals(mooshroom);
     }
 
+    @Unique
+    private static boolean areBehaviorsRegistered() {
+        return behaviorsRegistered;
+    }
+
+    @Unique
+    private static void markBehaviorsRegistered() {
+        behaviorsRegistered = true;
+    }
+
     /**
      * Register all Mooshroom behaviors using the builder pattern.
      * Creates code-based handles that mirror the YAML configuration values.
      */
-    @Override
-    protected void registerBehaviors() {
+    @Unique
+    private static void registerBehaviors() {
         AnimalConfig config = AnimalConfig.builder(MOOSHROOM_ID)
                 .addHandle(new MooshroomHungerHandle())
                 .addHandle(new MooshroomConditionHandle())
