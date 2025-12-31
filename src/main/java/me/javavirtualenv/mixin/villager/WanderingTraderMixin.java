@@ -60,9 +60,14 @@ public class WanderingTraderMixin implements EcologyAccess {
         }
     }
 
-    @Inject(method = "customServerAiStep", at = @At("TAIL"))
+    @Inject(method = "aiStep", at = @At("TAIL"))
     private void onTick(CallbackInfo ci) {
         WanderingTrader trader = (WanderingTrader) (Object) this;
+
+        // Only run on server side
+        if (trader.level().isClientSide()) {
+            return;
+        }
 
         // Initialize behaviors if not done
         if (!betterEcology$behaviorsInitialized) {
@@ -113,26 +118,6 @@ public class WanderingTraderMixin implements EcologyAccess {
     @Unique
     @Override
     public me.javavirtualenv.ecology.EcologyComponent betterEcology$getEcologyComponent() {
-        return null;
-    }
-
-    /**
-     * Custom accessor for trader-specific behavior systems.
-     * These accessors use the EcologyAccess interface to safely retrieve behavior systems.
-     */
-    @Unique
-    public static TradingReputation getTradingReputation(WanderingTrader trader) {
-        if (trader instanceof EcologyAccess access) {
-            return access.betterEcology$getTradingReputation();
-        }
-        return null;
-    }
-
-    @Unique
-    public static GossipSystem getGossipSystem(WanderingTrader trader) {
-        if (trader instanceof EcologyAccess access) {
-            return access.betterEcology$getGossipSystem();
-        }
         return null;
     }
 }

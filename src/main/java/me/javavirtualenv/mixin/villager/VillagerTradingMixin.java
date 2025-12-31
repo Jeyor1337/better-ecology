@@ -1,12 +1,14 @@
 package me.javavirtualenv.mixin.villager;
 
 import me.javavirtualenv.behavior.villager.TradingReputation;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.entity.npc.VillagerTrades;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.trading.MerchantOffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Mixin to modify villager trading prices based on reputation.
@@ -15,23 +17,30 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class VillagerTradingMixin {
 
     /**
-     * Modifies the price of trades based on player reputation.
+     * Modifies the price of trades based on player reputation from Better Ecology system.
+     * Hooks into updateSpecialPrices which is called when a player starts trading.
      */
-    @Inject(method = "getTradingPrice", at = @At("RETURN"), cancellable = true, remap = false)
-    private static void modifyTradingPrice(
-        Villager villager,
-        VillagerTrades.ItemListing trade,
-        int basePrice,
-        CallbackInfoReturnable<Integer> cir
-    ) {
-        // Note: This is a simplified example - actual implementation would need to hook into
-        // the MerchantRecipe system which has a different API
-        TradingReputation reputation = VillagerMixin.getTradingReputation(villager);
+    @Inject(method = "updateSpecialPrices", at = @At("TAIL"))
+    private void modifyTradingPrices(Player player, CallbackInfo ci) {
+        Villager villager = (Villager) (Object) this;
+
+        if (!(villager instanceof EcologyAccess access)) {
+            return;
+        }
+
+        TradingReputation reputation = access.betterEcology$getTradingReputation();
         if (reputation == null) {
             return;
         }
 
-        // This would be called when a trade is being calculated
-        // Implementation would modify the recipe price based on reputation
+        // Apply additional price modifications based on Better Ecology's trading reputation
+        float reputationModifier = reputation.getReputationModifier(player.getUUID());
+        if (reputationModifier != 0.0f) {
+            for (MerchantOffer offer : villager.getOffers()) {
+                // Apply reputation-based discount or markup
+                int adjustment = Math.round(offer.getBaseCostA().getCount() * reputationModifier);
+                offer.addToSpecialPriceDiff(-adjustment);
+            }
+        }
     }
 }

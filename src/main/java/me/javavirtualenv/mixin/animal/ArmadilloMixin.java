@@ -24,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 /**
  * Mixin for Armadillo entity behavior registration.
@@ -76,25 +77,6 @@ public abstract class ArmadilloMixin extends Mob {
             .build();
 
         AnimalBehaviorRegistry.register(ARMADILLO_ID, config);
-    }
-
-    /**
-     * Modify damage amount before vanilla processing.
-     * This allows vanilla's isScared() logic to apply, and stacks additional reduction
-     * when the ecology rolled state is active.
-     */
-    @ModifyArg(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)
-    private float betterEcology$modifyHurtDamage(float originalAmount, DamageSource source) {
-        EcologyComponent component = me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent((Mob)(Object)this);
-        if (component != null) {
-            ArmadilloComponent armadilloComponent = new ArmadilloComponent(component.getHandleTag("armadillo"));
-
-            // While rolled up, reduce damage by additional 80% (on top of vanilla's isScared() reduction)
-            if (armadilloComponent.isRolled()) {
-                return originalAmount * 0.2f;
-            }
-        }
-        return originalAmount;
     }
 
     /**

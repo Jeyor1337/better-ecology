@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.mixin.villager.VillagerMixin;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.npc.Villager;
 
@@ -114,7 +114,7 @@ public class SocializeGoal extends Goal {
      * Shares gossip with another villager.
      */
     private void shareGossip(Villager other) {
-        GossipSystem otherGossip = VillagerMixin.getGossipSystem(other);
+        GossipSystem otherGossip = ((EcologyAccess) other).betterEcology$getGossipSystem();
         if (otherGossip != null) {
             gossipSystem.spreadGossip(other);
         }

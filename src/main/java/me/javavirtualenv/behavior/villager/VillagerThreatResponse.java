@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.mixin.villager.VillagerMixin;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -97,7 +97,7 @@ public class VillagerThreatResponse {
             closestDistance = Math.min(closestDistance, distance);
 
             // Add gossip about the threat
-            GossipSystem gossip = VillagerMixin.getGossipSystem(villager);
+            GossipSystem gossip = ((EcologyAccess) villager).betterEcology$getGossipSystem();
             if (gossip != null && villager.getRandom().nextDouble() < 0.1) {
                 // Share threat info with other villagers
                 gossip.addGossip(
@@ -202,7 +202,7 @@ public class VillagerThreatResponse {
 
         for (Villager other : nearbyVillagers) {
             if (other != villager) {
-                VillagerThreatResponse otherResponse = VillagerMixin.getThreatResponse(other);
+                VillagerThreatResponse otherResponse = ((EcologyAccess) other).betterEcology$getThreatResponse();
                 if (otherResponse != null) {
                     otherResponse.onExternalAlert();
                 }
@@ -238,7 +238,7 @@ public class VillagerThreatResponse {
         );
 
         for (Villager other : nearbyVillagers) {
-            GossipSystem gossip = VillagerMixin.getGossipSystem(other);
+            GossipSystem gossip = ((EcologyAccess) other).betterEcology$getGossipSystem();
             if (gossip != null) {
                 gossip.addGossip(
                     GossipSystem.GossipType.EMERGENCY,

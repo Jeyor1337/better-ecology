@@ -239,12 +239,12 @@ social:
   communication:
     alarm_calls:
       enabled: null
-      types: []
-      # Special alarm for spider detection
-      - trigger: "spider_nearby"
-        call: "peep_alert"
-        group_response: "none"
-        description: "When a spider is detected within 6 blocks, the armadillo emits a subtle warning sound. Unlike typical alarm calls, this doesn't trigger group response because armadillos are solitary, but it provides feedback to players that spider repelling is active."
+      types:
+        # Special alarm for spider detection
+        - trigger: "spider_nearby"
+          call: "peep_alert"
+          group_response: "none"
+          description: "When a spider is detected within 6 blocks, the armadillo emits a subtle warning sound. Unlike typical alarm calls, this doesn't trigger group response because armadillos are solitary, but it provides feedback to players that spider repelling is active."
 
 
 # ============================================================================

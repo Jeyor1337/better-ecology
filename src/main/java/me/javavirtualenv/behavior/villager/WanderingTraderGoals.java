@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.mixin.villager.VillagerMixin;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.mixin.villager.WanderingTraderMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -179,7 +179,7 @@ class SocializeWithVillagersGoal extends Goal {
      * Exchanges gossip with a villager.
      */
     private void exchangeGossip(Villager villager) {
-        GossipSystem villagerGossip = VillagerMixin.getGossipSystem(villager);
+        GossipSystem villagerGossip = ((EcologyAccess) villager).betterEcology$getGossipSystem();
         if (villagerGossip != null) {
             // Trader shares gossip with villager
             gossipSystem.spreadGossip(villager);

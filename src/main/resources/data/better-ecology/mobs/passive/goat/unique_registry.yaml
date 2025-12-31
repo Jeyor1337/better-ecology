@@ -503,8 +503,8 @@ unique_behaviors:
       # Behavior modifiers
       ram_chance: 0.1            # 10% chance when provoked (vs 5% normal)
       ram_cooldown_modifier: 0.5 # Half the cooldown
-        horn_drop_chance: 1.0    # Always drops at least 1 horn
-        flee_speed_multiplier: 1.2
+      horn_drop_chance: 1.0      # Always drops at least 1 horn
+      flee_speed_multiplier: 1.2
 
 
   # === HORNS AND HORN DROPS ===

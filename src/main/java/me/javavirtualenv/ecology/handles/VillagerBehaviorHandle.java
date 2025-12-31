@@ -4,8 +4,8 @@ import me.javavirtualenv.behavior.villager.*;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.mixin.MobAccessor;
-import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.npc.Villager;
@@ -33,12 +33,14 @@ public class VillagerBehaviorHandle implements EcologyHandle {
             return;
         }
 
+        EcologyAccess access = (EcologyAccess) villager;
+
         // Get behavior systems from mixin
-        TradingReputation tradingReputation = VillagerMixin.getTradingReputation(villager);
-        GossipSystem gossipSystem = VillagerMixin.getGossipSystem(villager);
-        WorkStationAI workStationAI = VillagerMixin.getWorkStationAI(villager);
-        DailyRoutine dailyRoutine = VillagerMixin.getDailyRoutine(villager);
-        EnhancedFarming enhancedFarming = VillagerMixin.getEnhancedFarming(villager);
+        TradingReputation tradingReputation = access.betterEcology$getTradingReputation();
+        GossipSystem gossipSystem = access.betterEcology$getGossipSystem();
+        WorkStationAI workStationAI = access.betterEcology$getWorkStationAI();
+        DailyRoutine dailyRoutine = access.betterEcology$getDailyRoutine();
+        EnhancedFarming enhancedFarming = access.betterEcology$getEnhancedFarming();
 
         if (tradingReputation == null || gossipSystem == null || workStationAI == null ||
             dailyRoutine == null || enhancedFarming == null) {

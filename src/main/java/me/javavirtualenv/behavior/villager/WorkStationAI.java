@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.mixin.villager.VillagerMixin;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
@@ -190,7 +190,7 @@ public class WorkStationAI {
      */
     private void checkNearbyAnimals(BlockPos station) {
         // Check if EnhancedFarming exists and has hungry villagers
-        EnhancedFarming farming = VillagerMixin.getEnhancedFarming(villager);
+        EnhancedFarming farming = ((EcologyAccess) villager).betterEcology$getEnhancedFarming();
         if (farming != null && farming.getKnownFarms().size() > 0) {
             productivity = Math.min(MAX_PRODUCTIVITY, productivity + 5);
         }

@@ -56,4 +56,20 @@ public final class ChunkSpawnDataStorage {
     public static boolean has(LevelChunk chunk) {
         return SPAWN_DATA_MAP.containsKey(chunk.getPos());
     }
+
+    /**
+     * Set spawn data for a proto chunk (during loading).
+     * Uses ChunkPos directly since proto chunk may not be upgraded yet.
+     */
+    public static void setForProtoChunk(ChunkPos chunkPos, ChunkSpawnData spawnData) {
+        SPAWN_DATA_MAP.put(chunkPos, spawnData);
+    }
+
+    /**
+     * Get spawn data by chunk position.
+     * Returns null if no spawn data exists.
+     */
+    public static ChunkSpawnData get(ChunkPos chunkPos) {
+        return SPAWN_DATA_MAP.get(chunkPos);
+    }
 }

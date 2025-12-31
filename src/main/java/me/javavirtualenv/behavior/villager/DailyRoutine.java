@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.mixin.villager.VillagerMixin;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
@@ -191,8 +191,8 @@ public class DailyRoutine {
         ).forEach(other -> {
             if (other != villager) {
                 // Spread gossip through the GossipSystem
-                GossipSystem myGossip = VillagerMixin.getGossipSystem(villager);
-                GossipSystem otherGossip = VillagerMixin.getGossipSystem(other);
+                GossipSystem myGossip = ((EcologyAccess) villager).betterEcology$getGossipSystem();
+                GossipSystem otherGossip = ((EcologyAccess) other).betterEcology$getGossipSystem();
                 if (myGossip != null && otherGossip != null) {
                     myGossip.spreadGossip(other);
                 }

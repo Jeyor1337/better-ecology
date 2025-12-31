@@ -7,11 +7,11 @@ import me.javavirtualenv.ecology.conservation.LineageRegistry;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.animal.Animal;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 /**
  * Mixin to capture animal breeding events and track parent-offspring relationships.
@@ -23,19 +23,19 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class AnimalBreedingMixin {
 
     /**
-     * Injects at the end of spawnChildFromBreeding to capture the baby and set parent UUIDs.
+     * Injects into finalizeSpawnChildFromBreeding to capture the baby and set parent UUIDs.
+     * This method is called after the baby is created, so it's guaranteed to exist at this point.
      * The parent entity is always the mother in this method (the other parent is the parameter).
      * Registers the birth with the LineageRegistry to track family trees.
      */
     @Inject(
-            method = "spawnChildFromBreeding",
-            at = @At("RETURN"),
-            locals = LocalCapture.CAPTURE_FAILHARD
+            method = "finalizeSpawnChildFromBreeding",
+            at = @At("HEAD")
     )
     private void betterEcology$onChildBorn(
             ServerLevel level,
             Animal otherParent,
-            AgeableMob baby,
+            @Nullable AgeableMob baby,
             CallbackInfo ci
     ) {
         if (baby == null) {

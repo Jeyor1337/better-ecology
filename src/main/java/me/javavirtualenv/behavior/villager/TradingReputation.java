@@ -103,6 +103,19 @@ public class TradingReputation {
     }
 
     /**
+     * Gets the reputation modifier for a player (discount/markup as a fraction).
+     * Returns a value between -0.35 (35% discount) and 0 (no discount).
+     */
+    public float getReputationModifier(UUID playerId) {
+        PlayerReputation reputation = getPlayerReputation(playerId);
+        if (reputation == null) {
+            return 0.0f;
+        }
+        // Return 1 - multiplier to get the discount as a modifier
+        return 1.0f - calculateReputationMultiplier(reputation);
+    }
+
+    /**
      * Calculates price multiplier based on reputation only.
      */
     private float calculateReputationMultiplier(PlayerReputation reputation) {
