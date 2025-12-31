@@ -9,6 +9,7 @@ import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.state.EntityState;
 import me.javavirtualenv.pig.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -83,7 +84,7 @@ public abstract class PigMixin extends AnimalMixin {
      */
     @Override
     protected void registerBehaviors() {
-        AnimalConfig config = AnimalConfig.builder(EntityType.PIG)
+        AnimalConfig config = AnimalConfig.builder(ResourceLocation.withDefaultNamespace("pig"))
                 .addHandle(new PigHungerHandle())
                 .addHandle(new PigConditionHandle())
                 .addHandle(new PigEnergyHandle())
@@ -550,7 +551,8 @@ public abstract class PigMixin extends AnimalMixin {
                     meetsConditionRequirement(component) &&
                     meetsHungerRequirement(component);
 
-            component.state().setCanBreed(canBreed);
+            tag.putBoolean("can_breed", canBreed);
+            component.setHandleTag(id(), tag);
         }
 
         @Override
@@ -562,7 +564,7 @@ public abstract class PigMixin extends AnimalMixin {
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(6,
                 new me.javavirtualenv.ecology.ai.EcologyBreedGoal(animal, 1.0, MIN_AGE, 0.6,
-                    MIN_CONDITION, COOLDOWN));
+                    MIN_CONDITION, COOLDOWN, null));
         }
 
         @Override
@@ -570,18 +572,8 @@ public abstract class PigMixin extends AnimalMixin {
             tag.put(id(), component.getHandleTag(id()).copy());
         }
 
-        @Override
-        public void onBreed(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            CompoundTag tag = component.getHandleTag(id());
-            setLastBred(tag, mob.tickCount);
-        }
-
         private int getLastBred(CompoundTag tag) {
             return tag.contains(NBT_LAST_BRED) ? tag.getInt(NBT_LAST_BRED) : -COOLDOWN;
-        }
-
-        private void setLastBred(CompoundTag tag, int tick) {
-            tag.putInt(NBT_LAST_BRED, tick);
         }
 
         private boolean meetsAgeRequirement(EcologyComponent component) {

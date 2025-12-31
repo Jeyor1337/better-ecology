@@ -12,6 +12,7 @@ import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.level.Level;
@@ -133,7 +134,7 @@ public abstract class RabbitMixin extends AnimalMixin {
      */
     @Override
     protected void registerBehaviors() {
-        AnimalConfig config = AnimalConfig.builder(EntityType.RABBIT)
+        AnimalConfig config = AnimalConfig.builder(ResourceLocation.withDefaultNamespace("rabbit"))
                 .build();
 
         AnimalBehaviorRegistry.register("minecraft:rabbit", config);

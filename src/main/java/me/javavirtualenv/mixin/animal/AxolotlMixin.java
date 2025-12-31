@@ -5,6 +5,7 @@ import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import org.spongepowered.asm.mixin.Mixin;
@@ -91,7 +92,7 @@ public abstract class AxolotlMixin extends AnimalMixin {
             productionGoal = new AxolotlProductionGoal(axolotl);
 
             int goalPriority = 4;
-            axolotl.goalSelector.addGoal(goalPriority, productionGoal);
+            ((MobAccessor) axolotl).betterEcology$getGoalSelector().addGoal(goalPriority, productionGoal);
         }
     }
 }

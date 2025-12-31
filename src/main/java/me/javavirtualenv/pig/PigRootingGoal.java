@@ -117,7 +117,7 @@ public class PigRootingGoal extends MoveToBlockGoal {
 
             BlockState belowState = level.getBlockState(pig.blockPosition().below());
             serverLevel.sendParticles(
-                ParticleTypes.BLOCK,
+                new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, belowState),
                 pos.x + offsetX,
                 pos.y,
                 pos.z + offsetZ,
@@ -244,7 +244,12 @@ public class PigRootingGoal extends MoveToBlockGoal {
         }
     }
 
-    private boolean isReachedTarget() {
+    private boolean isTargetBlock(Level level, BlockPos pos) {
+        return isValidTarget(level, pos);
+    }
+
+    @Override
+    protected boolean isReachedTarget() {
         if (this.blockPos == null) {
             return false;
         }

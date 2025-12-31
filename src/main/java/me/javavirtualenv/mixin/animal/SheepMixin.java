@@ -600,7 +600,7 @@ public abstract class SheepMixin extends AnimalMixin {
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(priority,
                 new me.javavirtualenv.ecology.ai.EcologyBreedGoal(animal, 1.0, MIN_AGE, MIN_HEALTH,
-                    (int) MIN_CONDITION, COOLDOWN));
+                    (int) MIN_CONDITION, COOLDOWN, null));
         }
     }
 
@@ -1004,7 +1004,7 @@ public abstract class SheepMixin extends AnimalMixin {
         }
 
         private java.util.Optional<EcologyComponent> getEcologyComponent(Mob mob) {
-            return me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent(mob);
+            return java.util.Optional.ofNullable(me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent(mob));
         }
     }
 }

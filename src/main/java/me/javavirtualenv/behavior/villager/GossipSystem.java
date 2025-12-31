@@ -1,9 +1,9 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.mixin.villager.VillagerMixin;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.Mob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,14 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Villagers share information about players, threats, and opportunities.
  */
 public class GossipSystem {
-    private final Villager villager;
+    private final Mob entity;
     private final Map<GossipType, List<GossipEntry>> gossipByType = new ConcurrentHashMap<>();
     private static final int MAX_GOSSIP_PER_TYPE = 20;
     private static final long GOSSIP_DECAY_TIME = 24000; // 1 day in ticks
     private static final double SPREAD_CHANCE = 0.3;
 
-    public GossipSystem(Villager villager) {
-        this.villager = villager;
+    public GossipSystem(Mob entity) {
+        this.entity = entity;
         for (GossipType type : GossipType.values()) {
             gossipByType.put(type, new ArrayList<>());
         }
@@ -40,7 +40,7 @@ public class GossipSystem {
             .filter(g -> g.targetId.equals(target))
             .findFirst();
 
-        long currentTime = villager.level().getGameTime();
+        long currentTime = entity.level().getGameTime();
 
         if (existing.isPresent()) {
             // Strengthen existing gossip
@@ -70,7 +70,7 @@ public class GossipSystem {
         return gossipList.stream()
             .filter(g -> g.targetId.equals(target))
             .mapToInt(g -> {
-                long age = villager.level().getGameTime() - g.timestamp;
+                long age = entity.level().getGameTime() - g.timestamp;
                 int decay = (int) (age / GOSSIP_DECAY_TIME);
                 return Math.max(0, g.strength - decay);
             })
@@ -87,7 +87,7 @@ public class GossipSystem {
         }
 
         // Filter out expired gossip
-        long currentTime = villager.level().getGameTime();
+        long currentTime = entity.level().getGameTime();
         List<GossipEntry> valid = new ArrayList<>();
         for (GossipEntry entry : gossipList) {
             long age = currentTime - entry.timestamp;
@@ -103,11 +103,17 @@ public class GossipSystem {
     }
 
     /**
-     * Spreads gossip to nearby villagers.
-     * Should be called when villagers socialize.
+     * Spreads gossip to nearby mobs.
+     * Should be called when mobs socialize.
      */
-    public void spreadGossip(Villager other) {
-        GossipSystem otherGossip = VillagerMixin.getGossipSystem(other);
+    public void spreadGossip(Mob other) {
+        GossipSystem otherGossip = null;
+
+        // Try to get gossip system from the other mob via EcologyAccess
+        if (other instanceof EcologyAccess access) {
+            otherGossip = access.betterEcology$getGossipSystem();
+        }
+
         if (otherGossip == null) {
             return;
         }
@@ -119,14 +125,14 @@ public class GossipSystem {
 
             // Share my gossip with them
             for (GossipEntry entry : myGossip) {
-                if (villager.getRandom().nextDouble() < SPREAD_CHANCE) {
+                if (entity.getRandom().nextDouble() < SPREAD_CHANCE) {
                     otherGossip.addGossip(type, entry.targetId, Math.max(1, entry.strength / 2));
                 }
             }
 
             // Receive their gossip
             for (GossipEntry entry : theirGossip) {
-                if (villager.getRandom().nextDouble() < SPREAD_CHANCE) {
+                if (entity.getRandom().nextDouble() < SPREAD_CHANCE) {
                     addGossip(type, entry.targetId, Math.max(1, entry.strength / 2));
                 }
             }
@@ -178,7 +184,7 @@ public class GossipSystem {
      * Removes old gossip to prevent memory bloat.
      */
     public void decayGossip() {
-        long currentTime = villager.level().getGameTime();
+        long currentTime = entity.level().getGameTime();
 
         for (GossipType type : GossipType.values()) {
             List<GossipEntry> gossipList = gossipByType.get(type);

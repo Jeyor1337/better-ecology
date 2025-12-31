@@ -131,7 +131,8 @@ public class PigMudBathingGoal extends MoveToBlockGoal {
                state.is(Blocks.CLAY);
     }
 
-    private boolean isReachedTarget() {
+    @Override
+    protected boolean isReachedTarget() {
         if (this.blockPos == null) {
             return false;
         }
@@ -229,5 +230,9 @@ public class PigMudBathingGoal extends MoveToBlockGoal {
         );
 
         BetterEcology.LOGGER.debug("Pig applied mud effect for {} ticks", MUD_EFFECT_DURATION);
+    }
+
+    private boolean isTargetBlock(Level level, BlockPos pos) {
+        return isValidTarget(level, pos);
     }
 }

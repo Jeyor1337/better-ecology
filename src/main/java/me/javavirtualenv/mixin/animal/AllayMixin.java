@@ -5,6 +5,7 @@ import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.allay.Allay;
 import org.spongepowered.asm.mixin.Mixin;
@@ -95,7 +96,7 @@ public abstract class AllayMixin extends AnimalMixin {
             collectionGoal = new AllayCollectionGoal(allay);
 
             int goalPriority = 3;
-            allay.goalSelector.addGoal(goalPriority, collectionGoal);
+            ((MobAccessor) allay).betterEcology$getGoalSelector().addGoal(goalPriority, collectionGoal);
         }
     }
 }

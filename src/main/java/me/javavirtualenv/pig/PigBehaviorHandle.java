@@ -16,7 +16,7 @@ import net.minecraft.world.level.Level;
 public class PigBehaviorHandle extends CodeBasedHandle {
     private static final String NBT_MUD_TIMER = "mudEffectTimer";
     private static final String NBT_EXCITEMENT_TIMER = "excitementTimer";
-    private static final String MUD_EFFECT_DURATION = 6000;
+    private static final int MUD_EFFECT_DURATION = 6000;
     private static final int EXCITEMENT_DURATION = 300;
 
     @Override

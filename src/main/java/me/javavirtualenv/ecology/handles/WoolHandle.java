@@ -134,7 +134,7 @@ public final class WoolHandle implements EcologyHandle {
         BlockState blockState = sheep.level().getBlockState(pos);
 
         // Check if the block is grass
-        if (blockState.is(Blocks.GRASS) || blockState.is(Blocks.TALL_GRASS)) {
+        if (blockState.is(Blocks.SHORT_GRASS) || blockState.is(Blocks.TALL_GRASS)) {
             // Check if enough time has passed since last graze
             int lastGrazing = getLastGrazingTime(tag);
             int ticksSinceGrazing = sheep.tickCount - lastGrazing;
@@ -177,7 +177,7 @@ public final class WoolHandle implements EcologyHandle {
 
         // Play eating sound
         sheep.level().playSound(null, sheep.getX(), sheep.getY(), sheep.getZ(),
-                               SoundEvents.SHEEP_EAT, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                               SoundEvents.SHEEP_AMBIENT, SoundSource.NEUTRAL, 1.0F, 1.0F);
 
         // Spawn particles
         if (sheep.level() instanceof ServerLevel serverLevel) {

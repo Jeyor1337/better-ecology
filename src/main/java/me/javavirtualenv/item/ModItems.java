@@ -1,16 +1,17 @@
 package me.javavirtualenv.item;
 
 import me.javavirtualenv.BetterEcology;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import net.fabricmc.fabric.api.item.v1.FabricItem;
+import net.minecraft.world.food.FoodProperties;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
+import net.minecraft.world.item.CreativeModeTabs;
 
 import java.util.List;
 
@@ -24,16 +25,15 @@ public final class ModItems {
         throw new AssertionError("ModItems should not be instantiated");
     }
 
-    public static final Item TRUFFLE = new Item(new FabricItem.Settings()
+    public static final Item TRUFFLE = new Item(new Item.Properties()
             .rarity(Rarity.RARE)
-            .food(new net.minecraft.world.food.FoodProperties.Builder()
+            .food(new FoodProperties.Builder()
                     .nutrition(6)
-                    .saturationMod(0.6f)
+                    .saturationModifier(0.6f)
                     .build())) {
         @Override
-        public void appendHoverText(ItemStack stack, Level level, List<Component> tooltip, TooltipFlag flag) {
+        public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
             tooltip.add(Component.translatable("item.better-ecology.truffle.tooltip"));
-            super.appendHoverText(stack, level, tooltip, flag);
         }
     };
 
@@ -44,16 +44,11 @@ public final class ModItems {
     }
 
     private static void registerItem(String name, Item item) {
-        net.minecraft.core.Registry.register(
-            net.minecraft.core.registries.BuiltInRegistries.ITEM,
-            ResourceLocation.fromNamespaceAndPath(BetterEcology.MOD_ID, name),
-            item
-        );
+        Registry.register(BuiltInRegistries.ITEM, ResourceLocation.fromNamespaceAndPath(BetterEcology.MOD_ID, name), item);
     }
 
     private static void addToItemGroups() {
-        ItemGroupEvents.modifyEntriesEvent(net.minecraft.core.registries.BuiltInRegistries.ITEM_GROUP
-                .get(ResourceLocation.withDefaultNamespace("food_and_drinks")))
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FOOD_AND_DRINKS)
             .register(content -> {
                 content.accept(TRUFFLE);
             });

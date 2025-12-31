@@ -20,6 +20,7 @@ public class PigRenderFeature extends RenderLayer<Pig, net.minecraft.client.mode
 
     private static final Vector3f MUD_COLOR = new Vector3f(0.4f, 0.3f, 0.2f);
     private static final int MAX_MUD_DURATION = 6000;
+    private static final ResourceLocation PIG_TEXTURE = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/entity/pig/pig.png");
 
     public PigRenderFeature(RenderLayerParent<Pig, net.minecraft.client.model.EntityModel<Pig>> renderer) {
         super(renderer);
@@ -41,23 +42,20 @@ public class PigRenderFeature extends RenderLayer<Pig, net.minecraft.client.mode
 
         poseStack.pushPose();
 
-        VertexConsumer consumer = bufferSource.getBuffer(
-            RenderType.entityTranslucent(
-                this.getParentModel().getTextureLocation(pig)
-            )
-        );
-
         float alpha = mudIntensity * 0.4f;
-        float red = MUD_COLOR.x() * alpha;
-        float green = MUD_COLOR.y() * alpha;
-        float blue = MUD_COLOR.z() * alpha;
+        float red = MUD_COLOR.x();
+        float green = MUD_COLOR.y();
+        float blue = MUD_COLOR.z();
+
+        VertexConsumer consumer = bufferSource.getBuffer(
+            RenderType.entityTranslucent(PIG_TEXTURE)
+        ).setColor(red, green, blue, alpha);
 
         this.getParentModel().renderToBuffer(
             poseStack,
             consumer,
             packedLight,
-            OverlayTexture.NO_OVERLAY,
-            red, green, blue, alpha
+            OverlayTexture.NO_OVERLAY
         );
 
         poseStack.popPose();

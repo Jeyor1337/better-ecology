@@ -74,7 +74,7 @@ public abstract class SquidMixin {
             productionGoal = new SquidInkProductionGoal(squid);
 
             int goalPriority = 4;
-            squid.goalSelector.addGoal(goalPriority, productionGoal);
+            ((MobAccessor) squid).betterEcology$getGoalSelector().addGoal(goalPriority, productionGoal);
         }
     }
 }

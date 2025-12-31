@@ -205,7 +205,7 @@ public final class ChunkBlockIndex {
      */
     private static BlockStateSnapshot getBlockState(BlockGetter level, BlockPos pos) {
         try {
-            if (!level.isLoaded(pos)) {
+            if (level instanceof Level levelInstance && !levelInstance.isLoaded(pos)) {
                 return null;
             }
             return new BlockStateSnapshot(level.getBlockState(pos).getBlock(), pos);

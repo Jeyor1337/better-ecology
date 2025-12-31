@@ -96,15 +96,15 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
     private BehaviorRegistry createWolfRegistry(Mob mob, EcologyComponent component) {
         BehaviorRegistry registry = new BehaviorRegistry();
 
-        // Wolf-specific pack behaviors
+        // Wolf-specific pack behaviors - wrap SteeringBehavior with adapter
         PackHuntingBehavior packHunting = new PackHuntingBehavior();
-        registry.register("pack_hunting", packHunting, "wolf");
+        registry.register("pack_hunting", new SteeringBehaviorAdapter(packHunting, 1.3, 0.18), "wolf");
 
         PackTerritoryBehavior packTerritory = new PackTerritoryBehavior();
-        registry.register("pack_territory", packTerritory, "wolf");
+        registry.register("pack_territory", new SteeringBehaviorAdapter(packTerritory, 1.3, 0.18), "wolf");
 
         PackHierarchyBehavior packHierarchy = new PackHierarchyBehavior();
-        registry.register("pack_hierarchy", packHierarchy, "wolf");
+        registry.register("pack_hierarchy", new SteeringBehaviorAdapter(packHierarchy, 1.3, 0.18), "wolf");
 
         // Basic steering behaviors (for when not in pack mode)
         registry.register("separation", new SeparationBehavior(3.0, 1.3, 0.18), "flocking");

@@ -122,31 +122,36 @@ public class VillagerMixin implements EcologyAccess {
         // This is handled by the separate goal registration system
     }
 
-    // Getter methods for behavior systems
+    // Getter methods for behavior systems - override interface defaults
 
-    @Unique
+    @Override
     public TradingReputation betterEcology$getTradingReputation() {
         return betterEcology$tradingReputation;
     }
 
-    @Unique
+    @Override
     public GossipSystem betterEcology$getGossipSystem() {
         return betterEcology$gossipSystem;
     }
 
-    @Unique
+    @Override
     public WorkStationAI betterEcology$getWorkStationAI() {
         return betterEcology$workStationAI;
     }
 
-    @Unique
+    @Override
     public DailyRoutine betterEcology$getDailyRoutine() {
         return betterEcology$dailyRoutine;
     }
 
-    @Unique
+    @Override
     public EnhancedFarming betterEcology$getEnhancedFarming() {
         return betterEcology$enhancedFarming;
+    }
+
+    @Override
+    public VillagerThreatResponse betterEcology$getThreatResponse() {
+        return betterEcology$threatResponse;
     }
 
     @Unique
@@ -158,51 +163,52 @@ public class VillagerMixin implements EcologyAccess {
 
     /**
      * Custom accessor for villager-specific behavior systems.
+     * These accessors use the EcologyAccess interface to safely retrieve behavior systems.
      */
     @Unique
     public static TradingReputation getTradingReputation(Villager villager) {
-        if (villager instanceof VillagerMixin mixin) {
-            return mixin.betterEcology$tradingReputation;
+        if (villager instanceof EcologyAccess access) {
+            return access.betterEcology$getTradingReputation();
         }
         return null;
     }
 
     @Unique
     public static GossipSystem getGossipSystem(Villager villager) {
-        if (villager instanceof VillagerMixin mixin) {
-            return mixin.betterEcology$gossipSystem;
+        if (villager instanceof EcologyAccess access) {
+            return access.betterEcology$getGossipSystem();
         }
         return null;
     }
 
     @Unique
     public static WorkStationAI getWorkStationAI(Villager villager) {
-        if (villager instanceof VillagerMixin mixin) {
-            return mixin.betterEcology$workStationAI;
+        if (villager instanceof EcologyAccess access) {
+            return access.betterEcology$getWorkStationAI();
         }
         return null;
     }
 
     @Unique
     public static DailyRoutine getDailyRoutine(Villager villager) {
-        if (villager instanceof VillagerMixin mixin) {
-            return mixin.betterEcology$dailyRoutine;
+        if (villager instanceof EcologyAccess access) {
+            return access.betterEcology$getDailyRoutine();
         }
         return null;
     }
 
     @Unique
     public static EnhancedFarming getEnhancedFarming(Villager villager) {
-        if (villager instanceof VillagerMixin mixin) {
-            return mixin.betterEcology$enhancedFarming;
+        if (villager instanceof EcologyAccess access) {
+            return access.betterEcology$getEnhancedFarming();
         }
         return null;
     }
 
     @Unique
     public static VillagerThreatResponse getThreatResponse(Villager villager) {
-        if (villager instanceof VillagerMixin mixin) {
-            return mixin.betterEcology$threatResponse;
+        if (villager instanceof EcologyAccess access) {
+            return access.betterEcology$getThreatResponse();
         }
         return null;
     }

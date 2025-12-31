@@ -154,7 +154,12 @@ public abstract class MuleMixin {
      */
     @Unique
     private EcologyHandle createHealthHandle() {
-        return new CodeBasedHandle("health") {
+        return new CodeBasedHandle() {
+            @Override
+            public String id() {
+                return "health";
+            }
+
             @Override
             public void registerGoals(net.minecraft.world.entity.Mob mob, me.javavirtualenv.ecology.EcologyComponent component, me.javavirtualenv.ecology.EcologyProfile profile) {
                 double baseHealth = 11.25;
@@ -178,7 +183,12 @@ public abstract class MuleMixin {
      */
     @Unique
     private EcologyHandle createMovementHandle() {
-        return new CodeBasedHandle("movement") {
+        return new CodeBasedHandle() {
+            @Override
+            public String id() {
+                return "movement";
+            }
+
             @Override
             public void registerGoals(net.minecraft.world.entity.Mob mob, me.javavirtualenv.ecology.EcologyComponent component, me.javavirtualenv.ecology.EcologyProfile profile) {
                 double walkSpeed = 0.2;

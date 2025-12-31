@@ -8,6 +8,7 @@ import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import me.javavirtualenv.behavior.aquatic.*;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -68,7 +69,7 @@ public abstract class GlowSquidMixin {
             productionGoal = new SquidInkProductionGoal(glowSquid);
 
             int goalPriority = 4;
-            glowSquid.goalSelector.addGoal(goalPriority, productionGoal);
+            ((MobAccessor) glowSquid).betterEcology$getGoalSelector().addGoal(goalPriority, productionGoal);
         }
     }
 }

@@ -234,7 +234,8 @@ public class PigFeedingGoal extends MoveToBlockGoal {
         return false;
     }
 
-    private boolean isReachedTarget() {
+    @Override
+    protected boolean isReachedTarget() {
         if (this.blockPos == null) {
             return false;
         }
@@ -330,5 +331,9 @@ public class PigFeedingGoal extends MoveToBlockGoal {
             return 15;
         }
         return 10;
+    }
+
+    private boolean isTargetBlock(Level level, BlockPos pos) {
+        return isValidTarget(level, pos);
     }
 }

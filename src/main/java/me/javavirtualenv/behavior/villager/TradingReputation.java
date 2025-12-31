@@ -1,7 +1,7 @@
 package me.javavirtualenv.behavior.villager;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
@@ -15,14 +15,14 @@ import java.util.UUID;
  * Includes supply/demand system and special deals.
  */
 public class TradingReputation {
-    private final Villager villager;
+    private final Mob trader;
     private final Map<UUID, PlayerReputation> playerReputations = new HashMap<>();
     private final Map<Item, SupplyDemandData> supplyDemand = new HashMap<>();
     private long lastSupplyUpdate = 0;
     private static final long SUPPLY_UPDATE_INTERVAL = 12000;
 
-    public TradingReputation(Villager villager) {
-        this.villager = villager;
+    public TradingReputation(Mob trader) {
+        this.trader = trader;
         initializeSupplyDemand();
     }
 
@@ -49,7 +49,7 @@ public class TradingReputation {
      * Updates supply/demand data periodically.
      */
     public void updateSupplyDemand() {
-        long currentTime = villager.level().getGameTime();
+        long currentTime = trader.level().getGameTime();
         if (currentTime - lastSupplyUpdate < SUPPLY_UPDATE_INTERVAL) {
             return;
         }
@@ -73,7 +73,7 @@ public class TradingReputation {
             reputation.reputation += Math.min(5, emeraldValue / 10);
             reputation.totalEmeraldsTraded += emeraldValue;
         }
-        reputation.lastTradeTime = villager.level().getGameTime();
+        reputation.lastTradeTime = trader.level().getGameTime();
 
         // Update supply/demand for traded item
         if (tradedItem != null) {
@@ -165,7 +165,7 @@ public class TradingReputation {
             baseChance = 0.02;
         }
 
-        return villager.getRandom().nextDouble() < baseChance;
+        return trader.getRandom().nextDouble() < baseChance;
     }
 
     /**

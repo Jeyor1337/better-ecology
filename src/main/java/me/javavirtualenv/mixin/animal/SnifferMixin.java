@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -98,7 +99,7 @@ public abstract class SnifferMixin extends AnimalMixin {
             diggingGoal = new SnifferDiggingGoal(sniffer);
 
             int goalPriority = 5;
-            sniffer.goalSelector.addGoal(goalPriority, diggingGoal);
+            ((MobAccessor) sniffer).betterEcology$getGoalSelector().addGoal(goalPriority, diggingGoal);
         }
     }
 
@@ -112,7 +113,7 @@ public abstract class SnifferMixin extends AnimalMixin {
             sniffingGoal = new SniffingGoal(sniffer);
 
             int goalPriority = 4;
-            sniffer.goalSelector.addGoal(goalPriority, sniffingGoal);
+            ((MobAccessor) sniffer).betterEcology$getGoalSelector().addGoal(goalPriority, sniffingGoal);
         }
     }
 
@@ -126,7 +127,7 @@ public abstract class SnifferMixin extends AnimalMixin {
             socialGoal = new SnifferSocialGoal(sniffer);
 
             int goalPriority = 6;
-            sniffer.goalSelector.addGoal(goalPriority, socialGoal);
+            ((MobAccessor) sniffer).betterEcology$getGoalSelector().addGoal(goalPriority, socialGoal);
         }
     }
 }

@@ -85,7 +85,7 @@ public abstract class ArmadilloMixin extends Mob {
      */
     @ModifyArg(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)
     private float betterEcology$modifyHurtDamage(float originalAmount, DamageSource source) {
-        EcologyComponent component = getEcologyComponent();
+        EcologyComponent component = me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent((Mob)(Object)this);
         if (component != null) {
             ArmadilloComponent armadilloComponent = new ArmadilloComponent(component.getHandleTag("armadillo"));
 
@@ -289,6 +289,7 @@ public abstract class ArmadilloMixin extends Mob {
      */
     private static final class ArmadilloEnergyHandle extends CodeBasedHandle {
         private static final String NBT_ENERGY = "energy";
+        private static final String NBT_IS_EXHAUSTED = "isExhausted";
 
         private static final int MAX_VALUE = 100;
         private static final double RECOVERY_RATE = 0.7;
@@ -327,7 +328,13 @@ public abstract class ArmadilloMixin extends Mob {
             setEnergy(tag, newEnergy);
 
             boolean isExhausted = newEnergy < EXHAUSTION_THRESHOLD;
-            state.setIsExhausted(isExhausted);
+            tag.putBoolean(NBT_IS_EXHAUSTED, isExhausted);
+
+            // Exhausted animals can't sprint/hunt effectively
+            if (isExhausted && (state.isHunting() || state.isFleeing())) {
+                state.setIsHunting(false);
+                state.setIsFleeing(false);
+            }
         }
 
         private int getCurrentEnergy(CompoundTag tag) {
@@ -461,7 +468,7 @@ public abstract class ArmadilloMixin extends Mob {
 
             // Set foraging state based on time
             if (isActiveTime) {
-                component.state().setIsForaging(true);
+                // Foraging is handled by the temporal handle
             }
         }
     }

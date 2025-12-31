@@ -2,6 +2,7 @@ package me.javavirtualenv.mixin.villager;
 
 import me.javavirtualenv.behavior.villager.*;
 import me.javavirtualenv.ecology.api.EcologyAccess;
+import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
@@ -82,26 +83,29 @@ public class WanderingTraderMixin implements EcologyAccess {
 
     @Unique
     private void initializeWanderingTraderGoals(WanderingTrader trader) {
-        GoalSelector goalSelector = trader.goalSelector;
+        GoalSelector goalSelector = ((MobAccessor) trader).betterEcology$getGoalSelector();
 
         // Register village seeking goal
-        goalSelector.addGoal(3, new SeekVillageGoal(trader));
+        // TODO: Implement SeekVillageGoal class
+        // goalSelector.addGoal(3, new SeekVillageGoal(trader));
 
         // Register socialization goal with villagers
-        goalSelector.addGoal(5, new SocializeWithVillagersGoal(trader, betterEcology$gossipSystem));
+        // TODO: Implement SocializeWithVillagersGoal class
+        // goalSelector.addGoal(5, new SocializeWithVillagersGoal(trader, betterEcology$gossipSystem));
 
         // Register preferential trading goal
-        goalSelector.addGoal(2, new PreferentialTradingGoal(trader, betterEcology$tradingReputation));
+        // TODO: Implement PreferentialTradingGoal class
+        // goalSelector.addGoal(2, new PreferentialTradingGoal(trader, betterEcology$tradingReputation));
     }
 
-    // Getter methods for behavior systems
+    // Getter methods for behavior systems - override interface defaults
 
-    @Unique
+    @Override
     public TradingReputation betterEcology$getTradingReputation() {
         return betterEcology$tradingReputation;
     }
 
-    @Unique
+    @Override
     public GossipSystem betterEcology$getGossipSystem() {
         return betterEcology$gossipSystem;
     }
@@ -114,19 +118,20 @@ public class WanderingTraderMixin implements EcologyAccess {
 
     /**
      * Custom accessor for trader-specific behavior systems.
+     * These accessors use the EcologyAccess interface to safely retrieve behavior systems.
      */
     @Unique
     public static TradingReputation getTradingReputation(WanderingTrader trader) {
-        if (trader instanceof WanderingTraderMixin mixin) {
-            return mixin.betterEcology$tradingReputation;
+        if (trader instanceof EcologyAccess access) {
+            return access.betterEcology$getTradingReputation();
         }
         return null;
     }
 
     @Unique
     public static GossipSystem getGossipSystem(WanderingTrader trader) {
-        if (trader instanceof WanderingTraderMixin mixin) {
-            return mixin.betterEcology$gossipSystem;
+        if (trader instanceof EcologyAccess access) {
+            return access.betterEcology$getGossipSystem();
         }
         return null;
     }

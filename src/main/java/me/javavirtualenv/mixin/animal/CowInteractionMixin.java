@@ -44,9 +44,8 @@ public abstract class CowInteractionMixin {
             return;
         }
 
-        if (!(this instanceof Cow cow)) {
-            return;
-        }
+        // Cast to Cow for both Cow and MushroomCow
+        Cow cow = (Cow) (Object) this;
 
         ItemStack heldItem = player.getItemInHand(hand);
 
@@ -124,7 +123,7 @@ public abstract class CowInteractionMixin {
 
         // Handle flower feeding
         MooshroomMilkProductionHandle mooshroomHandle = findMooshroomMilkHandle(component);
-        if (mooshroomHandle != null && mooshroomHandle.onFlowerFed(mooshroom, heldItem)) {
+        if (mooshroomHandle != null && mooshroomHandle.onFlowerFed(mooshroom, component, heldItem)) {
             // Consume flower
             if (!player.getAbilities().instabuild) {
                 heldItem.shrink(1);

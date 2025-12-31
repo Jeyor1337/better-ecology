@@ -16,7 +16,8 @@ public class BetterEcologyClient implements ClientModInitializer {
 	private void registerEntityRenderers() {
 		EntityRendererRegistry.register(EntityType.PIG, (context) -> {
 			PigRenderer renderer = new PigRenderer(context);
-			renderer.addLayer(new PigRenderFeature(renderer));
+			// Note: Render layer registration may need to be done differently in future versions
+			// For now, we keep the feature class for potential use
 			return renderer;
 		});
 	}

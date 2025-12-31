@@ -667,7 +667,7 @@ public abstract class DonkeyMixin extends AnimalMixin {
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(priority,
                 new me.javavirtualenv.ecology.ai.EcologyBreedGoal(animal, 1.0, MIN_AGE, MIN_HEALTH,
-                    (int) MIN_CONDITION, COOLDOWN));
+                    (int) MIN_CONDITION, COOLDOWN, null));
         }
     }
 
@@ -750,7 +750,6 @@ public abstract class DonkeyMixin extends AnimalMixin {
             return "spatial";
         }
 
-        @Override
         public void onAttach(Mob mob, EcologyComponent component) {
             // Home range: 96 radius, no home point
             // Can live in all biomes, prefers plains, savanna, meadow
@@ -789,7 +788,6 @@ public abstract class DonkeyMixin extends AnimalMixin {
             return "spawn";
         }
 
-        @Override
         public void onAttach(Mob mob, EcologyComponent component) {
             // Spawning configured in data pack spawns
             // Weight: 8, group size: 1-3
