@@ -1,6 +1,7 @@
 package me.javavirtualenv.mixin.block;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.NoteBlock;
@@ -40,13 +41,11 @@ public class NoteBlockMixin {
         );
 
         for (var parrot : nearbyParrots) {
-            EcologyComponent component = EcologyComponent.getOrCreate(parrot);
-            if (component != null) {
-                // Store note block play time in the parrot's component
-                var noteData = component.getHandleTag("note_blocks");
-                noteData.putLong(pos.toString(), level.getGameTime());
-                component.setHandleTag("note_blocks", noteData);
-            }
+            EcologyComponent component = ((EcologyAccess) parrot).betterEcology$getEcologyComponent();
+            // Store note block play time in the parrot's component
+            var noteData = component.getHandleTag("note_blocks");
+            noteData.putLong(pos.toString(), level.getGameTime());
+            component.setHandleTag("note_blocks", noteData);
         }
     }
 }

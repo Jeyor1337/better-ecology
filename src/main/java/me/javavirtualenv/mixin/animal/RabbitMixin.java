@@ -8,6 +8,7 @@ import me.javavirtualenv.behavior.rabbit.RabbitThumpConfig;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -65,18 +66,16 @@ public abstract class RabbitMixin extends AnimalMixin {
         }
 
         // Add rabbit-specific goals
-        EcologyComponent component = EcologyComponent.getOrCreate(rabbit);
-        if (component != null) {
-            MobAccessor accessor = (MobAccessor) rabbit;
+        EcologyComponent component = ((EcologyAccess) rabbit).betterEcology$getEcologyComponent();
+        MobAccessor accessor = (MobAccessor) rabbit;
 
-            // Primary behavior goal - highest priority for escape behaviors
-            RabbitBehaviorGoal rabbitGoal = new RabbitBehaviorGoal(rabbit, component);
-            accessor.betterEcology$getGoalSelector().addGoal(1, rabbitGoal);
+        // Primary behavior goal - highest priority for escape behaviors
+        RabbitBehaviorGoal rabbitGoal = new RabbitBehaviorGoal(rabbit, component);
+        accessor.betterEcology$getGoalSelector().addGoal(1, rabbitGoal);
 
-            // Food caching goal - lower priority, runs when safe
-            RabbitBurrowCachingGoal cachingGoal = new RabbitBurrowCachingGoal(rabbit, component);
-            accessor.betterEcology$getGoalSelector().addGoal(6, cachingGoal);
-        }
+        // Food caching goal - lower priority, runs when safe
+        RabbitBurrowCachingGoal cachingGoal = new RabbitBurrowCachingGoal(rabbit, component);
+        accessor.betterEcology$getGoalSelector().addGoal(6, cachingGoal);
     }
 
     /**

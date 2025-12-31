@@ -32,7 +32,7 @@ public class RefugeAwareTargetGoal extends NearestAttackableTargetGoal<LivingEnt
 
     public RefugeAwareTargetGoal(Mob mob, Class<LivingEntity> targetClass,
                                   int randomInterval, boolean mustSee, boolean mustReach) {
-        super(mob, targetClass, randomInterval, mustSee, mustReach);
+        super(mob, targetClass, randomInterval, mustSee, mustReach, null);
         this.predator = mob;
         this.originalPredicate = null;
     }

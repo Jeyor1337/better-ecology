@@ -140,16 +140,19 @@ public class SniffingBehavior extends SnifferBehavior {
             return;
         }
 
+        net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) context.getLevel();
         Vec3d pos = context.getPosition();
-        double offsetX = (context.getLevel().random.nextDouble() - 0.5) * 0.5;
-        double offsetZ = (context.getLevel().random.nextDouble() - 0.5) * 0.5;
+        double offsetX = (serverLevel.random.nextDouble() - 0.5) * 0.5;
+        double offsetZ = (serverLevel.random.nextDouble() - 0.5) * 0.5;
 
-        context.getLevel().addParticle(
-            ParticleTypes.SNIFFER_SNIFFING,
+        serverLevel.sendParticles(
+            ParticleTypes.HAPPY_VILLAGER,
             pos.x + offsetX,
             pos.y + 1.2,
             pos.z + offsetZ,
-            0.0, 0.1, 0.0
+            1,
+            0.0, 0.1, 0.0,
+            0.0
         );
     }
 
@@ -174,10 +177,12 @@ public class SniffingBehavior extends SnifferBehavior {
             sniffer.getBoundingBox().inflate(32.0)
         ).forEach(otherSniffer -> {
             if (otherSniffer != sniffer && otherSniffer.isAlive()) {
-                otherSniffer.getBrain().setMemory(
-                    net.minecraft.world.entity.ai.memory.MemoryModuleType.NEAREST_VISIBLE_DESIRED_BLOCK,
-                    net.minecraft.core.GlobalPos.of(context.getLevel().dimension(), discovery)
+                Vec3d discoveryPos = new Vec3d(
+                    discovery.getX() + 0.5,
+                    discovery.getY(),
+                    discovery.getZ() + 0.5
                 );
+                detectedScents.add(new ScentMarker(discoveryPos, discovery, 0));
             }
         });
     }

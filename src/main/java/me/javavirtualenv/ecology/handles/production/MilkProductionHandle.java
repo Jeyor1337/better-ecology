@@ -29,8 +29,8 @@ import net.minecraft.world.item.Items;
  * - Vanilla-friendly - works like other animal resources (wool, eggs)
  */
 public class MilkProductionHandle implements EcologyHandle {
-    private static final String NBT_MILK_AMOUNT = "milkAmount";
-    private static final String NBT_LAST_MILKED = "lastMilkedTick";
+    protected static final String NBT_MILK_AMOUNT = "milkAmount";
+    protected static final String NBT_LAST_MILKED = "lastMilkedTick";
     private static final String NBT_READY_PARTICLE_TICK = "readyParticleTick";
 
     // Configuration - readable and simple
@@ -128,7 +128,7 @@ public class MilkProductionHandle implements EcologyHandle {
     /**
      * Get the sound effect for milking this animal.
      */
-    protected SoundEvents getMilkingSound(Mob mob) {
+    protected net.minecraft.sounds.SoundEvent getMilkingSound(Mob mob) {
         return mob instanceof MushroomCow
                 ? SoundEvents.MOOSHROOM_MILK
                 : SoundEvents.COW_MILK;

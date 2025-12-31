@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.wolf;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import net.minecraft.world.entity.Entity;
@@ -50,8 +50,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Mob entity = context.getEntity();
-        if (!(entity instanceof Wolf wolf)) {
+        if (!(context.getSelf() instanceof Wolf wolf)) {
             return new Vec3d();
         }
 
@@ -88,7 +87,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         // Find highest ranking pack member
         Wolf leader = findLeader(wolf, packMembers);
 
-        if (leader == null || leader.getId().equals(wolf.getId())) {
+        if (leader == null || leader.getUUID().equals(wolf.getUUID())) {
             // Alpha or no leader - maintain pack cohesion
             return calculatePackCohesion(wolf, packMembers, context);
         }
@@ -113,7 +112,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         Vec3d selfPos = context.getPosition();
 
         for (Wolf member : packMembers) {
-            if (member.getId().equals(self.getId())) {
+            if (member.getUUID().equals(self.getUUID())) {
                 continue;
             }
 
@@ -140,7 +139,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         toCenter.mult(followStrength);
 
         Vec3d steer = Vec3d.sub(toCenter, context.getVelocity());
-        steer.limit(maxForce());
+        steer.limit(context.getMaxForce());
 
         return steer;
     }
@@ -164,7 +163,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
             away.mult(followStrength * 0.5);
 
             Vec3d steer = Vec3d.sub(away, context.getVelocity());
-            steer.limit(maxForce() * 0.5);
+            steer.limit(context.getMaxForce() * 0.5);
 
             return steer;
         }
@@ -176,7 +175,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
             toLeader.mult(followStrength);
 
             Vec3d steer = Vec3d.sub(toLeader, context.getVelocity());
-            steer.limit(maxForce());
+            steer.limit(context.getMaxForce());
 
             return steer;
         }
@@ -211,7 +210,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         strengths.add(new WolfStrength(wolf, selfStrength));
 
         for (Wolf member : packMembers) {
-            if (member.getId().equals(wolf.getId())) {
+            if (member.getUUID().equals(wolf.getUUID())) {
                 continue;
             }
             double strength = calculateStrength(member);
@@ -224,7 +223,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         // Determine rank based on position in sorted list
         int selfIndex = 0;
         for (int i = 0; i < strengths.size(); i++) {
-            if (strengths.get(i).wolf().getId().equals(wolf.getId())) {
+            if (strengths.get(i).wolf().getUUID().equals(wolf.getUUID())) {
                 selfIndex = i;
                 break;
             }
@@ -233,7 +232,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         // Map index to rank
         if (selfIndex == 0) {
             rank = HierarchyRank.ALPHA;
-            alphaId = wolf.getId();
+            alphaId = wolf.getUUID();
         } else if (selfIndex == 1) {
             rank = HierarchyRank.BETA;
         } else if (selfIndex < strengths.size() * 0.5) {
@@ -244,7 +243,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
 
         // Store alpha ID
         if (!strengths.isEmpty()) {
-            alphaId = strengths.get(0).wolf().getId();
+            alphaId = strengths.get(0).wolf().getUUID();
         }
     }
 
@@ -277,7 +276,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         double maxStrength = calculateStrength(self);
 
         for (Wolf member : packMembers) {
-            if (member.getId().equals(self.getId())) {
+            if (member.getUUID().equals(self.getUUID())) {
                 continue;
             }
 
@@ -297,7 +296,7 @@ public class PackHierarchyBehavior extends SteeringBehavior {
     private List<Wolf> getPackMembers(Wolf wolf, BehaviorContext context) {
         List<Wolf> pack = new ArrayList<>();
 
-        for (Entity entity : context.getNeighbors()) {
+        for (Entity entity : context.getNearbyEntities()) {
             if (!(entity instanceof Wolf otherWolf)) {
                 continue;
             }
@@ -320,21 +319,12 @@ public class PackHierarchyBehavior extends SteeringBehavior {
     }
 
     /**
-     * Gets or generates pack ID from NBT.
+     * Gets or generates pack ID.
      */
     private UUID getPackId(Wolf wolf) {
-        if (packId != null) {
-            return packId;
+        if (packId == null) {
+            packId = wolf.getUUID();
         }
-
-        var persistentData = wolf.getPersistentData();
-        if (persistentData.contains("WolfPackId")) {
-            packId = persistentData.getUUID("WolfPackId");
-            return packId;
-        }
-
-        packId = UUID.randomUUID();
-        persistentData.putUUID("WolfPackId", packId);
         return packId;
     }
 
@@ -369,9 +359,6 @@ public class PackHierarchyBehavior extends SteeringBehavior {
         return packId;
     }
 
-    public void setPackId(UUID packId) {
-        this.packId = packId;
-    }
 
     /**
      * Hierarchy ranks in wolf pack.

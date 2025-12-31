@@ -287,7 +287,7 @@ public class WoolGrowthGoal extends Goal {
                 for (int z = -searchRadius; z <= searchRadius; z++) {
                     BlockPos pos = mobPos.offset(x, y, z);
                     if (level.getBlockState(pos).is(Blocks.GRASS_BLOCK)) {
-                        double distance = mob.distSqr(pos);
+                        double distance = mob.blockPosition().distSqr(pos);
                         if (distance < nearestDistance &&
                             distance < this.searchRadius * this.searchRadius) {
                             nearestDistance = distance;
@@ -303,7 +303,12 @@ public class WoolGrowthGoal extends Goal {
 
     private BlockPos findShelter() {
         // Look for nearby sheep (huddle together for warmth)
-        return SpatialIndex.getNearestSameTypePosition(mob, 8);
+        var nearbySheep = SpatialIndex.getNearbySameType(mob, 8);
+        if (!nearbySheep.isEmpty()) {
+            // Return position of first nearby sheep
+            return nearbySheep.get(0).blockPosition();
+        }
+        return null;
     }
 
     private BlockPos findShade() {
@@ -322,8 +327,8 @@ public class WoolGrowthGoal extends Goal {
                 if (level.getBlockState(abovePos).isAir() &&
                     (level.getBlockState(abovePos.above()).is(Blocks.OAK_LOG) ||
                      level.getBlockState(abovePos.above()).is(Blocks.OAK_LEAVES) ||
-                     level.getBrightness(abovePos) < 10)) {
-                    double distance = mob.distSqr(pos);
+                     level.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, abovePos) < 10)) {
+                    double distance = mob.blockPosition().distSqr(pos);
                     if (distance < nearestDistance &&
                         distance < this.searchRadius * this.searchRadius) {
                         nearestDistance = distance;
@@ -367,8 +372,8 @@ public class WoolGrowthGoal extends Goal {
         level.destroyBlock(targetGrassPos, false);
 
         level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
-                       SoundEvents.SHEEP_EAT,
-                       SoundSource.NEUTRAL, 1.0F, 1.0F);
+                       SoundEvents.SHEEP_AMBIENT,
+                       SoundSource.NEUTRAL, 1.0F, 0.8F);
 
         // Spawn particles
         if (level instanceof ServerLevel serverLevel) {
@@ -378,7 +383,10 @@ public class WoolGrowthGoal extends Goal {
                 double offsetZ = serverLevel.getRandom().nextDouble() * 0.5 - 0.25;
 
                 serverLevel.sendParticles(
-                    net.minecraft.core.particles.BlockParticle.BLOCK,
+                    new net.minecraft.core.particles.BlockParticleOption(
+                        net.minecraft.core.particles.ParticleTypes.BLOCK,
+                        level.getBlockState(targetGrassPos)
+                    ),
                     targetGrassPos.getX() + 0.5 + offsetX,
                     targetGrassPos.getY() + offsetY,
                     targetGrassPos.getZ() + 0.5 + offsetZ,

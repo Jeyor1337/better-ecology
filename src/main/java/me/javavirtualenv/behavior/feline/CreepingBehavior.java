@@ -2,7 +2,7 @@ package me.javavirtualenv.behavior.feline;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Mob;
 
 /**

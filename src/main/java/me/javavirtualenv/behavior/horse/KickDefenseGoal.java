@@ -55,10 +55,8 @@ public class KickDefenseGoal extends Goal {
             return false;
         }
 
-        // Cannot kick while rearing
-        if (horse.isStepping()) {
-            return false;
-        }
+        // Cannot kick while rearing (horses don't have isStepping in 1.21.1)
+        // Removed check as this method doesn't exist in current version
 
         // Find threats from behind
         kickTarget = findRearThreat();
@@ -221,7 +219,7 @@ public class KickDefenseGoal extends Goal {
                 double x = horse.getX() + (level.random.nextDouble() - 0.5) * 0.5;
                 double y = horse.getY() + horse.getBbHeight() * 0.5;
                 double z = horse.getZ() + (level.random.nextDouble() - 0.5) * 0.5;
-                level.sendParticles(
+                ((net.minecraft.server.level.ServerLevel) level).sendParticles(
                     net.minecraft.core.particles.ParticleTypes.CLOUD,
                     x, y, z,
                     1, 0, 0, 0, 0.02

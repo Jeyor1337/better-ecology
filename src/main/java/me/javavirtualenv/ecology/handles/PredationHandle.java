@@ -145,7 +145,8 @@ public final class PredationHandle implements EcologyHandle {
 
 	private void registerHuntClass(Mob mob, MobAccessor accessor, Class<? extends LivingEntity> entityClass, PredationCache cache) {
 		accessor.betterEcology$getTargetSelector().addGoal(HUNT_PRIORITY,
-			new RefugeAwareTargetGoal(mob, entityClass, false));
+			new RefugeAwareTargetGoal(mob, LivingEntity.class, 0, false, false,
+				entity -> entityClass.isInstance(entity)));
 	}
 
 	private void registerHuntTag(Mob mob, MobAccessor accessor, TagKey<EntityType<?>> tagId, PredationCache cache) {

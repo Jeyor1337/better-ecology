@@ -11,6 +11,10 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
@@ -102,8 +106,8 @@ public class ThumpBehavior {
         }
 
         // Check distance to threat
-        Vec3d position = context.getPosition();
-        Vec3d threatPos = new Vec3d(threat.getX(), threat.getY(), threat.getZ());
+        me.javavirtualenv.behavior.core.Vec3d position = context.getPosition();
+        me.javavirtualenv.behavior.core.Vec3d threatPos = new me.javavirtualenv.behavior.core.Vec3d(threat.getX(), threat.getY(), threat.getZ());
         double distance = position.distanceTo(threatPos);
 
         // Only thump if threat is within detection range but not too close
@@ -124,7 +128,7 @@ public class ThumpBehavior {
      */
     private void performThump(BehaviorContext context, LivingEntity threat) {
         Mob entity = context.getEntity();
-        Vec3d position = context.getPosition();
+        me.javavirtualenv.behavior.core.Vec3d position = context.getPosition();
 
         // Play thump sound
         playThumpSound(context);
@@ -174,11 +178,16 @@ public class ThumpBehavior {
 
             // Spawn dust particles at feet
             BlockPos pos = entity.blockPosition();
+            BlockState groundState = entity.level().getBlockState(pos.below());
+            if (groundState.isAir()) {
+                groundState = Blocks.DIRT.defaultBlockState();
+            }
+
             for (int i = 0; i < 5; i++) {
                 double offsetX = (entity.getRandom().nextDouble() - 0.5) * 0.5;
                 double offsetZ = (entity.getRandom().nextDouble() - 0.5) * 0.5;
                 serverLevel.sendParticles(
-                    net.minecraft.core.particles.ParticleTypes.BLOCK,
+                    new BlockParticleOption(ParticleTypes.BLOCK, groundState),
                     entity.getX() + offsetX,
                     entity.getY(),
                     entity.getZ() + offsetZ,
@@ -195,7 +204,7 @@ public class ThumpBehavior {
      */
     private void alertNearbyRabbits(BehaviorContext context, LivingEntity threat) {
         Mob entity = context.getEntity();
-        Vec3d position = context.getPosition();
+        me.javavirtualenv.behavior.core.Vec3d position = context.getPosition();
         double alertRange = config.getThumpAlertRange();
 
         // Find nearby rabbits
@@ -213,7 +222,7 @@ public class ThumpBehavior {
             }
 
             // Check if rabbit already knows about threat
-            Vec3d rabbitPos = new Vec3d(rabbit.getX(), rabbit.getY(), rabbit.getZ());
+            me.javavirtualenv.behavior.core.Vec3d rabbitPos = new me.javavirtualenv.behavior.core.Vec3d(rabbit.getX(), rabbit.getY(), rabbit.getZ());
             double distance = rabbitPos.distanceTo(position);
 
             if (distance > alertRange) {
@@ -315,27 +324,5 @@ public class ThumpBehavior {
         lastThreat = null;
         totalThumps = 0;
         rabbitsAlerted = 0;
-    }
-
-    // Helper class for Vec3d compatibility
-    private static class Vec3d {
-        public final double x, y, z;
-
-        public Vec3d(double x, double y, double z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        public static Vec3d fromMinecraftVec3(Vec3 vec) {
-            return new Vec3d(vec.x, vec.y, vec.z);
-        }
-
-        public double distanceTo(Vec3d other) {
-            double dx = this.x - other.x;
-            double dy = this.y - other.y;
-            double dz = this.z - other.z;
-            return Math.sqrt(dx * dx + dy * dy + dz * dz);
-        }
     }
 }

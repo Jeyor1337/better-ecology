@@ -10,6 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.predicate.BlockStatePredicate;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -186,9 +187,7 @@ public class EnhancedFarming {
         }
 
         double distance = villager.position().distanceTo(
-            currentFarmTarget.getX() + 0.5,
-            currentFarmTarget.getY(),
-            currentFarmTarget.getZ() + 0.5
+            new Vec3(currentFarmTarget.getX() + 0.5, currentFarmTarget.getY(), currentFarmTarget.getZ() + 0.5)
         );
 
         if (distance < 2.5) {
@@ -273,26 +272,29 @@ public class EnhancedFarming {
      */
     private void shareFoodWithVillagers() {
         CompoundTag tag = getStorageTag();
-        int foodStored = tag.getInt("FoodStored");
+        int initialFoodStored = tag.getInt("FoodStored");
 
-        if (foodStored <= 5) {
+        if (initialFoodStored <= 5) {
             currentState = FarmingState.IDLE;
             return;
         }
 
         // Find hungry villagers nearby
+        final int[] foodRemaining = {initialFoodStored};
         villager.level().getEntitiesOfClass(
             Villager.class,
             villager.getBoundingBox().inflate(16.0)
         ).forEach(other -> {
-            if (isHungry(other) && foodStored > 0) {
+            if (isHungry(other) && foodRemaining[0] > 0) {
                 // Share food
-                tag.putInt("FoodStored", foodStored - 1);
-                foodStored--;
+                foodRemaining[0]--;
 
                 // Give food to villager (this would integrate with hunger system)
             }
         });
+
+        // Update the stored food count after sharing
+        tag.putInt("FoodStored", foodRemaining[0]);
 
         currentState = FarmingState.IDLE;
     }
@@ -436,9 +438,7 @@ public class EnhancedFarming {
         }
 
         double distance = villager.position().distanceTo(
-            expansionTarget.getX() + 0.5,
-            expansionTarget.getY(),
-            expansionTarget.getZ() + 0.5
+            new Vec3(expansionTarget.getX() + 0.5, expansionTarget.getY(), expansionTarget.getZ() + 0.5)
         );
 
         if (distance < 2.5) {
@@ -483,9 +483,13 @@ public class EnhancedFarming {
             return;
         }
 
+        BlockState dirtState = Blocks.DIRT.defaultBlockState();
         for (int i = 0; i < 3; i++) {
             villager.level().addParticle(
-                net.minecraft.core.particles.ParticleTypes.BLOCK,
+                new net.minecraft.core.particles.BlockParticleOption(
+                    net.minecraft.core.particles.ParticleTypes.BLOCK,
+                    dirtState
+                ),
                 pos.getX() + 0.5,
                 pos.getY() + 1.0,
                 pos.getZ() + 0.5,

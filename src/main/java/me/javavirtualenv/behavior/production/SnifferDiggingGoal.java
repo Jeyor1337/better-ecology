@@ -1,6 +1,7 @@
 package me.javavirtualenv.behavior.production;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.animal.sniffer.Sniffer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Sniffer-specific digging goal for ancient seeds.
@@ -78,11 +80,11 @@ public class SnifferDiggingGoal extends ResourceGatheringGoal {
             snifferPos.getZ() + (int) searchRadius
         )) {
             if (isValidDirtBlock(pos)) {
-                double distance = sniffer.position().distanceTo(
+                double distance = sniffer.position().distanceTo(new Vec3(
                     pos.getX() + 0.5,
                     pos.getY(),
                     pos.getZ() + 0.5
-                );
+                ));
 
                 if (distance < nearestDistance) {
                     nearest = pos;
@@ -144,7 +146,7 @@ public class SnifferDiggingGoal extends ResourceGatheringGoal {
     protected void onResourceDelivered() {
         gatheringTicks = 0;
 
-        EcologyComponent component = EcologyComponent.getFromEntity(sniffer);
+        EcologyComponent component = ((EcologyAccess) sniffer).betterEcology$getEcologyComponent();
         if (component != null) {
             CompoundTag productionData = component.getHandleTag("production");
 

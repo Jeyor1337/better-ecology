@@ -1,6 +1,7 @@
 package me.javavirtualenv.behavior.production;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -113,7 +114,7 @@ public class AxolotlProductionGoal extends ResourceGatheringGoal {
     protected void onResourceDelivered() {
         gatheringTicks = 0;
 
-        EcologyComponent component = EcologyComponent.getFromEntity(axolotl);
+        EcologyComponent component = ((EcologyAccess) axolotl).betterEcology$getEcologyComponent();
         if (component != null) {
             CompoundTag productionData = component.getHandleTag("production");
 

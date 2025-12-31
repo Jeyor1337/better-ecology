@@ -136,12 +136,10 @@ public class MimicBehavior {
         // Play the mimic sound
         parrot.level().playSound(
             null,
-            parrot.getX(),
-            parrot.getY(),
-            parrot.getZ(),
+            net.minecraft.core.BlockPos.containing(parrot.getX(), parrot.getY(), parrot.getZ()),
             sound,
             parrot.getSoundSource(),
-            config.mimicVolume,
+            (float) config.mimicVolume,
             config.mimicPitch
         );
 
@@ -216,7 +214,7 @@ public class MimicBehavior {
         ZOMBIE(SoundEvents.PARROT_IMITATE_ZOMBIE, null),
         SKELETON(SoundEvents.PARROT_IMITATE_SKELETON, null),
         SPIDER(SoundEvents.PARROT_IMITATE_SPIDER, null),
-        ENDERMAN(SoundEvents.PARROT_IMITATE_ENDERMAN, null),
+        ENDERMAN(SoundEvents.PARROT_IMITATE_ENDER_DRAGON, null),
         WITCH(SoundEvents.PARROT_IMITATE_WITCH, null),
         WITHER_SKELETON(SoundEvents.PARROT_IMITATE_WITHER_SKELETON, null),
         RAVAGER(SoundEvents.PARROT_IMITATE_RAVAGER, null),

@@ -129,7 +129,7 @@ public class SocialGroomingGoal extends Goal {
 
     private AbstractHorse findGroomingPartner() {
         Level level = horse.level();
-        List<AbstractHorse> nearbyHorses = level.getNearbyEntitiesOfClass(
+        List<AbstractHorse> nearbyHorses = level.getEntitiesOfClass(
             AbstractHorse.class,
             horse.getBoundingBox().inflate(config.groomingSearchRadius)
         );
@@ -193,10 +193,11 @@ public class SocialGroomingGoal extends Goal {
     private net.minecraft.sounds.SoundEvent getGroomingSound() {
         net.minecraft.world.entity.EntityType<?> type = horse.getType();
 
+        // Note: DONKEY_BREATHE doesn't exist in 1.21.1, using DONKEY_AMBIENT instead
         if (type == net.minecraft.world.entity.EntityType.DONKEY) {
-            return net.minecraft.sounds.SoundEvents.DONKEY_BREATHE;
+            return net.minecraft.sounds.SoundEvents.DONKEY_AMBIENT;
         } else if (type == net.minecraft.world.entity.EntityType.MULE) {
-            return net.minecraft.sounds.SoundEvents.DONKEY_BREATHE;
+            return net.minecraft.sounds.SoundEvents.DONKEY_AMBIENT;
         } else {
             return net.minecraft.sounds.SoundEvents.HORSE_BREATHE;
         }
@@ -219,7 +220,7 @@ public class SocialGroomingGoal extends Goal {
             double offsetY = (level.getRandom().nextDouble() - 0.5) * 0.3;
             double offsetZ = (level.getRandom().nextDouble() - 0.5) * 0.3;
 
-            level.sendParticles(
+            ((net.minecraft.server.level.ServerLevel) level).sendParticles(
                 net.minecraft.core.particles.ParticleTypes.HEART,
                 between.x + offsetX,
                 between.y + offsetY,

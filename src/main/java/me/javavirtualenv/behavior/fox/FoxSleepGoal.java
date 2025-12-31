@@ -1,5 +1,6 @@
 package me.javavirtualenv.behavior.fox;
 
+import me.javavirtualenv.mixin.animal.FoxAccessor;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
@@ -53,7 +54,7 @@ public class FoxSleepGoal extends Goal {
     public void start() {
         // Set vanilla fox to sleeping
         if (fox instanceof net.minecraft.world.entity.animal.Fox minecraftFox) {
-            minecraftFox.setSleeping(true);
+            ((FoxAccessor) minecraftFox).betterEcology$setSleeping(true);
         }
 
         sleepingBehavior.setSleeping(true);
@@ -63,7 +64,7 @@ public class FoxSleepGoal extends Goal {
     public void stop() {
         // Wake up vanilla fox
         if (fox instanceof net.minecraft.world.entity.animal.Fox minecraftFox) {
-            minecraftFox.setSleeping(false);
+            ((FoxAccessor) minecraftFox).betterEcology$setSleeping(false);
         }
 
         sleepingBehavior.setSleeping(false);

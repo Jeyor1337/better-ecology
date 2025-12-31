@@ -258,13 +258,13 @@ public class ArmadilloBurrowSystem {
      */
     private void loadBurrows() {
         if (level instanceof ServerLevel serverLevel) {
-            CompoundTag data = serverLevel.getDataStorage()
-                .get(BurrowData::load, BURROW_DATA_KEY);
+            BurrowData data = serverLevel.getDataStorage()
+                .computeIfAbsent(BurrowData.factory(), BURROW_DATA_KEY);
 
-            if (data != null) {
+            if (data != null && data.data != null) {
                 burrows.clear();
 
-                CompoundTag burrowsTag = data.getCompound("burrows");
+                CompoundTag burrowsTag = data.data.getCompound("burrows");
                 for (String key : burrowsTag.getAllKeys()) {
                     CompoundTag burrowTag = burrowsTag.getCompound(key);
                     ArmadilloBurrow burrow = ArmadilloBurrow.fromNbt(burrowTag);
@@ -314,14 +314,26 @@ public class ArmadilloBurrowSystem {
      * Data storage class for burrow persistence.
      */
     private static class BurrowData extends net.minecraft.world.level.saveddata.SavedData {
-        private final CompoundTag data;
+        private CompoundTag data;
+
+        public BurrowData() {
+            this.data = new CompoundTag();
+        }
 
         public BurrowData(CompoundTag data) {
             this.data = data;
         }
 
-        public static BurrowData load(CompoundTag tag) {
+        public static BurrowData load(CompoundTag tag, HolderLookup.Provider provider) {
             return new BurrowData(tag);
+        }
+
+        public static net.minecraft.world.level.saveddata.SavedData.Factory<BurrowData> factory() {
+            return new net.minecraft.world.level.saveddata.SavedData.Factory<>(
+                BurrowData::new,
+                BurrowData::load,
+                null  // No data fixer needed for this data
+            );
         }
 
         @Override

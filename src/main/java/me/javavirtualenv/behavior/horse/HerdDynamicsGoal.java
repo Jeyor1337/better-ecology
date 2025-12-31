@@ -109,7 +109,7 @@ public class HerdDynamicsGoal extends Goal {
         Level level = horse.level();
 
         // Find all nearby horses of same type
-        List<AbstractHorse> nearbyHorses = level.getNearbyEntitiesOfClass(
+        List<AbstractHorse> nearbyHorses = level.getEntitiesOfClass(
             AbstractHorse.class,
             horse.getBoundingBox().inflate(config.herdRadius)
         );
@@ -214,7 +214,7 @@ public class HerdDynamicsGoal extends Goal {
         Level level = horse.level();
 
         // Check for predators
-        List<net.minecraft.world.entity.LivingEntity> threats = level.getNearbyEntitiesOfClass(
+        List<net.minecraft.world.entity.LivingEntity> threats = level.getEntitiesOfClass(
             net.minecraft.world.entity.LivingEntity.class,
             horse.getBoundingBox().inflate(config.threatDetectionRange),
             entity -> {
@@ -263,13 +263,14 @@ public class HerdDynamicsGoal extends Goal {
         if (herdMembers != null) {
             for (AbstractHorse herdMember : herdMembers) {
                 if (herdMember.isAlive() && herdMember.distanceTo(horse) < config.alarmCallRange) {
-                    // Mark herd member as aware of threat
-                    CompoundTag data = herdMember.getPersistentData();
-                    data.putBoolean("better-ecology:is_fleeing", true);
-                    data.putUUID("better-ecology:flee_from", threat.getUUID());
-
-                    // Set flee cooldown
-                    data.putLong("better-ecology:flee_until", level.getGameTime() + 200);
+                    // Mark herd member as aware of threat using ecology component
+                    EcologyComponent component = me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent(herdMember);
+                    if (component != null) {
+                        CompoundTag fleeingTag = component.getHandleTag("fleeing");
+                        fleeingTag.putBoolean("is_fleeing", true);
+                        fleeingTag.putUUID("flee_from", threat.getUUID());
+                        fleeingTag.putLong("flee_until", level.getGameTime() + 200);
+                    }
                 }
             }
         }

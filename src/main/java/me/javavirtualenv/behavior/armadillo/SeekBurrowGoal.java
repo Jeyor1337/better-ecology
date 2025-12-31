@@ -198,7 +198,7 @@ public class SeekBurrowGoal extends Goal {
                         targetBurrowPos.getX(),
                         targetBurrowPos.getY(),
                         targetBurrowPos.getZ(),
-                        SoundEvents.ARMADILLO_IDLE,
+                        SoundEvents.ARMADILLO_AMBIENT,
                         SoundSource.NEUTRAL,
                         0.2F,
                         0.8F

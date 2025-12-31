@@ -1,12 +1,13 @@
 package me.javavirtualenv.behavior.reproduction;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.ecology.handles.reproduction.NestData;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.util.RandomPos;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -60,7 +61,7 @@ public class NestBuildingGoal extends Goal {
         }
 
         // Load nest data
-        EcologyComponent component = EcologyComponent.get(animal);
+        EcologyComponent component = ((EcologyAccess) animal).betterEcology$getEcologyComponent();
         if (component == null) {
             return false;
         }
@@ -192,7 +193,7 @@ public class NestBuildingGoal extends Goal {
     }
 
     private BlockPos getRandomPositionInRange(BlockPos center, int radius) {
-        Vec3 randomVec = RandomPos.getPos(animal, radius, radius / 2);
+        Vec3 randomVec = DefaultRandomPos.getPos(animal, radius, radius / 2);
         if (randomVec == null) {
             return null;
         }
@@ -413,7 +414,7 @@ public class NestBuildingGoal extends Goal {
         } else {
             // Random wander to find materials
             if (animal.getRandom().nextFloat() < 0.02) {
-                Vec3 randomPos = RandomPos.getPos(animal, 16, 8);
+                Vec3 randomPos = DefaultRandomPos.getPos(animal, 16, 8);
                 if (randomPos != null) {
                     targetPosition = randomPos;
                 }
@@ -445,13 +446,11 @@ public class NestBuildingGoal extends Goal {
 
     private boolean isUsableMaterial(BlockState state) {
         Block block = state.getBlock();
-        return block == Blocks.GRASS ||
-               block == Blocks.SHORT_GRASS ||
+        return block == Blocks.SHORT_GRASS ||
                block == Blocks.FERN ||
                block == Blocks.LARGE_FERN ||
                block == Blocks.HAY_BLOCK ||
-               block == Blocks.WHITE_WOOL ||
-               block == Blocks.STRING;
+               block == Blocks.WHITE_WOOL;
     }
 
     private void collectMaterial(Vec3 pos) {
@@ -467,7 +466,7 @@ public class NestBuildingGoal extends Goal {
 
     private String getMaterialType(BlockState state) {
         Block block = state.getBlock();
-        if (block == Blocks.GRASS || block == Blocks.SHORT_GRASS) {
+        if (block == Blocks.SHORT_GRASS) {
             return "grass";
         } else if (block == Blocks.FERN || block == Blocks.LARGE_FERN) {
             return "leaves";
@@ -475,8 +474,6 @@ public class NestBuildingGoal extends Goal {
             return "hay";
         } else if (block == Blocks.WHITE_WOOL) {
             return "wool";
-        } else if (block == Blocks.STRING) {
-            return "fiber";
         }
         return "unknown";
     }
@@ -562,7 +559,7 @@ public class NestBuildingGoal extends Goal {
                     // Flee or chase based on size
                     if (other.getBoundingBox().getSize() > animal.getBoundingBox().getSize()) {
                         // Flee
-                        Vec3 fleePos = RandomPos.getPosAway(animal, 16, 8, other.position());
+                        Vec3 fleePos = DefaultRandomPos.getPosAway(animal, 16, 8, other.position());
                         if (fleePos != null) {
                             targetPosition = fleePos;
                             moveToTarget();

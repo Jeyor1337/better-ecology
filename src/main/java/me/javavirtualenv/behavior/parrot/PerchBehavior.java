@@ -150,7 +150,9 @@ public class PerchBehavior {
         }
 
         // Distance penalty (prefer closer perches)
-        double distance = parrot.distanceTo(pos);
+        double distance = parrot.position().distanceTo(
+            new Vec3(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5)
+        );
         score -= distance * config.distancePenalty;
 
         // Block type bonus

@@ -51,7 +51,7 @@ public class CroakingBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Entity entity = context.getEntity();
+        Entity entity = context.getSelf();
         if (!(entity instanceof Frog frog)) {
             return new Vec3d();
         }
@@ -154,7 +154,7 @@ public class CroakingBehavior extends SteeringBehavior {
      */
     private net.minecraft.sounds.SoundEvent getVariantCroakSound(Object variant) {
         // Use vanilla croak sounds
-        return net.minecraft.sounds.SoundEvents.FROG_CROAK;
+        return net.minecraft.sounds.SoundEvents.FROG_AMBIENT;
     }
 
     /**

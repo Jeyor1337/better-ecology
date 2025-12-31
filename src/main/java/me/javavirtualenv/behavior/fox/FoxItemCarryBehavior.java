@@ -4,6 +4,8 @@ import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.fox.FoxItemStorage;
+import me.javavirtualenv.mixin.animal.FoxAccessor;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Mob;
@@ -96,7 +98,7 @@ public class FoxItemCarryBehavior extends SteeringBehavior {
                 fox.getBoundingBox().inflate(searchRange))) {
 
             // Skip if item is not on ground
-            if (!itemEntity.isOnGround()) {
+            if (!itemEntity.onGround()) {
                 continue;
             }
 
@@ -161,7 +163,7 @@ public class FoxItemCarryBehavior extends SteeringBehavior {
         }
 
         // Medium priority: other food
-        if (itemStack.isEdible()) {
+        if (itemStack.has(DataComponents.FOOD)) {
             return 0.5;
         }
 
@@ -245,7 +247,7 @@ public class FoxItemCarryBehavior extends SteeringBehavior {
     private double getTrustLevel(Mob fox, Player player) {
         // Check if player has tamed this fox
         if (fox instanceof net.minecraft.world.entity.animal.Fox minecraftFox) {
-            if (minecraftFox.isTrusting(player)) {
+            if (((FoxAccessor) minecraftFox).betterEcology$trusts(player.getUUID())) {
                 return 1.0;
             }
         }
@@ -275,9 +277,13 @@ public class FoxItemCarryBehavior extends SteeringBehavior {
         }
 
         Vec3 pos = fox.position();
+        ItemStack dummyStack = new ItemStack(net.minecraft.world.item.Items.SWEET_BERRIES);
         for (int i = 0; i < 3; i++) {
             fox.level().addParticle(
-                net.minecraft.core.particles.ParticleTypes.ITEM,
+                new net.minecraft.core.particles.ItemParticleOption(
+                    net.minecraft.core.particles.ParticleTypes.ITEM,
+                    dummyStack
+                ),
                 pos.x, pos.y + 0.5, pos.z,
                 0, 0.1, 0
             );

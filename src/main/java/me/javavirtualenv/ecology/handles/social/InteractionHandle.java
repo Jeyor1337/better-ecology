@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -347,9 +348,10 @@ public final class InteractionHandle implements EcologyHandle {
             if (isHerdMate(mob, other)) {
                 // Trigger flee behavior in herd mates
                 // This would interact with the fleeing behavior system
-                CompoundTag otherTag = other.getPersistentData();
-                otherTag.putBoolean("better_ecology:warning_received", true);
-                otherTag.putInt("better_ecology:warning_tick", mob.tickCount);
+                EcologyComponent component = ((EcologyAccess) other).betterEcology$getEcologyComponent();
+                CompoundTag otherTag = component.getHandleTag("interaction");
+                otherTag.putBoolean("warning_received", true);
+                otherTag.putInt("warning_tick", mob.tickCount);
             }
         }
     }

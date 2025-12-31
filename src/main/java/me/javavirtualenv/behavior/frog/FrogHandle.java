@@ -113,7 +113,7 @@ public class FrogHandle implements EcologyHandle {
 
         if (!handleTag.contains("variant")) {
             // Store frog variant for biome-specific behavior
-            String variantId = frog.getVariant().unwrap().location().toString();
+            String variantId = frog.getVariant().unwrapKey().map(key -> key.location().toString()).orElse("minecraft:temperate");
             handleTag.putString("variant", variantId);
         }
     }
@@ -149,7 +149,7 @@ public class FrogHandle implements EcologyHandle {
 
     private void tickJumping(Frog frog, CompoundTag handleTag) {
         // Track jump state for animation purposes
-        handleTag.putBoolean("is_jumping", !frog.isOnGround());
+        handleTag.putBoolean("is_jumping", !frog.onGround());
     }
 
     private FrogCache buildCache(EcologyProfile profile) {
@@ -185,7 +185,7 @@ public class FrogHandle implements EcologyHandle {
      */
     public static float getTemperamentModifier(Frog frog) {
         var variant = frog.getVariant();
-        String variantId = variant.unwrap().location().toString();
+        String variantId = variant.unwrapKey().map(key -> key.location().toString()).orElse("minecraft:temperate");
 
         return switch (variantId) {
             case "minecraft:temperate" -> 1.0F;

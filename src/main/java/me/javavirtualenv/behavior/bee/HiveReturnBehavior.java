@@ -3,6 +3,7 @@ package me.javavirtualenv.behavior.bee;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.mixin.animal.BeeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Bee;
@@ -175,7 +176,7 @@ public class HiveReturnBehavior extends SteeringBehavior {
     private void onArriveAtHive(Bee bee, Level level) {
         if (bee.hasNectar()) {
             // Deposit nectar (vanilla behavior)
-            bee.setHasNectar(false);
+            ((BeeAccessor) bee).invokeSetHasNectar(false);
 
             // The vanilla bee entity will enter the hive
             // We don't need to manually handle honey production

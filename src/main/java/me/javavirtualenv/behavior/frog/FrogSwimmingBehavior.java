@@ -39,7 +39,7 @@ public class FrogSwimmingBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Entity entity = context.getEntity();
+        Entity entity = context.getSelf();
         if (!(entity instanceof Frog frog)) {
             return new Vec3d();
         }

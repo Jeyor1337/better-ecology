@@ -201,6 +201,16 @@ public class Vec3d {
     }
 
     /**
+     * Computes the Euclidean distance to a point specified by coordinates.
+     */
+    public double distanceTo(double x, double y, double z) {
+        double dx = this.x - x;
+        double dy = this.y - y;
+        double dz = this.z - z;
+        return sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
      * Static method to compute distance between two vectors.
      */
     public static double dist(Vec3d a, Vec3d b) {

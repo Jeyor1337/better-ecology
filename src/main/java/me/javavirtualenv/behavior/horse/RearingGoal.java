@@ -76,7 +76,7 @@ public class RearingGoal extends Goal {
 
         // Stop movement and make rear
         horse.getNavigation().stop();
-        horse.makeRear();
+        // Note: makeRear() doesn't exist in 1.21.1, rearing is handled by standing animation
 
         // Play rear sound
         Level level = horse.level();
@@ -92,8 +92,8 @@ public class RearingGoal extends Goal {
                 double x = horse.getX() + (level.random.nextDouble() - 0.5) * horse.getBbWidth();
                 double y = horse.getY();
                 double z = horse.getZ() + (level.random.nextDouble() - 0.5) * horse.getBbWidth();
-                level.sendParticles(
-                    net.minecraft.core.particles.ParticleTypes.DUST,
+                ((net.minecraft.server.level.ServerLevel) level).sendParticles(
+                    net.minecraft.core.particles.ParticleTypes.POOF,
                     x, y, z,
                     1, 0, 0, 0, 0.02
                 );
@@ -112,8 +112,14 @@ public class RearingGoal extends Goal {
         rearDurationTicks--;
 
         // Occasional extra rear animation during long rears
+        // Note: makeRear() doesn't exist in 1.21.1, animation is client-side
         if (rearDurationTicks % 20 == 0 && rearDurationTicks > 0) {
-            horse.makeRear();
+            // Play sound instead to indicate rearing
+            horse.level().playSound(null, horse.blockPosition(),
+                getRearSound(),
+                net.minecraft.sounds.SoundSource.HOSTILE,
+                0.5f, 1.2f
+            );
         }
     }
 
@@ -147,7 +153,7 @@ public class RearingGoal extends Goal {
         Level level = horse.level();
 
         // Check for wolf packs
-        List<net.minecraft.world.entity.animal.Wolf> wolves = level.getNearbyEntitiesOfClass(
+        List<net.minecraft.world.entity.animal.Wolf> wolves = level.getEntitiesOfClass(
             net.minecraft.world.entity.animal.Wolf.class,
             horse.getBoundingBox().inflate(16.0),
             wolf -> wolf.isAlive() && wolf.isAggressive()
@@ -159,7 +165,7 @@ public class RearingGoal extends Goal {
         }
 
         // Check for zombies
-        List<LivingEntity> zombies = level.getNearbyEntitiesOfClass(
+        List<LivingEntity> zombies = level.getEntitiesOfClass(
             LivingEntity.class,
             horse.getBoundingBox().inflate(12.0),
             entity -> entity.getType() == EntityType.ZOMBIE ||

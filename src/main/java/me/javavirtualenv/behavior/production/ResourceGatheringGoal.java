@@ -8,6 +8,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -99,11 +100,11 @@ public class ResourceGatheringGoal extends Goal {
         }
 
         if (targetResourcePos != null && mob.level().isLoaded(targetResourcePos)) {
-            double distance = mob.position().distanceTo(
+            double distance = mob.position().distanceTo(new Vec3(
                 targetResourcePos.getX() + 0.5,
                 targetResourcePos.getY(),
                 targetResourcePos.getZ() + 0.5
-            );
+            ));
 
             if (distance > 2.0) {
                 mob.getNavigation().moveTo(targetResourcePos.getX(), targetResourcePos.getY(), targetResourcePos.getZ(), 1.0);
@@ -149,11 +150,11 @@ public class ResourceGatheringGoal extends Goal {
             mobPos.getZ() + (int) searchRadius
         )) {
             if (isValidResource(pos)) {
-                double distance = mob.position().distanceTo(
+                double distance = mob.position().distanceTo(new Vec3(
                     pos.getX() + 0.5,
                     pos.getY(),
                     pos.getZ() + 0.5
-                );
+                ));
 
                 if (distance < nearestDistance) {
                     nearest = pos;
@@ -189,11 +190,11 @@ public class ResourceGatheringGoal extends Goal {
     protected void returnToHome() {
         BlockPos homePos = getHomePosition();
         if (homePos != null) {
-            double distance = mob.position().distanceTo(
+            double distance = mob.position().distanceTo(new Vec3(
                 homePos.getX() + 0.5,
                 homePos.getY(),
                 homePos.getZ() + 0.5
-            );
+            ));
 
             if (distance > 2.0) {
                 mob.getNavigation().moveTo(homePos.getX(), homePos.getY(), homePos.getZ(), 1.0);
@@ -210,11 +211,11 @@ public class ResourceGatheringGoal extends Goal {
             return true;
         }
 
-        double distance = mob.position().distanceTo(
+        double distance = mob.position().distanceTo(new Vec3(
             homePos.getX() + 0.5,
             homePos.getY(),
             homePos.getZ() + 0.5
-        );
+        ));
 
         return distance < 3.0;
     }

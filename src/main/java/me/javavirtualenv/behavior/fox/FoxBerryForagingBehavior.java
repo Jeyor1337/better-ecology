@@ -7,6 +7,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SweetBerryBushBlock;
@@ -241,8 +243,12 @@ public class FoxBerryForagingBehavior extends SteeringBehavior {
         }
 
         Vec3 pos = fox.position();
+        ItemStack berryStack = new ItemStack(Items.SWEET_BERRIES);
         fox.level().addParticle(
-            net.minecraft.core.particles.ParticleTypes.ITEM,
+            new net.minecraft.core.particles.ItemParticleOption(
+                net.minecraft.core.particles.ParticleTypes.ITEM,
+                berryStack
+            ),
             pos.x, pos.y + 0.5, pos.z,
             (fox.getRandom().nextDouble() - 0.5) * 0.1,
             0.1,

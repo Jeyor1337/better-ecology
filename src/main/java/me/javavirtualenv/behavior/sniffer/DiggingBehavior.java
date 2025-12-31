@@ -3,7 +3,10 @@ package me.javavirtualenv.behavior.sniffer;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -179,7 +182,10 @@ public class DiggingBehavior extends SnifferBehavior {
     }
 
     private SeedType determineSeedType(BehaviorContext context, BlockPos pos) {
-        String biomeId = context.getLevel().getBiome(pos).unwrap().key().location().toString();
+        var biomeHolder = context.getLevel().getBiome(pos);
+        String biomeId = biomeHolder.unwrapKey()
+            .map(key -> key.location().toString())
+            .orElse("minecraft:plains");
         SeedType biomeSeed = BIOME_SEED_MAP.getOrDefault(biomeId, SeedType.TORCHFLOWER);
 
         double roll = context.getLevel().random.nextDouble();
@@ -214,7 +220,7 @@ public class DiggingBehavior extends SnifferBehavior {
 
     private ItemStack createRareAncientSeed(ServerLevel level) {
         ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
-        stack.setHoverName(net.minecraft.network.chat.Component.literal("Ancient Seeds"));
+        stack.set(DataComponents.CUSTOM_NAME, Component.literal("Ancient Seeds"));
         return stack;
     }
 
@@ -237,18 +243,20 @@ public class DiggingBehavior extends SnifferBehavior {
             return;
         }
 
+        ServerLevel serverLevel = (ServerLevel) context.getLevel();
         Vec3d pos = context.getPosition();
         for (int i = 0; i < 5; i++) {
-            double offsetX = (context.getLevel().random.nextDouble() - 0.5) * 0.5;
-            double offsetZ = (context.getLevel().random.nextDouble() - 0.5) * 0.5;
+            double offsetX = (serverLevel.random.nextDouble() - 0.5) * 0.5;
+            double offsetZ = (serverLevel.random.nextDouble() - 0.5) * 0.5;
 
-            context.getLevel().addParticle(
-                ParticleTypes.BLOCK,
+            serverLevel.sendParticles(
+                new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DIRT.defaultBlockState()),
                 pos.x + offsetX,
                 pos.y + 0.2,
                 pos.z + offsetZ,
+                1,
                 0.0, 0.2, 0.0,
-                net.minecraft.world.level.block.Block.getId(Blocks.DIRT.defaultBlockState())
+                0.0
             );
         }
     }

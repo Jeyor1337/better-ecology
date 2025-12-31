@@ -1,5 +1,10 @@
 package me.javavirtualenv.ecology.ai;
 
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -7,6 +12,7 @@ import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
@@ -300,7 +306,7 @@ public class BullCompetitionGoal extends Goal {
             if (level instanceof ServerLevel serverLevel) {
                 Vec3 direction = rival.position().subtract(bull.position()).normalize();
                 serverLevel.sendParticles(
-                        net.minecraft.core.particles.ParticleTypes.CLOUD,
+                        ParticleTypes.CLOUD,
                         bull.getX() + direction.x * 0.5,
                         bull.getY() + bull.getEyeHeight(),
                         bull.getZ() + direction.z * 0.5,
@@ -341,8 +347,10 @@ public class BullCompetitionGoal extends Goal {
 
         // Spawn dirt particles
         if (level instanceof ServerLevel serverLevel) {
+            BlockParticleOption dirtParticle = new BlockParticleOption(
+                    ParticleTypes.BLOCK, Blocks.DIRT.defaultBlockState());
             serverLevel.sendParticles(
-                    net.minecraft.core.particles.ParticleTypes.BLOCK,
+                    dirtParticle,
                     bull.getX(),
                     bull.getY(),
                     bull.getZ(),
@@ -400,7 +408,13 @@ public class BullCompetitionGoal extends Goal {
             return 50;
         }
 
-        return rival.getPersistentData().getInt("better-ecology:dominance_score");
+        if (rival instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("bull_competition");
+            return tag.getInt("dominance_score");
+        }
+
+        return 50;
     }
 
     /**
@@ -418,7 +432,11 @@ public class BullCompetitionGoal extends Goal {
 
     public void setDominanceScore(int score) {
         this.dominanceScore = Math.max(0, Math.min(100, score));
-        bull.getPersistentData().putInt("better-ecology:dominance_score", dominanceScore);
+        if (bull instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("bull_competition");
+            tag.putInt("dominance_score", dominanceScore);
+        }
     }
 
     public boolean isDisplaying() {

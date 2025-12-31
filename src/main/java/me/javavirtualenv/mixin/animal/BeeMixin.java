@@ -8,6 +8,7 @@ import me.javavirtualenv.behavior.bee.WaggleDanceBehavior;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import net.minecraft.nbt.CompoundTag;
@@ -120,12 +121,13 @@ public abstract class BeeMixin extends AnimalMixin {
      */
     private void initializeBeeComponent() {
         Bee bee = (Bee) (Object) this;
-        EcologyComponent component = EcologyComponent.getOrCreate(bee);
+        EcologyComponent component = ((EcologyAccess) bee).betterEcology$getEcologyComponent();
 
-        if (!component.hasHandleData(BEE_COMPONENT_KEY)) {
+        CompoundTag existingTag = component.getHandleTag(BEE_COMPONENT_KEY);
+        if (existingTag == null || existingTag.isEmpty()) {
             BeeComponent beeComponent = new BeeComponent();
             CompoundTag tag = beeComponent.toNbt();
-            component.setHandleData(BEE_COMPONENT_KEY, tag);
+            component.setHandleTag(BEE_COMPONENT_KEY, tag);
         }
     }
 
@@ -135,10 +137,11 @@ public abstract class BeeMixin extends AnimalMixin {
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
     private void onSaveData(CompoundTag compound, CallbackInfo ci) {
         Bee bee = (Bee) (Object) this;
-        EcologyComponent component = EcologyComponent.getIfExists(bee);
+        EcologyComponent component = ((EcologyAccess) bee).betterEcology$getEcologyComponent();
 
-        if (component != null && component.hasHandleData(BEE_COMPONENT_KEY)) {
-            compound.put(BEE_COMPONENT_KEY, component.getHandleData(BEE_COMPONENT_KEY));
+        CompoundTag tag = component.getHandleTag(BEE_COMPONENT_KEY);
+        if (tag != null && !tag.isEmpty()) {
+            compound.put(BEE_COMPONENT_KEY, tag);
         }
     }
 
@@ -148,11 +151,11 @@ public abstract class BeeMixin extends AnimalMixin {
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
     private void onLoadData(CompoundTag compound, CallbackInfo ci) {
         Bee bee = (Bee) (Object) this;
-        EcologyComponent component = EcologyComponent.getOrCreate(bee);
+        EcologyComponent component = ((EcologyAccess) bee).betterEcology$getEcologyComponent();
 
         if (compound.contains(BEE_COMPONENT_KEY)) {
             CompoundTag beeTag = compound.getCompound(BEE_COMPONENT_KEY);
-            component.setHandleData(BEE_COMPONENT_KEY, beeTag);
+            component.setHandleTag(BEE_COMPONENT_KEY, beeTag);
         }
     }
 
@@ -162,10 +165,10 @@ public abstract class BeeMixin extends AnimalMixin {
     @Inject(method = "hasNectar", at = @At("HEAD"), cancellable = true)
     private void onHasNectar(CallbackInfoReturnable<Boolean> cir) {
         Bee bee = (Bee) (Object) this;
-        EcologyComponent component = EcologyComponent.getIfExists(bee);
+        EcologyComponent component = ((EcologyAccess) bee).betterEcology$getEcologyComponent();
 
-        if (component != null && component.hasHandleData(BEE_COMPONENT_KEY)) {
-            CompoundTag tag = component.getHandleData(BEE_COMPONENT_KEY);
+        CompoundTag tag = component.getHandleTag(BEE_COMPONENT_KEY);
+        if (tag != null && !tag.isEmpty()) {
             BeeComponent beeComponent = BeeComponent.fromNbt(tag);
             cir.setReturnValue(beeComponent.hasNectar());
         }
@@ -177,14 +180,15 @@ public abstract class BeeMixin extends AnimalMixin {
     @Inject(method = "setHasNectar", at = @At("TAIL"))
     private void onSetHasNectar(boolean hasNectar, CallbackInfo ci) {
         Bee bee = (Bee) (Object) this;
-        EcologyComponent component = EcologyComponent.getOrCreate(bee);
+        EcologyComponent component = ((EcologyAccess) bee).betterEcology$getEcologyComponent();
 
-        CompoundTag tag = component.hasHandleData(BEE_COMPONENT_KEY)
-            ? component.getHandleData(BEE_COMPONENT_KEY)
-            : new CompoundTag();
+        CompoundTag tag = component.getHandleTag(BEE_COMPONENT_KEY);
+        if (tag == null || tag.isEmpty()) {
+            tag = new CompoundTag();
+        }
         BeeComponent beeComponent = BeeComponent.fromNbt(tag);
         beeComponent.setHasNectar(hasNectar);
-        component.setHandleData(BEE_COMPONENT_KEY, beeComponent.toNbt());
+        component.setHandleTag(BEE_COMPONENT_KEY, beeComponent.toNbt());
     }
 
     /**
@@ -192,10 +196,11 @@ public abstract class BeeMixin extends AnimalMixin {
      */
     public BeeComponent getBeeComponent() {
         Bee bee = (Bee) (Object) this;
-        EcologyComponent component = EcologyComponent.getIfExists(bee);
+        EcologyComponent component = ((EcologyAccess) bee).betterEcology$getEcologyComponent();
 
-        if (component != null && component.hasHandleData(BEE_COMPONENT_KEY)) {
-            return BeeComponent.fromNbt(component.getHandleData(BEE_COMPONENT_KEY));
+        CompoundTag tag = component.getHandleTag(BEE_COMPONENT_KEY);
+        if (tag != null && !tag.isEmpty()) {
+            return BeeComponent.fromNbt(tag);
         }
 
         return new BeeComponent();

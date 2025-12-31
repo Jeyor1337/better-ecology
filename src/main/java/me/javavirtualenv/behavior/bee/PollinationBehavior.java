@@ -4,7 +4,10 @@ import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import me.javavirtualenv.ecology.spatial.BlockSpatialCache;
+import me.javavirtualenv.mixin.animal.BeeAccessor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -243,7 +246,7 @@ public class PollinationBehavior extends SteeringBehavior {
 
         if (block instanceof CropBlock cropBlock) {
             // Accelerate crop growth
-            IntegerProperty ageProperty = cropBlock.getAgeProperty();
+            IntegerProperty ageProperty = CropBlock.AGE;
             int currentAge = state.getValue(ageProperty);
             int maxAge = cropBlock.getMaxAge();
 
@@ -256,7 +259,7 @@ public class PollinationBehavior extends SteeringBehavior {
             }
         } else if (block instanceof FlowerBlock || state.is(BlockTags.FLOWERS)) {
             // Pollinating flower gives nectar
-            bee.setHasNectar(true);
+            ((BeeAccessor) bee).invokeSetHasNectar(true);
             return true;
         }
 
@@ -280,12 +283,15 @@ public class PollinationBehavior extends SteeringBehavior {
             double posY = pos.getY() + 0.5 + yOffset;
             double posZ = pos.getZ() + 0.5 + zOffset;
 
-            // Pollen particle color (yellow)
+            // Pollen particle color (yellow from dandelion)
+            BlockParticleOption particleOption = new BlockParticleOption(
+                ParticleTypes.BLOCK,
+                Blocks.DANDELION.defaultBlockState()
+            );
             level.addParticle(
-                net.minecraft.core.particles.BlockParticle.BLOCK,
+                particleOption,
                 posX, posY, posZ,
-                0.0, 0.05, 0.0,
-                Blocks.YELLOW_FLOWER.defaultBlockState()
+                0.0, 0.05, 0.0
             );
         }
     }

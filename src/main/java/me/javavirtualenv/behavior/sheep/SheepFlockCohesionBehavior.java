@@ -137,32 +137,16 @@ public class SheepFlockCohesionBehavior extends SteeringBehavior {
         }
     }
 
-    public void setFlockRadius(double flockRadius) {
-        this.flockRadius = flockRadius;
-    }
-
     public double getFlockRadius() {
         return flockRadius;
-    }
-
-    public void setMaxSpeed(double maxSpeed) {
-        this.maxSpeed = maxSpeed;
     }
 
     public double getMaxSpeed() {
         return maxSpeed;
     }
 
-    public void setMaxForce(double maxForce) {
-        this.maxForce = maxForce;
-    }
-
     public double getMaxForce() {
         return maxForce;
-    }
-
-    public void setMinSeparation(double minSeparation) {
-        this.minSeparation = minSeparation;
     }
 
     public double getMinSeparation() {

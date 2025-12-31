@@ -1,5 +1,6 @@
 package me.javavirtualenv.behavior.fox;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -58,13 +59,13 @@ public class FoxPickupItemGoal extends Goal {
 
     @Override
     public void start() {
-        fox.setSpeed(speedModifier);
+        fox.setSpeed((float)speedModifier);
     }
 
     @Override
     public void stop() {
         targetItem = null;
-        fox.setSpeed(1.0);
+        fox.setSpeed(1.0f);
     }
 
     @Override
@@ -97,14 +98,14 @@ public class FoxPickupItemGoal extends Goal {
                 fox.getBoundingBox().inflate(16.0))) {
 
             // Skip if not on ground
-            if (!itemEntity.isOnGround()) {
+            if (!itemEntity.onGround()) {
                 continue;
             }
 
             ItemStack itemStack = itemEntity.getItem();
 
             // Skip non-food items
-            if (!itemStack.isEdible() &&
+            if (!itemStack.has(DataComponents.FOOD) &&
                 !itemStack.is(net.minecraft.world.item.Items.SWEET_BERRIES) &&
                 !itemStack.is(net.minecraft.world.item.Items.GLOW_BERRIES)) {
                 continue;

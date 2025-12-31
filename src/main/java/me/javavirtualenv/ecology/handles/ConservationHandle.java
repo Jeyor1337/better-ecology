@@ -7,6 +7,7 @@ import me.javavirtualenv.ecology.ai.EmergencyBreedingGoal;
 import me.javavirtualenv.ecology.conservation.ConservationStatus;
 import me.javavirtualenv.ecology.conservation.PopulationRegistry;
 import me.javavirtualenv.mixin.MobAccessor;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Animal;
 
@@ -34,7 +35,7 @@ public final class ConservationHandle implements EcologyHandle {
 
         // Store MVP threshold for quick access
         ConservationConfig config = profile.cached(CACHE_KEY, () -> buildConfig(profile));
-        component.setInt("conservation.mvp_threshold", config.mvpThreshold());
+        component.getHandleTag("conservation").putInt("mvp_threshold", config.mvpThreshold());
     }
 
     @Override
@@ -57,7 +58,8 @@ public final class ConservationHandle implements EcologyHandle {
         accessor.betterEcology$getGoalSelector().addGoal(priority,
             new EmergencyBreedingGoal(animal, config.moveSpeed(),
                 config.reducedMinAge(), config.reducedMinHealth(),
-                config.reducedMinCondition(), config.cooldown(), config.mvpThreshold()));
+                (int) config.reducedMinCondition(), config.cooldown(),
+                component.getHandleTag("conservation").getInt("mvp_threshold")));
     }
 
     /**
@@ -72,7 +74,8 @@ public final class ConservationHandle implements EcologyHandle {
             return null;
         }
 
-        int mvpThreshold = component.getInt("conservation.mvp_threshold", 20);
+        CompoundTag tag = component.getHandleTag("conservation");
+        int mvpThreshold = tag.contains("mvp_threshold") ? tag.getInt("mvp_threshold") : 20;
         return PopulationRegistry.getStatus(mob, mvpThreshold);
     }
 

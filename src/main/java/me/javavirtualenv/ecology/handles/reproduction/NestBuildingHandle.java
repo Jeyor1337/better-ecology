@@ -57,20 +57,23 @@ public final class NestBuildingHandle implements EcologyHandle {
 
         CompoundTag handleTag = tag.getCompound(id());
         if (handleTag.contains(NEST_DATA_KEY)) {
-            NestData nestData = NestData.fromNbt(handleTag.getCompound(NEST_DATA_KEY));
-            component.setData(id() + "." + NEST_DATA_KEY, nestData);
+            NestBuildingConfig config = profile.cached(CACHE_KEY, () -> buildConfig(profile));
+            NestData nestData = NestData.fromNbt(handleTag.getCompound(NEST_DATA_KEY), config);
+            CompoundTag componentTag = component.getHandleTag(id());
+            componentTag.put(NEST_DATA_KEY, nestData.toNbt());
         }
     }
 
     @Override
     public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag tag) {
-        NestData nestData = getNestData(component);
-        if (nestData == null || !nestData.hasNest()) {
+        CompoundTag componentTag = component.getHandleTag(id());
+        if (!componentTag.contains(NEST_DATA_KEY)) {
             return;
         }
 
+        CompoundTag nestDataTag = componentTag.getCompound(NEST_DATA_KEY);
         CompoundTag handleTag = new CompoundTag();
-        handleTag.put(NEST_DATA_KEY, nestData.toNbt());
+        handleTag.put(NEST_DATA_KEY, nestDataTag.copy());
         tag.put(id(), handleTag);
     }
 
@@ -78,22 +81,28 @@ public final class NestBuildingHandle implements EcologyHandle {
      * Get or create nest data for an entity.
      */
     public static NestData getOrCreateNestData(EcologyComponent component, NestBuildingConfig config) {
-        String key = "nest_building." + NEST_DATA_KEY;
-        NestData nestData = component.getData(key);
+        CompoundTag handleTag = component.getHandleTag("nest_building");
 
-        if (nestData == null) {
-            nestData = new NestData(config);
-            component.setData(key, nestData);
+        if (!handleTag.contains(NEST_DATA_KEY)) {
+            NestData nestData = new NestData(config);
+            handleTag.put(NEST_DATA_KEY, nestData.toNbt());
+            return nestData;
         }
 
-        return nestData;
+        return NestData.fromNbt(handleTag.getCompound(NEST_DATA_KEY), config);
     }
 
     /**
      * Get nest data for an entity without creating.
      */
-    public static NestData getNestData(EcologyComponent component) {
-        return component.getData("nest_building." + NEST_DATA_KEY);
+    public static NestData getNestData(EcologyComponent component, NestBuildingConfig config) {
+        CompoundTag handleTag = component.getHandleTag("nest_building");
+
+        if (!handleTag.contains(NEST_DATA_KEY)) {
+            return null;
+        }
+
+        return NestData.fromNbt(handleTag.getCompound(NEST_DATA_KEY), config);
     }
 
     private NestBuildingConfig buildConfig(EcologyProfile profile) {
@@ -106,10 +115,12 @@ public final class NestBuildingHandle implements EcologyHandle {
         boolean territorialDefense = profile.getBool("nest_building.territorial_defense", true);
 
         Map<String, Integer> requiredMaterials = new HashMap<>();
-        var materialsList = profile.getList("nest_building.required_materials");
-        for (var entry : materialsList.entrySet()) {
-            if (entry.getValue() instanceof Number) {
-                requiredMaterials.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+        Map<String, Object> materialsMap = profile.getMap("nest_building.required_materials");
+        if (materialsMap != null) {
+            for (var entry : materialsMap.entrySet()) {
+                if (entry.getValue() instanceof Number) {
+                    requiredMaterials.put(entry.getKey(), ((Number) entry.getValue()).intValue());
+                }
             }
         }
 

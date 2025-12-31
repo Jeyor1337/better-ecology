@@ -15,8 +15,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+import net.minecraft.util.RandomSource;
+
 import java.util.EnumSet;
-import java.util.Random;
 
 /**
  * Goal for armadillo insect foraging behavior.
@@ -39,7 +40,7 @@ public class InsectForagingGoal extends Goal {
     private final EcologyComponent component;
     private final EcologyProfile profile;
     private final ArmadilloComponent armadilloComponent;
-    private final Random random;
+    private final RandomSource random;
 
     private BlockPos targetBlock;
     private int sniffTicks;

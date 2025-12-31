@@ -1,13 +1,17 @@
 package me.javavirtualenv.behavior.villager;
 
+import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Manages villager daily routines - work, socialize, sleep, gather.
@@ -97,9 +101,7 @@ public class DailyRoutine {
      */
     private void executeCurrentPhase() {
         if (targetPos != null && villager.position().distanceTo(
-            targetPos.getX() + 0.5,
-            targetPos.getY(),
-            targetPos.getZ() + 0.5
+            new Vec3(targetPos.getX() + 0.5, targetPos.getY(), targetPos.getZ() + 0.5)
         ) < 2.0) {
             // Arrived at target
             onArrivedAtTarget();
@@ -110,7 +112,7 @@ public class DailyRoutine {
      * Goes to work station.
      */
     private void goToWorkStation() {
-        villager.getVillagerData().getJobSite().ifPresent(jobSite -> {
+        villager.getBrain().getMemory(MemoryModuleType.JOB_SITE).ifPresent(jobSite -> {
             targetPos = jobSite.pos();
             moveToPos(targetPos, 0.6);
         });

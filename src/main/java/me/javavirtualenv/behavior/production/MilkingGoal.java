@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.HungerHandle;
 import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
 import me.javavirtualenv.ecology.handles.SocialHandle;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.TemptGoal;
@@ -65,8 +66,11 @@ public class MilkingGoal extends Goal {
             return false;
         }
 
-        int milkLevel = milkHandle.getMilkLevel(component);
-        int hungerLevel = HungerHandle.getHungerLevel(component);
+        int milkLevel = milkHandle.getMilkAmount(component);
+
+        // Get hunger level from component tag
+        CompoundTag hungerTag = component.getHandleTag("hunger");
+        int hungerLevel = hungerTag.getInt("hunger");
 
         // Seek food when milk is low and hunger is below threshold
         boolean needsNutrition = milkLevel < config.lowMilkThreshold() ||

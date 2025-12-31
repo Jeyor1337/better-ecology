@@ -4,13 +4,16 @@ import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Manages villager work station behavior with visual animations and productivity tracking.
@@ -51,9 +54,7 @@ public class WorkStationAI {
         }
 
         double distance = villager.position().distanceTo(
-            jobSite.getX() + 0.5,
-            jobSite.getY(),
-            jobSite.getZ() + 0.5
+            new Vec3(jobSite.getX() + 0.5, jobSite.getY(), jobSite.getZ() + 0.5)
         );
 
         if (distance > 3.0) {
@@ -118,40 +119,35 @@ public class WorkStationAI {
             return;
         }
 
-        switch (profession) {
-            case FARMER -> {
-                // Farmers check nearby crops
-                if (workTicks % 40 == 0) {
-                    checkNearbyCrops(station);
-                }
+        if (profession == VillagerProfession.FARMER) {
+            // Farmers check nearby crops
+            if (workTicks % 40 == 0) {
+                checkNearbyCrops(station);
             }
-            case LIBRARIAN -> {
-                // Librarians occasionally show enchantment particles
-                if (villager.getRandom().nextDouble() < 0.05) {
-                    spawnEnchantParticles();
-                }
+        } else if (profession == VillagerProfession.LIBRARIAN) {
+            // Librarians occasionally show enchantment particles
+            if (villager.getRandom().nextDouble() < 0.05) {
+                spawnEnchantParticles();
             }
-            case BLACKSMITH -> {
-                // Blacksmiths have higher productivity
-                productivity += PRODUCTIVITY_PER_TICK;
+        } else if (profession == VillagerProfession.WEAPONSMITH ||
+                   profession == VillagerProfession.ARMORER ||
+                   profession == VillagerProfession.TOOLSMITH) {
+            // Smiths have higher productivity
+            productivity += PRODUCTIVITY_PER_TICK;
+        } else if (profession == VillagerProfession.CLERIC) {
+            // Clerics occasionally show holy particles
+            if (workTicks % 80 == 0) {
+                spawnHolyParticles();
             }
-            case PRIEST -> {
-                // Clerics occasionally show holy particles
-                if (workTicks % 80 == 0) {
-                    spawnHolyParticles();
-                }
+        } else if (profession == VillagerProfession.FISHERMAN) {
+            // Fishermen check for water
+            if (workTicks % 60 == 0) {
+                checkNearbyWater(station);
             }
-            case FISHERMAN -> {
-                // Fishermen check for water
-                if (workTicks % 60 == 0) {
-                    checkNearbyWater(station);
-                }
-            }
-            case SHEPHERD -> {
-                // Shepherds think about sheep
-                if (workTicks % 50 == 0) {
-                    checkNearbyAnimals(station);
-                }
+        } else if (profession == VillagerProfession.SHEPHERD) {
+            // Shepherds think about sheep
+            if (workTicks % 50 == 0) {
+                checkNearbyAnimals(station);
             }
         }
     }
@@ -248,15 +244,24 @@ public class WorkStationAI {
             return;
         }
 
-        net.minecraft.core.particles.ParticleType particleType = switch (profession) {
-            case FARMER -> net.minecraft.core.particles.ParticleTypes.COMPOSTER;
-            case LIBRARIAN -> net.minecraft.core.particles.ParticleTypes.ENCHANT;
-            case BLACKSMITH, ARMORER, WEAPON_SMITH -> net.minecraft.core.particles.ParticleTypes.SMOKE;
-            case PRIEST, CLERIC -> net.minecraft.core.particles.ParticleTypes.HEART;
-            case MASON -> net.minecraft.core.particles.ParticleTypes.BLOCK;
-            case CARTOGRAPHER -> net.minecraft.core.particles.ParticleTypes.MAP;
-            default -> net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER;
-        };
+        net.minecraft.core.particles.ParticleOptions particleType;
+        if (profession == VillagerProfession.FARMER) {
+            particleType = net.minecraft.core.particles.ParticleTypes.COMPOSTER;
+        } else if (profession == VillagerProfession.LIBRARIAN) {
+            particleType = net.minecraft.core.particles.ParticleTypes.ENCHANT;
+        } else if (profession == VillagerProfession.WEAPONSMITH ||
+                   profession == VillagerProfession.ARMORER ||
+                   profession == VillagerProfession.TOOLSMITH) {
+            particleType = net.minecraft.core.particles.ParticleTypes.SMOKE;
+        } else if (profession == VillagerProfession.CLERIC) {
+            particleType = net.minecraft.core.particles.ParticleTypes.HEART;
+        } else if (profession == VillagerProfession.MASON) {
+            particleType = net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER;
+        } else if (profession == VillagerProfession.CARTOGRAPHER) {
+            particleType = net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER;
+        } else {
+            particleType = net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER;
+        }
 
         for (int i = 0; i < 2; i++) {
             double offsetX = villager.getRandom().nextGaussian() * 0.2;
@@ -281,20 +286,34 @@ public class WorkStationAI {
             return;
         }
 
-        SoundEvent sound = switch (profession) {
-            case FARMER -> SoundEvents.VILLAGER_WORK_FARMER;
-            case LIBRARIAN -> SoundEvents.VILLAGER_WORK_LIBRARIAN;
-            case BLACKSMITH, ARMORER, WEAPON_SMITH, TOOL_SMITH -> SoundEvents.VILLAGER_WORK_SMITH;
-            case PRIEST, CLERIC -> SoundEvents.VILLAGER_WORK_CLERIC;
-            case BUTCHER -> SoundEvents.VILLAGER_WORK_BUTCHER;
-            case CARTOGRAPHER -> SoundEvents.VILLAGER_WORK_CARTOGRAPHER;
-            case FISHERMAN -> SoundEvents.VILLAGER_WORK_FISHERMAN;
-            case FLETCHER -> SoundEvents.VILLAGER_WORK_FLETCHER;
-            case LEATHERWORKER -> SoundEvents.VILLAGER_WORK_LEATHERWORKER;
-            case MASON -> SoundEvents.VILLAGER_WORK_MASON;
-            case SHEPHERD -> SoundEvents.VILLAGER_WORK_SHEPHERD;
-            default -> SoundEvents.VILLAGER_WORKING;
-        };
+        SoundEvent sound;
+        if (profession == VillagerProfession.FARMER) {
+            sound = SoundEvents.VILLAGER_WORK_FARMER;
+        } else if (profession == VillagerProfession.LIBRARIAN) {
+            sound = SoundEvents.VILLAGER_WORK_LIBRARIAN;
+        } else if (profession == VillagerProfession.WEAPONSMITH ||
+                   profession == VillagerProfession.ARMORER ||
+                   profession == VillagerProfession.TOOLSMITH) {
+            sound = SoundEvents.VILLAGER_WORK_WEAPONSMITH;
+        } else if (profession == VillagerProfession.CLERIC) {
+            sound = SoundEvents.VILLAGER_WORK_CLERIC;
+        } else if (profession == VillagerProfession.BUTCHER) {
+            sound = SoundEvents.VILLAGER_WORK_BUTCHER;
+        } else if (profession == VillagerProfession.CARTOGRAPHER) {
+            sound = SoundEvents.VILLAGER_WORK_CARTOGRAPHER;
+        } else if (profession == VillagerProfession.FISHERMAN) {
+            sound = SoundEvents.VILLAGER_WORK_FISHERMAN;
+        } else if (profession == VillagerProfession.FLETCHER) {
+            sound = SoundEvents.VILLAGER_WORK_FLETCHER;
+        } else if (profession == VillagerProfession.LEATHERWORKER) {
+            sound = SoundEvents.VILLAGER_WORK_LEATHERWORKER;
+        } else if (profession == VillagerProfession.MASON) {
+            sound = SoundEvents.VILLAGER_WORK_MASON;
+        } else if (profession == VillagerProfession.SHEPHERD) {
+            sound = SoundEvents.VILLAGER_WORK_SHEPHERD;
+        } else {
+            sound = SoundEvents.VILLAGER_YES;
+        }
 
         villager.level().playSound(
             null,
@@ -379,7 +398,7 @@ public class WorkStationAI {
      * Gets the villager's job site position.
      */
     private BlockPos getJobSite() {
-        return villager.getVillagerData().getJobSite().map(GlobalPos::pos).orElse(null);
+        return villager.getBrain().getMemory(MemoryModuleType.JOB_SITE).map(GlobalPos::pos).orElse(null);
     }
 
     /**

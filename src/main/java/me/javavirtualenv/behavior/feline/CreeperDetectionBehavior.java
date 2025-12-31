@@ -2,7 +2,7 @@ package me.javavirtualenv.behavior.feline;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Creeper;
@@ -104,7 +104,7 @@ public class CreeperDetectionBehavior extends SteeringBehavior {
     private Entity findEntityToProtect(Mob mob) {
         if (mob instanceof net.minecraft.world.entity.animal.Cat cat) {
             if (cat.isTame() && cat.getOwner() != null) {
-                Entity owner = mob.level().getEntity(cat.getOwnerUUID());
+                Entity owner = mob.level().getPlayerByUUID(cat.getOwnerUUID());
                 if (owner != null && owner.isAlive()) {
                     return owner;
                 }

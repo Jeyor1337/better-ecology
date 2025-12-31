@@ -15,6 +15,7 @@ import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
@@ -180,37 +181,19 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
      * Gets another wolf's behavior tag (for pack sharing).
      */
     private CompoundTag getOtherWolfTag(Wolf wolf) {
-        // This would need to access the other wolf's component
-        // For now, use persistent data
-        var persistentData = wolf.getPersistentData();
-        CompoundTag tag = new CompoundTag();
+        EcologyComponent component = ((EcologyAccess) wolf).betterEcology$getEcologyComponent();
+        CompoundTag tag = component.getHandleTag(id());
 
-        if (persistentData.hasUUID("WolfPackId")) {
-            tag.putUUID(NBT_PACK_ID, persistentData.getUUID("WolfPackId"));
+        if (tag.hasUUID(NBT_PACK_ID)) {
+            return tag.copy();
         }
 
-        return tag;
+        return new CompoundTag();
     }
 
     @Override
     public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag tag) {
         CompoundTag handleTag = component.getHandleTag(id());
-
-        // Save pack data
-        if (mob instanceof Wolf wolf && !wolf.isTame()) {
-            var persistentData = wolf.getPersistentData();
-
-            if (persistentData.hasUUID("WolfPackId")) {
-                handleTag.putUUID(NBT_PACK_ID, persistentData.getUUID("WolfPackId"));
-            }
-
-            if (persistentData.contains("WolfTerritoryX")) {
-                handleTag.putDouble(NBT_TERRITORY_CENTER_X, persistentData.getDouble("WolfTerritoryX"));
-                handleTag.putDouble(NBT_TERRITORY_CENTER_Y, persistentData.getDouble("WolfTerritoryY"));
-                handleTag.putDouble(NBT_TERRITORY_CENTER_Z, persistentData.getDouble("WolfTerritoryZ"));
-            }
-        }
-
         tag.put(id(), handleTag.copy());
     }
 
@@ -222,20 +205,5 @@ public final class WolfBehaviorHandle extends CodeBasedHandle {
 
         CompoundTag handleTag = tag.getCompound(id());
         component.setHandleTag(id(), handleTag);
-
-        // Restore pack data to persistent data
-        if (mob instanceof Wolf wolf && !wolf.isTame()) {
-            var persistentData = wolf.getPersistentData();
-
-            if (handleTag.hasUUID(NBT_PACK_ID)) {
-                persistentData.putUUID("WolfPackId", handleTag.getUUID(NBT_PACK_ID));
-            }
-
-            if (handleTag.contains(NBT_TERRITORY_CENTER_X)) {
-                persistentData.putDouble("WolfTerritoryX", handleTag.getDouble(NBT_TERRITORY_CENTER_X));
-                persistentData.putDouble("WolfTerritoryY", handleTag.getDouble(NBT_TERRITORY_CENTER_Y));
-                persistentData.putDouble("WolfTerritoryZ", handleTag.getDouble(NBT_TERRITORY_CENTER_Z));
-            }
-        }
     }
 }

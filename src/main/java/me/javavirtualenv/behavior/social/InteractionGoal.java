@@ -90,7 +90,7 @@ public class InteractionGoal extends Goal {
     }
 
     private Mob findInteractionTarget() {
-        List<Mob> nearbyMobs = SpatialIndex.getNearbyMobs(mob, config.detectionRadius);
+        List<Mob> nearbyMobs = SpatialIndex.getNearbyMobs(mob, (int) config.detectionRadius);
 
         for (Mob other : nearbyMobs) {
             if (other == mob || !other.isAlive()) {

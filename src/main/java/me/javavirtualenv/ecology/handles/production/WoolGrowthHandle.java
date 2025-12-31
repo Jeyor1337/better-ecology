@@ -173,8 +173,8 @@ public final class WoolGrowthHandle implements EcologyHandle {
         double ageFactor = getAgeFactor(component);
 
         // Seasonal modifier
-        Level level = component.ecologyMob().level();
-        double seasonModifier = getSeasonalModifier(level, config);
+        Level level = component.getMob().level();
+        double seasonModifier = getSeasonalModifier(level, component, config);
 
         return baseRate * dietFactor * healthFactor * ageFactor * seasonModifier;
     }
@@ -208,9 +208,9 @@ public final class WoolGrowthHandle implements EcologyHandle {
         return isElderly ? 0.6 : 1.0;
     }
 
-    private double getSeasonalModifier(Level level, WoolGrowthConfig config) {
+    private double getSeasonalModifier(Level level, EcologyComponent component, WoolGrowthConfig config) {
         // Get season from temporal handle
-        CompoundTag temporalTag = ((EcologyComponent) component.ecologyComponent()).getHandleTag("temporal");
+        CompoundTag temporalTag = component.getHandleTag("temporal");
         if (!temporalTag.contains("season")) {
             return 1.0;
         }
@@ -332,11 +332,16 @@ public final class WoolGrowthHandle implements EcologyHandle {
 
         // Random chance to get parasites if in poor conditions
         if (sheep.level().random.nextFloat() < config.parasiteChance()) {
-            CompoundTag conditionTag = ((EcologyComponent) sheep).getEcologyComponentIfExists()
-                .map(c -> c.getHandleTag("condition")).orElse(new CompoundTag());
+            EcologyComponent sheepComponent = null;
+            if (sheep instanceof me.javavirtualenv.ecology.api.EcologyAccess access) {
+                sheepComponent = access.betterEcology$getEcologyComponent();
+            }
 
-            if (conditionTag.contains("condition") && conditionTag.getInt("condition") < 30) {
-                tag.putBoolean(NBT_IS_PARASITIZED, true);
+            if (sheepComponent != null) {
+                CompoundTag conditionTag = sheepComponent.getHandleTag("condition");
+                if (conditionTag.contains("condition") && conditionTag.getInt("condition") < 30) {
+                    tag.putBoolean(NBT_IS_PARASITIZED, true);
+                }
             }
         }
     }

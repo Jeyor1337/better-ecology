@@ -1,5 +1,8 @@
 package me.javavirtualenv.ecology.ai;
 
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -83,9 +86,11 @@ public class CalfFollowMotherGoal extends Goal {
         distressTimer = 0;
 
         // Store mother's UUID for persistence
-        if (mother != null) {
+        if (mother != null && calf instanceof EcologyAccess access) {
             motherUuid = mother.getUUID();
-            calf.getPersistentData().putUUID("better-ecology:mother_uuid", motherUuid);
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("calf_follow");
+            tag.putUUID("mother_uuid", motherUuid);
         }
     }
 
@@ -248,8 +253,10 @@ public class CalfFollowMotherGoal extends Goal {
         }
 
         // Mark mother as recently nursed (for cooldown)
-        if (mother != null) {
-            mother.getPersistentData().putLong("better-ecology:last_nursed_tick", calf.tickCount);
+        if (mother != null && mother instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("calf_follow");
+            tag.putLong("last_nursed_tick", calf.tickCount);
         }
     }
 
@@ -259,8 +266,10 @@ public class CalfFollowMotherGoal extends Goal {
     private boolean shouldNurse() {
         // Calves nurse when hungry
         // Check cooldown from mother
-        if (mother != null) {
-            long lastNursed = mother.getPersistentData().getLong("better-ecology:last_nursed_tick");
+        if (mother != null && mother instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("calf_follow");
+            long lastNursed = tag.getLong("last_nursed_tick");
             long cooldown = 600; // 30 seconds
 
             if (calf.tickCount - lastNursed < cooldown) {
@@ -317,8 +326,12 @@ public class CalfFollowMotherGoal extends Goal {
                 2.0F, 1.5F);
 
         // Alert nearby cows
-        calf.getPersistentData().putBoolean("better-ecology:calf_distress", true);
-        calf.getPersistentData().putLong("better-ecology:distress_tick", calf.tickCount);
+        if (calf instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("calf_follow");
+            tag.putBoolean("calf_distress", true);
+            tag.putLong("distress_tick", calf.tickCount);
+        }
     }
 
     /**
@@ -341,11 +354,17 @@ public class CalfFollowMotherGoal extends Goal {
         }
 
         // Check persistent data for mother UUID
-        UUID storedMotherUuid = calf.getPersistentData().getUUID("better-ecology:mother_uuid");
-        if (storedMotherUuid != null) {
-            motherUuid = storedMotherUuid;
-            // Try again with stored UUID
-            return findMother();
+        if (calf instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("calf_follow");
+            if (tag.hasUUID("mother_uuid")) {
+                UUID storedMotherUuid = tag.getUUID("mother_uuid");
+                if (storedMotherUuid != null) {
+                    motherUuid = storedMotherUuid;
+                    // Try again with stored UUID
+                    return findMother();
+                }
+            }
         }
 
         // Find nearest adult female of same species
@@ -401,6 +420,10 @@ public class CalfFollowMotherGoal extends Goal {
 
     public void setMotherUuid(UUID uuid) {
         this.motherUuid = uuid;
-        calf.getPersistentData().putUUID("better-ecology:mother_uuid", uuid);
+        if (calf instanceof EcologyAccess access) {
+            EcologyComponent component = access.betterEcology$getEcologyComponent();
+            CompoundTag tag = component.getHandleTag("calf_follow");
+            tag.putUUID("mother_uuid", uuid);
+        }
     }
 }

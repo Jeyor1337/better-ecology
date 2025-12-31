@@ -151,7 +151,7 @@ public class SheepSeparationDistressBehavior extends SteeringBehavior {
             double offsetZ = (mob.getRandom().nextDouble() - 0.5) * 1.0;
 
             level.sendParticles(
-                    net.minecraft.core.particles.ParticleTypes.WORRY,
+                    net.minecraft.core.particles.ParticleTypes.ANGRY_VILLAGER,
                     mob.getX() + offsetX,
                     mob.getY() + 1.0 + offsetY,
                     mob.getZ() + offsetZ,
@@ -196,32 +196,16 @@ public class SheepSeparationDistressBehavior extends SteeringBehavior {
         return sheepCount == 0 || nearestDistance > 8.0;
     }
 
-    public void setDistressRadius(double distressRadius) {
-        this.distressRadius = distressRadius;
-    }
-
     public double getDistressRadius() {
         return distressRadius;
-    }
-
-    public void setMaxSpeed(double maxSpeed) {
-        this.maxSpeed = maxSpeed;
     }
 
     public double getMaxSpeed() {
         return maxSpeed;
     }
 
-    public void setMaxForce(double maxForce) {
-        this.maxForce = maxForce;
-    }
-
     public double getMaxForce() {
         return maxForce;
-    }
-
-    public void setBleatInterval(int bleatInterval) {
-        this.bleatInterval = bleatInterval;
     }
 
     public int getBleatInterval() {

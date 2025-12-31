@@ -202,7 +202,8 @@ public final class SeasonalHandle implements EcologyHandle {
         boolean seasonalBreeding = profile.getBool("seasonal.breeding_seasons_enabled", false);
         boolean winterDormancy = profile.getBool("seasonal.winter_dormancy", false);
 
-        List<String> breedingSeasonsList = profile.getList("seasonal.breeding_seasons");
+        @SuppressWarnings("unchecked")
+        List<String> breedingSeasonsList = (List<String>) profile.getList("seasonal.breeding_seasons");
         List<SeasonalContext.Season> breedingSeasons = parseBreedingSeasons(breedingSeasonsList);
 
         String activityPatternStr = profile.getString("seasonal.activity_pattern", "diurnal");

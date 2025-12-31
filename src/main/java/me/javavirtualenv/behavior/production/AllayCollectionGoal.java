@@ -1,6 +1,7 @@
 package me.javavirtualenv.behavior.production;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -139,7 +140,7 @@ public class AllayCollectionGoal extends ResourceGatheringGoal {
             allay.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         }
 
-        EcologyComponent component = EcologyComponent.getFromEntity(allay);
+        EcologyComponent component = ((EcologyAccess) allay).betterEcology$getEcologyComponent();
         if (component != null) {
             CompoundTag productionData = component.getHandleTag("production");
 
@@ -205,7 +206,7 @@ public class AllayCollectionGoal extends ResourceGatheringGoal {
      * Tries to duplicate an item with a chance based on allay's happiness.
      */
     private ItemStack tryDuplicateItem(ItemStack original) {
-        EcologyComponent component = EcologyComponent.getFromEntity(allay);
+        EcologyComponent component = ((EcologyAccess) allay).betterEcology$getEcologyComponent();
         if (component == null) {
             return ItemStack.EMPTY;
         }

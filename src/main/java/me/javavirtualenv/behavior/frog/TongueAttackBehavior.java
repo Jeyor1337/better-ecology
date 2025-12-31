@@ -55,7 +55,7 @@ public class TongueAttackBehavior extends SeekBehavior {
 
     public TongueAttackBehavior(double tongueRange, int cooldownTicks, double tongueSpeed,
                                 PreySelector preySelector) {
-        super(tongueSpeed);
+        super(null, tongueSpeed);
         this.tongueRange = tongueRange;
         this.cooldownTicks = cooldownTicks;
         this.tongueSpeed = tongueSpeed;
@@ -64,7 +64,7 @@ public class TongueAttackBehavior extends SeekBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Entity entity = context.getEntity();
+        Entity entity = context.getSelf();
         if (!(entity instanceof Frog frog)) {
             return new Vec3d();
         }
@@ -107,7 +107,8 @@ public class TongueAttackBehavior extends SeekBehavior {
         }
 
         // Seek target if in range but not attacking yet
-        return seek(frogPos, context.getVelocity(), targetPos, getMaxSpeed());
+        setTarget(targetPos);
+        return super.calculate(context);
     }
 
     /**

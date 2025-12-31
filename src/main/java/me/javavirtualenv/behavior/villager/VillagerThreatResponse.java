@@ -93,7 +93,7 @@ public class VillagerThreatResponse {
         double closestDistance = Double.MAX_VALUE;
 
         for (net.minecraft.world.entity.Mob threat : threats) {
-            double distance = villager.distanceTo(threat);
+            double distance = villager.position().distanceTo(threat.position());
             closestDistance = Math.min(closestDistance, distance);
 
             // Add gossip about the threat

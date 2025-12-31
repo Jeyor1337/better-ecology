@@ -1,7 +1,7 @@
 package me.javavirtualenv.behavior.strider;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -100,7 +100,7 @@ public class LavaWalkingBehavior extends SteeringBehavior {
 
         // Apply freezing effects
         if (isFreezing) {
-            strider.setSpeed(strider.getSpeed() * 0.5);
+            strider.setSpeed((float)(strider.getSpeed() * 0.5));
         }
     }
 

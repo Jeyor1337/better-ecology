@@ -215,7 +215,9 @@ public class BurrowSystem {
      * Determines burrow type based on biome.
      */
     private BurrowType determineBurrowType(BlockPos pos) {
-        String biomeId = level.getBiome(pos).unwrapKey().location().toString();
+        String biomeId = level.getBiome(pos).unwrapKey()
+            .map(k -> k.location().toString())
+            .orElse("minecraft:plains");
         return BurrowType.forBiome(biomeId);
     }
 
@@ -243,13 +245,20 @@ public class BurrowSystem {
      */
     private void loadBurrows() {
         if (level instanceof ServerLevel serverLevel) {
-            CompoundTag data = serverLevel.getDataStorage()
-                .get(BurrowData::load, BURROW_DATA_KEY);
+            BurrowData data = serverLevel.getDataStorage()
+                .computeIfAbsent(
+                    new net.minecraft.world.level.saveddata.SavedData.Factory<>(
+                        BurrowData::new,
+                        BurrowData::load,
+                        null  // No data fixer needed for this data
+                    ),
+                    BURROW_DATA_KEY
+                );
 
-            if (data != null) {
+            if (data != null && data.data != null) {
                 burrows.clear();
 
-                CompoundTag burrowsTag = data.getCompound("burrows");
+                CompoundTag burrowsTag = data.data.getCompound("burrows");
                 for (String key : burrowsTag.getAllKeys()) {
                     CompoundTag burrowTag = burrowsTag.getCompound(key);
                     RabbitBurrow burrow = RabbitBurrow.fromNbt(burrowTag);
@@ -276,8 +285,17 @@ public class BurrowSystem {
             CompoundTag data = new CompoundTag();
             data.put("burrows", burrowsTag);
 
-            serverLevel.getDataStorage().set(BURROW_DATA_KEY,
-                new BurrowData(data));
+            BurrowData burrowData = serverLevel.getDataStorage()
+                .computeIfAbsent(
+                    new net.minecraft.world.level.saveddata.SavedData.Factory<>(
+                        BurrowData::new,
+                        BurrowData::load,
+                        null  // No data fixer needed for this data
+                    ),
+                    BURROW_DATA_KEY
+                );
+            burrowData.data = data;
+            burrowData.setDirty();
         }
     }
 
@@ -307,19 +325,23 @@ public class BurrowSystem {
      * Data storage class for burrow persistence.
      */
     private static class BurrowData extends net.minecraft.world.level.saveddata.SavedData {
-        private final CompoundTag data;
+        private CompoundTag data;
 
-        public BurrowData(CompoundTag data) {
-            this.data = data;
+        public BurrowData() {
+            this.data = new CompoundTag();
         }
 
-        public static BurrowData load(CompoundTag tag) {
-            return new BurrowData(tag);
+        public static BurrowData load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+            BurrowData burrowData = new BurrowData();
+            burrowData.data = tag;
+            return burrowData;
         }
 
         @Override
-        public CompoundTag save(CompoundTag tag) {
-            tag.merge(data);
+        public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider provider) {
+            if (data != null) {
+                tag.merge(data);
+            }
             return tag;
         }
     }

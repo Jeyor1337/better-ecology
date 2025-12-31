@@ -51,7 +51,7 @@ public class SandMovementBehavior extends SteeringBehavior {
      * Checks if the camel is on sand.
      */
     public static boolean isOnSand(Mob mob) {
-        BlockPos belowPos = new BlockPos(mob.getX(), mob.getY() - 0.2, mob.getZ());
+        BlockPos belowPos = BlockPos.containing(mob.getX(), mob.getY() - 0.2, mob.getZ());
         BlockState blockState = mob.level().getBlockState(belowPos);
         Block block = blockState.getBlock();
 
@@ -65,7 +65,7 @@ public class SandMovementBehavior extends SteeringBehavior {
      * Checks if the camel is on soul sand.
      */
     public static boolean isOnSoulSand(Mob mob) {
-        BlockPos belowPos = new BlockPos(mob.getX(), mob.getY() - 0.2, mob.getZ());
+        BlockPos belowPos = BlockPos.containing(mob.getX(), mob.getY() - 0.2, mob.getZ());
         BlockState blockState = mob.level().getBlockState(belowPos);
         Block block = blockState.getBlock();
 

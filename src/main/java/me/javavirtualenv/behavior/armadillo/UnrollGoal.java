@@ -72,7 +72,7 @@ public class UnrollGoal extends Goal {
                 mob.getX(),
                 mob.getY(),
                 mob.getZ(),
-                SoundEvents.ARMADILLO_UNROLL,
+                SoundEvents.ARMADILLO_UNROLL_START,
                 SoundSource.NEUTRAL,
                 0.4F,
                 1.0F

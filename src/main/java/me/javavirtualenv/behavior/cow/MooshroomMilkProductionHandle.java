@@ -4,12 +4,16 @@ import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.MushroomCow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.SuspiciousStewEffects;
+import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -131,8 +135,15 @@ public class MooshroomMilkProductionHandle extends MilkProductionHandle {
      */
     private ItemStack createSuspiciousStew(String flowerType) {
         ItemStack stew = new ItemStack(Items.SUSPICIOUS_STEW);
-        MobEffect effect = getEffectForFlower(flowerType);
-        net.minecraft.world.item.alchemy.SuspiciousStewEffect.addToStew(stew, effect, 160);
+        Holder<MobEffect> effect = getEffectForFlower(flowerType);
+
+        // Create a SuspiciousStewEffects.Entry with the effect and duration (160 ticks = 8 seconds)
+        SuspiciousStewEffects.Entry stewEffect = new SuspiciousStewEffects.Entry(effect, 160);
+        SuspiciousStewEffects effects = new SuspiciousStewEffects(List.of(stewEffect));
+
+        // Set the data component on the ItemStack
+        stew.set(DataComponents.SUSPICIOUS_STEW_EFFECTS, effects);
+
         return stew;
     }
 
@@ -140,7 +151,7 @@ public class MooshroomMilkProductionHandle extends MilkProductionHandle {
      * Get the potion effect for a given flower type.
      * Matches vanilla suspicious stew brewing.
      */
-    private MobEffect getEffectForFlower(String flowerType) {
+    private Holder<MobEffect> getEffectForFlower(String flowerType) {
         return switch (flowerType) {
             case "minecraft:allium" -> MobEffects.FIRE_RESISTANCE;
             case "minecraft:azure_bluet" -> MobEffects.BLINDNESS;

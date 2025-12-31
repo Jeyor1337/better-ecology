@@ -49,7 +49,7 @@ public class FrogJumpingBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Entity entity = context.getEntity();
+        Entity entity = context.getSelf();
         if (!(entity instanceof Frog frog)) {
             return new Vec3d();
         }
@@ -60,7 +60,7 @@ public class FrogJumpingBehavior extends SteeringBehavior {
         }
 
         // Only jump when on ground
-        if (!frog.isOnGround()) {
+        if (!frog.onGround()) {
             return new Vec3d();
         }
 

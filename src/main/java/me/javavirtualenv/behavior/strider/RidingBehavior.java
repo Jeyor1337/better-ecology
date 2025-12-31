@@ -1,7 +1,7 @@
 package me.javavirtualenv.behavior.strider;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Strider;
@@ -178,7 +178,7 @@ public class RidingBehavior extends SteeringBehavior {
      * Attempts to breed while riding.
      */
     public boolean breedWhileRidding(Strider strider, Strider partner) {
-        if (!canBreedWhileRidding()) {
+        if (!canBreedWhileRiding()) {
             return false;
         }
 

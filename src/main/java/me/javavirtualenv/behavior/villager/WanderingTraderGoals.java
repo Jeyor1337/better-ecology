@@ -1,5 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
+import me.javavirtualenv.mixin.villager.VillagerMixin;
 import me.javavirtualenv.mixin.villager.WanderingTraderMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -7,6 +8,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -34,9 +36,7 @@ class SeekVillageGoal extends Goal {
     @Override
     public boolean canContinueToUse() {
         return targetVillage != null && trader.position().distanceTo(
-            targetVillage.getX() + 0.5,
-            targetVillage.getY(),
-            targetVillage.getZ() + 0.5
+            new Vec3(targetVillage.getX() + 0.5, targetVillage.getY(), targetVillage.getZ() + 0.5)
         ) > 8.0;
     }
 
@@ -148,7 +148,7 @@ class SocializeWithVillagersGoal extends Goal {
         }
 
         // Move closer if too far
-        double distance = trader.distanceTo(socialPartner);
+        double distance = trader.position().distanceTo(socialPartner.position());
         if (distance > 3.0) {
             trader.getNavigation().moveTo(
                 socialPartner.getX(),
@@ -182,10 +182,11 @@ class SocializeWithVillagersGoal extends Goal {
         GossipSystem villagerGossip = VillagerMixin.getGossipSystem(villager);
         if (villagerGossip != null) {
             // Trader shares gossip with villager
-            gossipSystem.spreadGossip(villagerGossip);
+            gossipSystem.spreadGossip(villager);
 
-            // Villager shares gossip with trader
-            villagerGossip.spreadGossip(gossipSystem);
+            // Villager shares gossip with trader (need to get trader as Villager for API compatibility)
+            // Note: WanderingTrader extends AbstractVillager, not Villager, so direct spread not possible
+            // This would require additional API support
         }
     }
 

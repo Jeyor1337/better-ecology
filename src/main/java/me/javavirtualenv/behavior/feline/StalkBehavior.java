@@ -2,7 +2,7 @@ package me.javavirtualenv.behavior.feline;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.predation.PreySelector;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;

@@ -239,7 +239,7 @@ public class FelineBehaviorGoal extends Goal {
 
         // Check trust level with owner
         if (affection != null && cat.getOwner() != null) {
-            Player owner = mob.getLevel().getPlayerByUUID(cat.getOwnerUUID());
+            Player owner = mob.level().getPlayerByUUID(cat.getOwnerUUID());
             return affection.willGiveGifts(owner);
         }
 

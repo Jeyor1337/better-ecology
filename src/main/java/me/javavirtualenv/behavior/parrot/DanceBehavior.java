@@ -1,9 +1,11 @@
 package me.javavirtualenv.behavior.parrot;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Items;
 
@@ -279,11 +281,11 @@ public class DanceBehavior {
             }
 
             // Check if this parrot is already dancing
-            EcologyComponent otherComponent = EcologyComponent.getOrCreate(other);
-            if (otherComponent == null) {
+            if (!(other instanceof EcologyAccess access)) {
                 continue;
             }
 
+            EcologyComponent otherComponent = access.betterEcology$getEcologyComponent();
             CompoundTag otherDanceData = otherComponent.getHandleTag("dance");
             if (otherDanceData.getBoolean("is_dancing")) {
                 continue;
@@ -299,13 +301,15 @@ public class DanceBehavior {
 
     private void notifyParrotToDance(Mob other, DanceStyle style) {
         // Store in the other parrot's component that it should start dancing
-        EcologyComponent otherComponent = EcologyComponent.getOrCreate(other);
-        if (otherComponent != null) {
-            CompoundTag danceData = otherComponent.getHandleTag("dance");
-            danceData.putBoolean("should_start_dancing", true);
-            danceData.putString("invited_style", style.name());
-            otherComponent.setHandleTag("dance", danceData);
+        if (!(other instanceof EcologyAccess access)) {
+            return;
         }
+
+        EcologyComponent otherComponent = access.betterEcology$getEcologyComponent();
+        CompoundTag danceData = otherComponent.getHandleTag("dance");
+        danceData.putBoolean("should_start_dancing", true);
+        danceData.putString("invited_style", style.name());
+        otherComponent.setHandleTag("dance", danceData);
     }
 
     public boolean isDancing() {

@@ -2,7 +2,7 @@ package me.javavirtualenv.behavior.feline;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.player.Player;
@@ -136,7 +136,7 @@ public class GiftGivingBehavior extends SteeringBehavior {
         if (mob instanceof net.minecraft.world.entity.animal.Cat cat) {
             // Prefer owner
             if (cat.getOwner() != null) {
-                Player owner = mob.getLevel().getPlayerByUUID(cat.getOwnerUUID());
+                Player owner = mob.level().getPlayerByUUID(cat.getOwnerUUID());
                 if (owner != null && owner.isAlive()) {
                     double distance = mob.position().distanceTo(owner.position());
                     if (distance < searchRange) {
@@ -147,10 +147,7 @@ public class GiftGivingBehavior extends SteeringBehavior {
         }
 
         // Find nearest trusted player
-        return mob.getLevel().getNearestPlayer(
-            mob.getX(), mob.getY(), mob.getZ(), searchRange,
-            TargetingConditions.forNonCombat()
-        );
+        return mob.level().getNearestPlayer(mob, searchRange);
     }
 
     private void giveGift(Mob mob) {

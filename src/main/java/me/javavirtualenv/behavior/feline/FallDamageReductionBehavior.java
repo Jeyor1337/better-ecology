@@ -2,7 +2,7 @@ package me.javavirtualenv.behavior.feline;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.sounds.SoundEvents;
@@ -88,7 +88,7 @@ public class FallDamageReductionBehavior extends SteeringBehavior {
                 mob.fallDistance = 0;
             } else {
                 // Reduce damage by 80%
-                mob.fallDistance = fallDistance * 0.2;
+                mob.fallDistance = (float)(fallDistance * 0.2);
             }
         }
     }

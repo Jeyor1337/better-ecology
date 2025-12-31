@@ -175,7 +175,7 @@ public class BondingGoal extends Goal {
         for (int i = 0; i < 3; i++) {
             double offsetX = (level.getRandom().nextDouble() - 0.5) * 0.5;
             double offsetZ = (level.getRandom().nextDouble() - 0.5) * 0.5;
-            level.sendParticles(
+            ((net.minecraft.server.level.ServerLevel) level).sendParticles(
                 net.minecraft.core.particles.ParticleTypes.HEART,
                 x + offsetX, y, z + offsetZ,
                 1, 0, 0.1, 0, 0

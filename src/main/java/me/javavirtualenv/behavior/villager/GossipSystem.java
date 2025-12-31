@@ -1,5 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
+import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.npc.Villager;

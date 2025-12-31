@@ -204,7 +204,7 @@ public enum HabitatQuality {
      */
     private static boolean isFoodBlock(BlockState blockState) {
         return blockState.is(BlockTags.LEAVES) ||
-               blockState.is(Blocks.GRASS) ||
+               blockState.is(Blocks.SHORT_GRASS) ||
                blockState.is(Blocks.TALL_GRASS) ||
                blockState.is(Blocks.FERN) ||
                blockState.is(Blocks.LARGE_FERN) ||

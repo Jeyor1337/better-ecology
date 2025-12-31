@@ -4,6 +4,7 @@ import me.javavirtualenv.behavior.villager.*;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.mixin.MobAccessor;
 import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -19,6 +20,11 @@ public class VillagerBehaviorHandle implements EcologyHandle {
     @Override
     public String id() {
         return "villager_behavior";
+    }
+
+    @Override
+    public boolean supports(EcologyProfile profile) {
+        return profile != null && profile.getBool("villager.enabled", false);
     }
 
     @Override
@@ -53,30 +59,20 @@ public class VillagerBehaviorHandle implements EcologyHandle {
         DailyRoutine dailyRoutine,
         EnhancedFarming enhancedFarming
     ) {
-        // Register enhanced trading goal
-        var tradingGoalSelector = villager.goalSelector;
-        tradingGoalSelector.addGoal(
+        // Register enhanced trading goal using accessor
+        MobAccessor accessor = (MobAccessor) villager;
+        accessor.betterEcology$getGoalSelector().addGoal(
             2, // High priority during trading
             new EnhancedTradingGoal(villager, tradingReputation, gossipSystem)
         );
 
         // Register socialize goal
-        tradingGoalSelector.addGoal(
+        accessor.betterEcology$getGoalSelector().addGoal(
             5, // Medium priority
             new SocializeGoal(villager, gossipSystem, dailyRoutine)
         );
 
         // Note: Work and farming behaviors are handled through tick updates,
         // not goals, as they are continuous behaviors
-    }
-
-    @Override
-    public void tick(Mob mob, EcologyComponent component) {
-        // Villager behaviors are ticked through the mixin, not here
-    }
-
-    @Override
-    public List<String> dependencies() {
-        return List.of(); // No dependencies
     }
 }

@@ -2,7 +2,7 @@ package me.javavirtualenv.behavior.feline;
 
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
-import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.behavior.core.SteeringBehavior;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
@@ -148,7 +148,7 @@ public class RubAffectionBehavior extends SteeringBehavior {
         // Prioritize tamed owner
         if (mob instanceof net.minecraft.world.entity.animal.Cat cat) {
             if (cat.isTame() && cat.getOwner() != null) {
-                Entity owner = cat.level().getEntity(cat.getOwnerUUID());
+                Entity owner = cat.level().getPlayerByUUID(cat.getOwnerUUID());
                 if (owner != null && owner.isAlive()) {
                     double distance = mob.position().distanceTo(owner.position());
                     if (distance < 8.0) {

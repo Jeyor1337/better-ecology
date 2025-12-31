@@ -183,7 +183,7 @@ public class FoxPursuitBehavior extends SteeringBehavior {
 
     private Vec3d calculatePounce(Mob fox, Vec3d foxPos, Vec3d preyPos) {
         // Check if landed
-        if (fox.isOnGround()) {
+        if (fox.onGround()) {
             currentState = HuntingState.ATTACKING;
             isPouncing = false;
             return new Vec3d();
@@ -217,7 +217,7 @@ public class FoxPursuitBehavior extends SteeringBehavior {
 
     private void updateHuntingState(Mob fox) {
         // Check if pounce completed
-        if (isPouncing && fox.isOnGround()) {
+        if (isPouncing && fox.onGround()) {
             currentState = HuntingState.ATTACKING;
             isPouncing = false;
             return;

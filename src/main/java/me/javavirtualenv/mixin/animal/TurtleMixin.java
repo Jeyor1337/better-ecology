@@ -3,6 +3,7 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.mixin.MobAccessor;
@@ -115,10 +116,8 @@ public abstract class TurtleMixin extends AnimalMixin {
             return;
         }
 
-        EcologyComponent component = EcologyComponent.getOrCreate(turtle);
-        if (component != null) {
-            // Nest building goals are registered by NestBuildingHandle
-            // Turtle-specific homing and beach migration can be added here
-        }
+        EcologyComponent component = ((EcologyAccess) turtle).betterEcology$getEcologyComponent();
+        // Nest building goals are registered by NestBuildingHandle
+        // Turtle-specific homing and beach migration can be added here
     }
 }

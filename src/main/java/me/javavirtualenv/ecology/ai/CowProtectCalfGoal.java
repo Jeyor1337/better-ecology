@@ -1,5 +1,7 @@
 package me.javavirtualenv.ecology.ai;
 
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -8,6 +10,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.level.Level;
@@ -259,9 +262,12 @@ public class CowProtectCalfGoal extends Goal {
                 SoundSource.NEUTRAL,
                 2.0F, 1.2F);
 
-        // Alert nearby herd members through persistent data
-        mother.getPersistentData().putBoolean("better-ecology:alarm_active", true);
-        mother.getPersistentData().putLong("better-ecology:alarm_tick", mother.tickCount);
+        // Alert nearby herd members through ecology component
+        if (mother instanceof EcologyAccess access) {
+            CompoundTag alarmTag = access.betterEcology$getEcologyComponent().getHandleTag("alarm");
+            alarmTag.putBoolean("alarm_active", true);
+            alarmTag.putLong("alarm_tick", mother.tickCount);
+        }
     }
 
     /**
@@ -283,7 +289,7 @@ public class CowProtectCalfGoal extends Goal {
         }
 
         // Hostile mobs
-        if (entity.getType().getCategory() == net.minecraft.world.entity.EntityType.MONSTER) {
+        if (entity.getType().getCategory() == MobCategory.MONSTER) {
             return true;
         }
 

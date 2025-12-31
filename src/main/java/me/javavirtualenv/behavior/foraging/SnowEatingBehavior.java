@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +53,8 @@ public class SnowEatingBehavior extends SteeringBehavior {
     @Override
     public Vec3d calculate(BehaviorContext context) {
         // Only activate if thirsty
-        if (!context.getEntityState().isThirsty()) {
+        EcologyComponent component = getEcologyComponent(context.getMob());
+        if (component == null || !component.state().isThirsty()) {
             return new Vec3d();
         }
 
@@ -175,9 +177,9 @@ public class SnowEatingBehavior extends SteeringBehavior {
             level.setBlock(currentSnowTarget, Blocks.AIR.defaultBlockState(), 3);
         } else if (block == Blocks.SNOW) {
             // Reduce snow layers or remove if single layer
-            int layers = state.getValue(net.minecraft.world.level.block.SnowBlock.LAYERS);
+            int layers = state.getValue(BlockStateProperties.LAYERS);
             if (layers > 1) {
-                level.setBlock(currentSnowTarget, state.setValue(net.minecraft.world.level.block.SnowBlock.LAYERS, layers - 1), 3);
+                level.setBlock(currentSnowTarget, state.setValue(BlockStateProperties.LAYERS, layers - 1), 3);
             } else {
                 level.setBlock(currentSnowTarget, Blocks.AIR.defaultBlockState(), 3);
             }

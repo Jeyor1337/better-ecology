@@ -206,19 +206,19 @@ public class GrainEatingBehavior extends SteeringBehavior {
             return false;
         }
 
-        // Check if block is a CropBlock and has age property
-        if (state.getBlock() instanceof CropBlock cropBlock) {
-            int age = state.getValue(cropBlock.getAgeProperty());
-            return age >= cropBlock.getMaxAge();
-        }
-
-        // For non-crop blocks (like stems), check for age property manually
+        // Check for age property in the block state
         IntegerProperty ageProperty = getAgePropertyOrNull(state);
         if (ageProperty == null) {
             return true;
         }
 
         int age = state.getValue(ageProperty);
+
+        // Get max age for the crop
+        if (state.getBlock() instanceof CropBlock cropBlock) {
+            return age >= cropBlock.getMaxAge();
+        }
+
         int maxAge = getMaxAgeForCrop(state.getBlock());
         return age >= maxAge;
     }
@@ -238,19 +238,19 @@ public class GrainEatingBehavior extends SteeringBehavior {
             return false;
         }
 
-        // Check if block is a CropBlock and has age property
-        if (state.getBlock() instanceof CropBlock cropBlock) {
-            int age = state.getValue(cropBlock.getAgeProperty());
-            return age < cropBlock.getMaxAge();
-        }
-
-        // For non-crop blocks (like stems), check for age property manually
+        // Check for age property in the block state
         IntegerProperty ageProperty = getAgePropertyOrNull(state);
         if (ageProperty == null) {
             return true;
         }
 
         int age = state.getValue(ageProperty);
+
+        // Get max age for the crop
+        if (state.getBlock() instanceof CropBlock cropBlock) {
+            return age < cropBlock.getMaxAge();
+        }
+
         int maxAge = getMaxAgeForCrop(state.getBlock());
         return age < maxAge;
     }

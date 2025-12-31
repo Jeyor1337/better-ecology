@@ -1,5 +1,6 @@
 package me.javavirtualenv.behavior.villager;
 
+import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.npc.Villager;
 
@@ -78,7 +79,7 @@ public class SocializeGoal extends Goal {
         }
 
         // Move closer if too far
-        double distance = villager.distanceTo(socialPartner);
+        double distance = villager.position().distanceTo(socialPartner.position());
         if (distance > 3.0) {
             villager.getNavigation().moveTo(
                 socialPartner.getX(),

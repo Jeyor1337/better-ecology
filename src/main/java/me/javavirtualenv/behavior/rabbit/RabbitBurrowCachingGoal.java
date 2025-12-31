@@ -1,8 +1,8 @@
 package me.javavirtualenv.behavior.rabbit;
 
 import me.javavirtualenv.ecology.EcologyComponent;
-import me.javavirtualenv.ecology.handles.HungerHandle;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
@@ -109,10 +109,10 @@ public class RabbitBurrowCachingGoal extends Goal {
             return true;
         }
 
-        // Cache if hunger is high (planning ahead)
-        HungerHandle hungerHandle = component.getHandle(HungerHandle.class);
-        if (hungerHandle != null) {
-            int hunger = hungerHandle.getHunger(mob);
+        // Cache if hunger is moderate (planning ahead)
+        CompoundTag hungerTag = component.getHandleTag("hunger");
+        if (hungerTag != null && hungerTag.contains("hunger")) {
+            int hunger = hungerTag.getInt("hunger");
             // Cache if not starving but could use food later
             if (hunger > 30 && hunger < 60) {
                 return true;

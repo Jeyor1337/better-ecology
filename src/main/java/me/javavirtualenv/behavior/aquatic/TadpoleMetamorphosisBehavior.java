@@ -3,7 +3,9 @@ package me.javavirtualenv.behavior.aquatic;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -129,7 +131,7 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
         ServerLevel level = (ServerLevel) tadpoleEntity.level();
 
         // Determine frog variant based on biome
-        FrogVariant variant = determineFrogVariant(level, tadpoleEntity.blockPosition());
+        Holder<FrogVariant> variant = determineFrogVariant(level, tadpoleEntity.blockPosition());
 
         // Create frog at tadpole's position
         Frog frog = EntityType.FROG.create(level);
@@ -151,21 +153,21 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
         return frog;
     }
 
-    private FrogVariant determineFrogVariant(ServerLevel level, net.minecraft.core.BlockPos pos) {
-        // Get temperature at position
-        float temperature = level.getBiome(pos).value().getTemperature(pos);
+    private Holder<FrogVariant> determineFrogVariant(ServerLevel level, net.minecraft.core.BlockPos pos) {
+        // Get base temperature at position (uses public method)
+        float temperature = level.getBiome(pos).value().getBaseTemperature();
 
         // Cold biome = temperate frog
         if (temperature < 0.5f) {
-            return BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.TEMPERATE);
+            return BuiltInRegistries.FROG_VARIANT.wrapAsHolder(BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.TEMPERATE));
         }
         // Warm biome = warm frog
         else if (temperature > 0.8f) {
-            return BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.WARM);
+            return BuiltInRegistries.FROG_VARIANT.wrapAsHolder(BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.WARM));
         }
         // Default = cold frog
         else {
-            return BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.COLD);
+            return BuiltInRegistries.FROG_VARIANT.wrapAsHolder(BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.COLD));
         }
     }
 

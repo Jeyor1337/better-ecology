@@ -1,13 +1,16 @@
 package me.javavirtualenv.behavior.production;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.EcologyHooks;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
+import me.javavirtualenv.mixin.animal.BeeAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Bee-specific pollination goal.
@@ -97,10 +100,10 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
         }
 
         if (pollinationTicks >= gatheringDuration) {
-            bee.setHasNectar(true);
+            ((BeeAccessor) bee).invokeSetHasNectar(true);
             hasResource = true;
 
-            EcologyComponent component = EcologyComponent.getFromEntity(bee);
+            EcologyComponent component = EcologyHooks.getEcologyComponent(bee);
             if (component != null) {
                 ResourceProductionHandle productionHandle = new ResourceProductionHandle();
                 productionHandle.setPollinationTarget(bee, component, currentFlowerType);
@@ -112,11 +115,9 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
     protected void returnToHome() {
         BlockPos hivePos = bee.getHivePos();
         if (hivePos != null) {
-            double distance = bee.position().distanceTo(
-                hivePos.getX() + 0.5,
-                hivePos.getY(),
-                hivePos.getZ() + 0.5
-            );
+            Vec3 beePos = bee.position();
+            Vec3 hiveCenter = new Vec3(hivePos.getX() + 0.5, hivePos.getY(), hivePos.getZ() + 0.5);
+            double distance = beePos.distanceTo(hiveCenter);
 
             if (distance > 1.5) {
                 bee.getNavigation().moveTo(hivePos.getX(), hivePos.getY(), hivePos.getZ(), 1.0);
@@ -131,11 +132,9 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             return true;
         }
 
-        double distance = bee.position().distanceTo(
-            hivePos.getX() + 0.5,
-            hivePos.getY(),
-            hivePos.getZ() + 0.5
-        );
+        Vec3 beePos = bee.position();
+        Vec3 hiveCenter = new Vec3(hivePos.getX() + 0.5, hivePos.getY(), hivePos.getZ() + 0.5);
+        double distance = beePos.distanceTo(hiveCenter);
 
         return distance < 2.0;
     }
@@ -164,7 +163,7 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             }
         }
 
-        bee.setHasNectar(false);
+        ((BeeAccessor) bee).invokeSetHasNectar(false);
         currentFlowerType = null;
         pollinationTicks = 0;
     }
@@ -234,7 +233,10 @@ public class BeePollinationGoal extends ResourceGatheringGoal {
             if (isGrowableCrop(state)) {
                 if (serverLevel.random.nextFloat() < 0.15f) {
                     net.minecraft.world.level.block.Block block = state.getBlock();
-                    block.randomTick(state, serverLevel, pos, serverLevel.random);
+                    // Use isRandomlyTicking to check if the block supports random ticks
+                    if (state.isRandomlyTicking()) {
+                        state.randomTick(serverLevel, pos, serverLevel.random);
+                    }
                 }
             }
         }

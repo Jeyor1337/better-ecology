@@ -91,8 +91,7 @@ public class FelineBehaviorHandle implements EcologyHandle {
         // Save affection data
         CatAffectionComponent affection = getAffectionComponent(mob, component);
         if (affection != null) {
-            CompoundTag affectionTag = new CompoundTag();
-            affection.toNbt(affectionTag);
+            CompoundTag affectionTag = affection.toNbt();
             tag.put(AFFECTION_KEY, affectionTag);
         }
 
@@ -120,8 +119,7 @@ public class FelineBehaviorHandle implements EcologyHandle {
     private void storeAffectionComponent(Mob mob, EcologyComponent component, CatAffectionComponent affection) {
         // Store in component data for persistence
         CompoundTag tag = component.getHandleTag(id());
-        CompoundTag affectionTag = new CompoundTag();
-        affection.toNbt(affectionTag);
+        CompoundTag affectionTag = affection.toNbt();
         tag.put(AFFECTION_KEY, affectionTag);
     }
 

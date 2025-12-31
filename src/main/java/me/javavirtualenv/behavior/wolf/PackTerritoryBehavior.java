@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.wolf;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import net.minecraft.world.entity.Entity;
@@ -54,8 +54,7 @@ public class PackTerritoryBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Mob entity = context.getEntity();
-        if (!(entity instanceof Wolf wolf)) {
+        if (!(context.getSelf() instanceof Wolf wolf)) {
             return new Vec3d();
         }
 
@@ -98,7 +97,7 @@ public class PackTerritoryBehavior extends SteeringBehavior {
     private Entity detectIntruder(Wolf wolf, BehaviorContext context) {
         Vec3d wolfPos = context.getPosition();
 
-        for (Entity entity : context.getNeighbors()) {
+        for (Entity entity : context.getNearbyEntities()) {
             if (!(entity instanceof Wolf otherWolf)) {
                 continue;
             }
@@ -154,7 +153,7 @@ public class PackTerritoryBehavior extends SteeringBehavior {
         // Seek intruder
         Vec3d toIntruder = Vec3d.sub(intruderPos, wolfPos);
         toIntruder.normalize();
-        toIntruder.mult(maxForce() * urgency);
+        toIntruder.mult(context.getMaxForce() * urgency);
 
         return toIntruder;
     }
@@ -247,7 +246,7 @@ public class PackTerritoryBehavior extends SteeringBehavior {
             // Server-side - sync to clients
             // In a full implementation, would send packet to spawn particles
             // For now, we play a sound as a simple indicator
-            level.playSound(null, wolf.blockPosition(), SoundEvents.WOLF_SNIFF,
+            level.playSound(null, wolf.blockPosition(), SoundEvents.WOLF_AMBIENT,
                 SoundSource.NEUTRAL, 0.5f, 1.0f);
         }
     }
@@ -278,57 +277,24 @@ public class PackTerritoryBehavior extends SteeringBehavior {
     }
 
     /**
-     * Gets or generates pack ID from NBT.
+     * Gets or generates pack ID.
      */
     private UUID getPackId(Wolf wolf) {
-        if (packId != null) {
-            return packId;
+        if (packId == null) {
+            packId = wolf.getUUID();
         }
-
-        var persistentData = wolf.getPersistentData();
-        if (persistentData.contains("WolfPackId")) {
-            packId = persistentData.getUUID("WolfPackId");
-            return packId;
-        }
-
-        packId = UUID.randomUUID();
-        persistentData.putUUID("WolfPackId", packId);
         return packId;
     }
 
     /**
-     * Saves territory data to NBT.
+     * Saves territory data.
      */
     private void saveTerritoryData(Wolf wolf) {
-        var persistentData = wolf.getPersistentData();
-
-        if (territoryCenter != null) {
-            persistentData.putDouble("WolfTerritoryX", territoryCenter.x);
-            persistentData.putDouble("WolfTerritoryY", territoryCenter.y);
-            persistentData.putDouble("WolfTerritoryZ", territoryCenter.z);
-        }
-    }
-
-    /**
-     * Loads territory data from NBT.
-     */
-    private void loadTerritoryData(Wolf wolf) {
-        var persistentData = wolf.getPersistentData();
-
-        if (persistentData.contains("WolfTerritoryX")) {
-            double x = persistentData.getDouble("WolfTerritoryX");
-            double y = persistentData.getDouble("WolfTerritoryY");
-            double z = persistentData.getDouble("WolfTerritoryZ");
-            territoryCenter = new Vec3d(x, y, z);
-        }
+        // Territory data is stored in memory for this session
     }
 
     public Vec3d getTerritoryCenter() {
         return territoryCenter;
-    }
-
-    public void setTerritoryCenter(Vec3d center) {
-        this.territoryCenter = center;
     }
 
     public double getTerritoryRadius() {

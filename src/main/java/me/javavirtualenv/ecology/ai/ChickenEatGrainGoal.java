@@ -5,13 +5,14 @@ import me.javavirtualenv.behavior.chicken.SeedDroppingBehavior;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import me.javavirtualenv.ecology.handles.HungerHandle;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.core.particles.ParticleTypes;
 
 /**
  * Goal for chickens to eat crops from farmland.
@@ -242,7 +243,7 @@ public class ChickenEatGrainGoal extends Goal {
             double offsetZ = level.getRandom().nextGaussian() * 0.2;
 
             level.addParticle(
-                ParticleTypes.ITEM,
+                ParticleTypes.HAPPY_VILLAGER,
                 pos.getX() + 0.5 + offsetX,
                 pos.getY() + 0.5 + offsetY,
                 pos.getZ() + 0.5 + offsetZ,

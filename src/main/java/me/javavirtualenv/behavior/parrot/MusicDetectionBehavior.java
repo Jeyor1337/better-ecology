@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
 
@@ -92,7 +93,7 @@ public class MusicDetectionBehavior {
         if (block == Blocks.JUKEBOX) {
             BlockEntity be = parrot.level().getBlockEntity(pos);
             if (be instanceof JukeboxBlockEntity jukebox) {
-                return jukebox.getRecord().isPresent();
+                return !jukebox.getTheItem().isEmpty();
             }
         }
 
@@ -124,9 +125,10 @@ public class MusicDetectionBehavior {
         if (block == Blocks.JUKEBOX) {
             BlockEntity be = parrot.level().getBlockEntity(musicPos);
             if (be instanceof JukeboxBlockEntity jukebox) {
-                return jukebox.getRecord()
-                    .map(record -> DanceStyle.fromRecord(record.value()))
-                    .orElse(DanceStyle.BOUNCE);
+                var record = jukebox.getTheItem();
+                if (!record.isEmpty()) {
+                    return DanceStyle.fromRecord(record);
+                }
             }
         }
 
@@ -185,10 +187,8 @@ public class MusicDetectionBehavior {
             return false;
         }
 
-        double distance = parrot.distanceTo(
-            musicSource.getX() + 0.5,
-            musicSource.getY() + 0.5,
-            musicSource.getZ() + 0.5
+        double distance = parrot.position().distanceTo(
+            new Vec3(musicSource.getX() + 0.5, musicSource.getY() + 0.5, musicSource.getZ() + 0.5)
         );
 
         // Check if we've arrived at the music

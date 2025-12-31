@@ -179,8 +179,8 @@ public class GrazingHandle implements EcologyHandle {
         tag.putInt(NBT_GRASS_EATEN_COUNT, grassEaten + 1);
         tag.putBoolean(NBT_IS_GRAZING, true);
 
-        // Play eating sound
-        level.playSound(null, cow.blockPosition(), SoundEvents.COW_EAT, SoundSource.NEUTRAL, 1.0F, 1.0F);
+        // Play eating sound (using grass break sound as eating sound)
+        level.playSound(null, cow.blockPosition(), SoundEvents.GRASS_BREAK, SoundSource.NEUTRAL, 1.0F, 1.0F);
 
         // Spawn particles
         spawnEatParticles(level, cow.blockPosition());
@@ -208,7 +208,7 @@ public class GrazingHandle implements EcologyHandle {
         tag.putInt(NBT_GRASS_EATEN_COUNT, grassEaten + 1);
         tag.putBoolean(NBT_IS_GRAZING, true);
 
-        level.playSound(null, cow.blockPosition(), SoundEvents.COW_EAT, SoundSource.NEUTRAL, 1.0F, 1.2F);
+        level.playSound(null, cow.blockPosition(), SoundEvents.GRASS_BREAK, SoundSource.NEUTRAL, 1.0F, 1.2F);
 
         spawnEatParticles(level, cow.blockPosition());
     }

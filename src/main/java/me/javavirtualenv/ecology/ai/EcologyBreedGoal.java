@@ -229,8 +229,8 @@ public class EcologyBreedGoal extends BreedGoal {
      * Prevents breeding between animals related within 2 generations.
      */
     private boolean checkGeneticDiversityRequirement(Animal animal) {
-        Animal partner = this.animal.getLoveCause();
-        if (partner == null || partner == animal) {
+        Object loveCause = this.animal.getLoveCause();
+        if (loveCause == null || !(loveCause instanceof Animal partner) || partner == animal) {
             return true;
         }
 

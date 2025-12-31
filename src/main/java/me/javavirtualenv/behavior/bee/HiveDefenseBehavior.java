@@ -5,6 +5,7 @@ import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -206,7 +207,9 @@ public class HiveDefenseBehavior extends SteeringBehavior {
             if (otherBee != alarmBee && !otherBee.isAngry()) {
                 // Trigger anger in nearby bees
                 otherBee.setRemainingPersistentAngerTime(ANGER_DURATION);
-                otherBee.setTarget(threat);
+                if (threat instanceof LivingEntity livingThreat) {
+                    otherBee.setTarget(livingThreat);
+                }
             }
         }
     }

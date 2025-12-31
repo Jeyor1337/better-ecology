@@ -1,11 +1,13 @@
 package me.javavirtualenv.ecology.ai;
 
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
+import org.joml.Vector3f;
 
 import java.util.EnumSet;
 
@@ -60,9 +62,9 @@ public class CowCudChewGoal extends Goal {
         // Stop moving
         mob.getNavigation().stop();
 
-        // Play start sound
+        // Play start sound (use COW_AMBIENT since COW_EAT doesn't exist in 1.21.1)
         level.playSound(null, mob.blockPosition(),
-                SoundEvents.COW_EAT,
+                SoundEvents.COW_AMBIENT,
                 SoundSource.NEUTRAL,
                 0.8F, 0.9F);
     }
@@ -85,10 +87,10 @@ public class CowCudChewGoal extends Goal {
     public void tick() {
         chewingTicks++;
 
-        // Periodic chewing sounds
+        // Periodic chewing sounds (use COW_AMBIENT since COW_EAT doesn't exist in 1.21.1)
         if (chewingTicks % 40 == 0) {
             level.playSound(null, mob.blockPosition(),
-                    SoundEvents.COW_EAT,
+                    SoundEvents.COW_AMBIENT,
                     SoundSource.NEUTRAL,
                     0.6F, 1.0F);
         }
@@ -122,8 +124,12 @@ public class CowCudChewGoal extends Goal {
         double offsetY = serverLevel.getRandom().nextDouble() * 0.2;
         double offsetZ = serverLevel.getRandom().nextDouble() * 0.3 - 0.15;
 
+        // Create dust particle options (green-ish color for grass)
+        DustParticleOptions dustOptions = new DustParticleOptions(
+                new Vector3f(0.4f, 0.6f, 0.3f), 1.0f);
+
         serverLevel.sendParticles(
-                net.minecraft.core.particles.ParticleTypes.DUST,
+                dustOptions,
                 mob.getX() + offsetX,
                 mob.getY() + mob.getEyeHeight() * 0.8 + offsetY,
                 mob.getZ() + offsetZ,

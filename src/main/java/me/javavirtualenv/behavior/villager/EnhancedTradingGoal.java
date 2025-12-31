@@ -1,10 +1,12 @@
 package me.javavirtualenv.behavior.villager;
 
+import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.EnumSet;
+import java.util.UUID;
 
 /**
  * Goal for enhanced trading behavior with dynamic pricing.

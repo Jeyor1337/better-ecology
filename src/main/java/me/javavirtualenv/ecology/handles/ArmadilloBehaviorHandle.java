@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
@@ -55,17 +56,19 @@ public class ArmadilloBehaviorHandle extends CodeBasedHandle {
         getGoalSelector(mob).addGoal(burrowPriority, burrowGoal);
 
         // Register predator avoidance
-        getGoalSelector(mob).addGoal(3, new AvoidEntityGoal<>(
-            mob,
-            Wolf.class,
-            12.0f,
-            0.8,
-            0.6
-        ));
+        if (mob instanceof PathfinderMob pathfinderMob) {
+            getGoalSelector(mob).addGoal(3, new AvoidEntityGoal<Wolf>(
+                pathfinderMob,
+                Wolf.class,
+                12.0f,
+                0.8,
+                0.6
+            ));
 
-        // Basic survival goals
-        getGoalSelector(mob).addGoal(0, new FloatGoal(mob));
-        getGoalSelector(mob).addGoal(7, new RandomStrollGoal(mob, 0.5));
+            // Basic survival goals
+            getGoalSelector(mob).addGoal(0, new FloatGoal(mob));
+            getGoalSelector(mob).addGoal(7, new RandomStrollGoal(pathfinderMob, 0.5));
+        }
     }
 
     @Override

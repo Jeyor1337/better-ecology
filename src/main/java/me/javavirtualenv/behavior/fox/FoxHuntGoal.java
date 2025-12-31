@@ -92,11 +92,11 @@ public class FoxHuntGoal extends Goal {
 
         // Handle pouncing state
         if (pursuitBehavior.getCurrentState() == FoxPursuitBehavior.HuntingState.POUNCING) {
-            fox.setSpeed(speedModifier * 1.5);
+            fox.setSpeed((float)(speedModifier * 1.5));
         } else if (pursuitBehavior.getCurrentState() == FoxPursuitBehavior.HuntingState.CROUCHING) {
-            fox.setSpeed(speedModifier * 0.2);
+            fox.setSpeed((float)(speedModifier * 0.2));
         } else {
-            fox.setSpeed(speedModifier);
+            fox.setSpeed((float)speedModifier);
         }
     }
 

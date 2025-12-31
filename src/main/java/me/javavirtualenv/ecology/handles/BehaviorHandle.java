@@ -229,24 +229,27 @@ public final class BehaviorHandle implements EcologyHandle {
         }
 
         // Bee-specific behaviors - only register for bees
+        // These behaviors extend steering.SteeringBehavior and need to be wrapped
         if (mobId != null && mobId.equals(ResourceLocation.withDefaultNamespace("bee"))) {
-            registry.register("pollination", new PollinationBehavior(), "bee");
-            registry.register("hive_return", new HiveReturnBehavior(), "bee");
-            registry.register("waggle_dance", new WaggleDanceBehavior(), "bee");
-            registry.register("hive_defense", new HiveDefenseBehavior(), "bee");
+            registry.register("pollination", new SteeringBehaviorAdapter(new PollinationBehavior()), "bee");
+            registry.register("hive_return", new SteeringBehaviorAdapter(new HiveReturnBehavior()), "bee");
+            registry.register("waggle_dance", new SteeringBehaviorAdapter(new WaggleDanceBehavior()), "bee");
+            registry.register("hive_defense", new SteeringBehaviorAdapter(new HiveDefenseBehavior()), "bee");
         }
 
         // Allay-specific behaviors
+        // These behaviors extend steering.SteeringBehavior and need to be wrapped
         if (mobId != null && mobId.equals(ResourceLocation.withDefaultNamespace("allay"))) {
-            registry.register("item_collecting", new me.javavirtualenv.behavior.allay.ItemCollectingBehavior(), "allay");
-            registry.register("sound_following", new me.javavirtualenv.behavior.allay.SoundFollowingBehavior(), "allay");
+            registry.register("item_collecting", new SteeringBehaviorAdapter(new me.javavirtualenv.behavior.allay.ItemCollectingBehavior()), "allay");
+            registry.register("sound_following", new SteeringBehaviorAdapter(new me.javavirtualenv.behavior.allay.SoundFollowingBehavior()), "allay");
         }
 
         // Strider-specific behaviors
+        // These behaviors extend steering.SteeringBehavior and need to be wrapped
         if (mobId != null && mobId.equals(ResourceLocation.withDefaultNamespace("strider"))) {
-            registry.register("lava_walking", new me.javavirtualenv.behavior.strider.LavaWalkingBehavior(), "strider");
-            registry.register("temperature_seeking", new me.javavirtualenv.behavior.strider.TemperatureSeekingBehavior(), "strider");
-            registry.register("riding", new me.javavirtualenv.behavior.strider.RidingBehavior(), "strider");
+            registry.register("lava_walking", new SteeringBehaviorAdapter(new me.javavirtualenv.behavior.strider.LavaWalkingBehavior()), "strider");
+            registry.register("temperature_seeking", new SteeringBehaviorAdapter(new me.javavirtualenv.behavior.strider.TemperatureSeekingBehavior()), "strider");
+            registry.register("riding", new SteeringBehaviorAdapter(new me.javavirtualenv.behavior.strider.RidingBehavior()), "strider");
         }
 
         // Armadillo-specific behaviors

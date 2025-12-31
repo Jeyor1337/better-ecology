@@ -136,9 +136,8 @@ public class EweProtectLambGoal extends Goal {
         }
 
         // Find nearest lamb
-        List<net.minecraft.world.entity.animal.Sheep> sheep = level.getNearbyEntities(
-                EntityType.SHEEP,
-                ewe,
+        List<net.minecraft.world.entity.animal.Sheep> sheep = level.getEntitiesOfClass(
+                net.minecraft.world.entity.animal.Sheep.class,
                 ewe.getBoundingBox().inflate(followRange)
         );
 

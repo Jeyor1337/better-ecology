@@ -1,6 +1,8 @@
 package me.javavirtualenv.ecology.ai;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -101,7 +103,7 @@ public class SheepGrazeGoal extends Goal {
                     BlockState blockState = level.getBlockState(pos);
 
                     if (isGrass(blockState)) {
-                        double distance = mob.distSqr(pos);
+                        double distance = mob.blockPosition().distSqr(pos);
                         if (distance < nearestDistance && distance < this.searchRadius * this.searchRadius) {
                             nearestDistance = distance;
                             nearestGrass = pos;
@@ -116,7 +118,7 @@ public class SheepGrazeGoal extends Goal {
 
     private boolean isGrass(BlockState blockState) {
         Block block = blockState.getBlock();
-        return block == Blocks.GRASS || block == Blocks.TALL_GRASS;
+        return block == Blocks.SHORT_GRASS || block == Blocks.TALL_GRASS;
     }
 
     private void eatGrass() {
@@ -132,7 +134,7 @@ public class SheepGrazeGoal extends Goal {
 
             // Play eating sound
             level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
-                          SoundEvents.SHEEP_EAT, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                          SoundEvents.SHEEP_AMBIENT, SoundSource.NEUTRAL, 1.0F, 1.0F);
 
             // Trigger game event
             level.gameEvent(mob, GameEvent.EAT, targetGrassPos);
@@ -145,13 +147,14 @@ public class SheepGrazeGoal extends Goal {
     }
 
     private void spawnEatParticles(ServerLevel level, BlockPos pos) {
+        BlockState blockState = this.level.getBlockState(pos);
         for (int i = 0; i < 8; i++) {
             double offsetX = level.getRandom().nextDouble() * 0.5 - 0.25;
             double offsetY = level.getRandom().nextDouble() * 0.5;
             double offsetZ = level.getRandom().nextDouble() * 0.5 - 0.25;
 
             level.sendParticles(
-                    net.minecraft.core.particles.BlockParticle.BLOCK,
+                    new BlockParticleOption(ParticleTypes.BLOCK, blockState),
                     pos.getX() + 0.5 + offsetX,
                     pos.getY() + offsetY,
                     pos.getZ() + 0.5 + offsetZ,

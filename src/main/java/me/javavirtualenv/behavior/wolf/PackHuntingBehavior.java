@@ -1,6 +1,6 @@
 package me.javavirtualenv.behavior.wolf;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.predation.PreySelector;
@@ -85,8 +85,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
 
     @Override
     public Vec3d calculate(BehaviorContext context) {
-        Mob entity = context.getEntity();
-        if (!(entity instanceof Wolf wolf)) {
+        if (!(context.getSelf() instanceof Wolf wolf)) {
             return new Vec3d();
         }
 
@@ -204,7 +203,6 @@ public class PackHuntingBehavior extends SteeringBehavior {
 
         // Find our position in the pack (based on distance to prey)
         int packIndex = getPackPosition(self, packMembers, preyPos);
-        int totalPackMembers = packMembers.size();
 
         // Calculate flanking angle
         // Spread pack members evenly around prey
@@ -377,7 +375,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
         }
 
         for (int i = 0; i < cachedPackOrder.size(); i++) {
-            if (cachedPackOrder.get(i).getId().equals(self.getId())) {
+            if (cachedPackOrder.get(i).getUUID().equals(self.getUUID())) {
                 return i;
             }
         }
@@ -413,7 +411,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
             }
         }
 
-        return strongest.getId().equals(wolf.getId());
+        return strongest.getUUID().equals(wolf.getUUID());
     }
 
     /**
@@ -431,9 +429,9 @@ public class PackHuntingBehavior extends SteeringBehavior {
      * Updates hunt state and timers.
      */
     private void updateHuntState(Wolf wolf) {
-        if (huntingState == PackHuntingState.HUNTING ||
-            huntingState == PackHuntingState.LEADING ||
-            huntingState == PackHuntingState.FLANKING) {
+        if (huntingState == PackHuntingState.LEADING ||
+            huntingState == PackHuntingState.FLANKING ||
+            huntingState == PackHuntingState.ATTACKING) {
             huntTimer++;
 
             // Give up after 30 seconds of hunting
@@ -531,23 +529,12 @@ public class PackHuntingBehavior extends SteeringBehavior {
     }
 
     /**
-     * Gets or generates pack ID from NBT.
+     * Gets or generates pack ID.
      */
     private UUID getPackId(Wolf wolf) {
-        if (packId != null) {
-            return packId;
+        if (packId == null) {
+            packId = wolf.getUUID();
         }
-
-        // Try to get from persistent data
-        var persistentData = wolf.getPersistentData();
-        if (persistentData.contains("WolfPackId")) {
-            packId = persistentData.getUUID("WolfPackId");
-            return packId;
-        }
-
-        // Generate new pack ID
-        packId = UUID.randomUUID();
-        persistentData.putUUID("WolfPackId", packId);
         return packId;
     }
 
@@ -561,10 +548,6 @@ public class PackHuntingBehavior extends SteeringBehavior {
 
     public UUID getPackId() {
         return packId;
-    }
-
-    public void setPackId(UUID packId) {
-        this.packId = packId;
     }
 
     /**

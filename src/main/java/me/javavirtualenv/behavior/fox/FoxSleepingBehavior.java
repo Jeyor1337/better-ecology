@@ -3,6 +3,7 @@ package me.javavirtualenv.behavior.fox;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.mixin.animal.FoxAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
@@ -183,7 +184,7 @@ public class FoxSleepingBehavior extends SteeringBehavior {
 
         // Set fox as sleeping if it's a vanilla fox
         if (fox instanceof net.minecraft.world.entity.animal.Fox minecraftFox) {
-            minecraftFox.setSleeping(true);
+            ((FoxAccessor) minecraftFox).betterEcology$setSleeping(true);
         }
 
         // Play sleep sound
@@ -199,7 +200,7 @@ public class FoxSleepingBehavior extends SteeringBehavior {
 
         // Wake up vanilla fox
         if (fox instanceof net.minecraft.world.entity.animal.Fox minecraftFox) {
-            minecraftFox.setSleeping(false);
+            ((FoxAccessor) minecraftFox).betterEcology$setSleeping(false);
         }
 
         // Play wake sound

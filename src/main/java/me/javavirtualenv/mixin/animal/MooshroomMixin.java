@@ -572,11 +572,13 @@ public abstract class MooshroomMixin extends AnimalMixin {
             long dayTime = mob.level().getDayTime() % 24000;
             double activityLevel = getActivityLevel(dayTime);
 
+            var temporalTag = component.getHandleTag("temporal");
             if (activityLevel < 0.5) {
-                component.state().setIsResting(true);
+                temporalTag.putBoolean("is_resting", true);
             } else {
-                component.state().setIsResting(false);
+                temporalTag.putBoolean("is_resting", false);
             }
+            component.setHandleTag("temporal", temporalTag);
         }
 
         @Override

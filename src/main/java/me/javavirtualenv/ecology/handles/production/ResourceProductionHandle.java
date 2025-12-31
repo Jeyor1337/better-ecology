@@ -355,11 +355,10 @@ public final class ResourceProductionHandle implements EcologyHandle {
 
         ItemStack honeyBottle = new ItemStack(net.minecraft.world.item.Items.HONEY_BOTTLE, honeyBottles);
 
-        if (quality > 1.2) {
-            honeyBottle.setHoverName(
-                net.minecraft.network.chat.Component.literal("Premium " + honeyBottle.getHoverName().getString())
-            );
-        }
+        // TODO: Add custom name for premium quality honey using DataComponents.CUSTOM_NAME
+        // if (quality > 1.2) {
+        //     honeyBottle.set(DataComponents.CUSTOM_NAME, Component.literal("Premium Honey"));
+        // }
 
         return honeyBottle;
     }

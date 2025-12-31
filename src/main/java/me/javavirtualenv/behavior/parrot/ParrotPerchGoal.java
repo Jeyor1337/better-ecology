@@ -1,9 +1,11 @@
 package me.javavirtualenv.behavior.parrot;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
@@ -42,7 +44,7 @@ public class ParrotPerchGoal extends Goal {
         }
 
         // Don't perch if currently dancing to music
-        EcologyComponent component = EcologyComponent.getOrCreate(parrot);
+        EcologyComponent component = ((EcologyAccess) parrot).betterEcology$getEcologyComponent();
         if (component != null) {
             var danceData = component.getHandleTag("dance");
             if (danceData.getBoolean("is_dancing")) {
@@ -123,10 +125,8 @@ public class ParrotPerchGoal extends Goal {
             return;
         }
 
-        double distance = parrot.distanceTo(
-            targetPerch.getX() + 0.5,
-            targetPerch.getY() + 0.5,
-            targetPerch.getZ() + 0.5
+        double distance = parrot.position().distanceTo(
+            new Vec3(targetPerch.getX() + 0.5, targetPerch.getY() + 0.5, targetPerch.getZ() + 0.5)
         );
 
         // Check if we've arrived

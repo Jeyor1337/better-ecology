@@ -11,6 +11,9 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 
 import java.util.Map;
 import java.util.Random;
@@ -123,7 +126,7 @@ public class RabbitForagingBehavior {
                             pos.getX(),
                             pos.getY(),
                             pos.getZ(),
-                            SoundEvents.RABBIT_EAT,
+                            SoundEvents.RABBIT_AMBIENT,
                             SoundSource.NEUTRAL,
                             0.5F,
                             1.0F
@@ -180,7 +183,10 @@ public class RabbitForagingBehavior {
             return state.getValue(CarrotBlock.AGE) >= 2; // Eat partially grown carrots
         }
         if (block instanceof CropBlock) {
-            return state.getValue(((CropBlock) block).getAgeProperty()) >= 1;
+            IntegerProperty ageProperty = getAgePropertyOrNull(state);
+            if (ageProperty != null) {
+                return state.getValue(ageProperty) >= 1;
+            }
         }
 
         // Vegetables
@@ -214,7 +220,7 @@ public class RabbitForagingBehavior {
         }
 
         // Grass
-        if (block == Blocks.GRASS ||
+        if (block == Blocks.SHORT_GRASS ||
             block == Blocks.TALL_GRASS ||
             block == Blocks.FERN ||
             block == Blocks.LARGE_FERN) {
@@ -222,6 +228,18 @@ public class RabbitForagingBehavior {
         }
 
         return false;
+    }
+
+    /**
+     * Gets the age property from a block state if it exists.
+     */
+    private IntegerProperty getAgePropertyOrNull(BlockState state) {
+        for (var property : state.getProperties()) {
+            if (property instanceof IntegerProperty intProperty && "age".equalsIgnoreCase(intProperty.getName())) {
+                return intProperty;
+            }
+        }
+        return null;
     }
 
     /**
@@ -239,7 +257,7 @@ public class RabbitForagingBehavior {
                 pos.getX(),
                 pos.getY(),
                 pos.getZ(),
-                SoundEvents.RABBIT_EAT,
+                SoundEvents.RABBIT_AMBIENT,
                 SoundSource.NEUTRAL,
                 0.5F,
                 1.0F
@@ -427,11 +445,12 @@ public class RabbitForagingBehavior {
         // Spawn particles
         if (!level.isClientSide()) {
             ServerLevel serverLevel = (ServerLevel) level;
+            BlockState snowState = Blocks.SNOW.defaultBlockState();
             for (int i = 0; i < 5; i++) {
                 double offsetX = (random.nextDouble() - 0.5) * 0.5;
                 double offsetZ = (random.nextDouble() - 0.5) * 0.5;
                 serverLevel.sendParticles(
-                    net.minecraft.core.particles.ParticleTypes.BLOCK,
+                    new BlockParticleOption(ParticleTypes.BLOCK, snowState),
                     entity.getX() + offsetX,
                     entity.getY(),
                     entity.getZ() + offsetZ,

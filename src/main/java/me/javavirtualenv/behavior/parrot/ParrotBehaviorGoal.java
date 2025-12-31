@@ -1,6 +1,7 @@
 package me.javavirtualenv.behavior.parrot;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 

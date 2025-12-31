@@ -1,8 +1,11 @@
 package me.javavirtualenv.behavior.fox;
 
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.HolderLookup;
 
 /**
  * Component for storing items carried by foxes.
@@ -14,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
  */
 public class FoxItemStorage {
 
-    private static final String STORAGE_KEY = "better-ecology:fox-item-storage";
+    private static final String STORAGE_KEY = "fox_item_storage";
     private static final String ITEM_KEY = "carried_item";
 
     private final Mob fox;
@@ -28,13 +31,15 @@ public class FoxItemStorage {
      * Get or create the item storage component for a fox.
      */
     public static FoxItemStorage get(Mob fox) {
-        if (fox.getPersistentData().contains(STORAGE_KEY)) {
-            CompoundTag tag = fox.getPersistentData().getCompound(STORAGE_KEY);
+        EcologyComponent component = ((EcologyAccess) fox).betterEcology$getEcologyComponent();
+        CompoundTag tag = component.getHandleTag(STORAGE_KEY);
+
+        if (tag != null && tag.contains(ITEM_KEY)) {
             return loadFromTag(fox, tag);
         }
 
         FoxItemStorage storage = new FoxItemStorage(fox);
-        fox.getPersistentData().put(STORAGE_KEY, storage.saveToTag());
+        component.setHandleTag(STORAGE_KEY, storage.saveToTag());
         return storage;
     }
 
@@ -74,7 +79,9 @@ public class FoxItemStorage {
     public CompoundTag saveToTag() {
         CompoundTag tag = new CompoundTag();
         if (!carriedItem.isEmpty()) {
-            tag.put(ITEM_KEY, carriedItem.save(new CompoundTag()));
+            HolderLookup.Provider registries = fox.registryAccess();
+            CompoundTag itemTag = (CompoundTag) carriedItem.save(registries);
+            tag.put(ITEM_KEY, itemTag);
         }
         return tag;
     }
@@ -83,7 +90,8 @@ public class FoxItemStorage {
      * Save storage data to fox's persistent data.
      */
     private void saveToFox() {
-        fox.getPersistentData().put(STORAGE_KEY, saveToTag());
+        EcologyComponent component = ((EcologyAccess) fox).betterEcology$getEcologyComponent();
+        component.setHandleTag(STORAGE_KEY, saveToTag());
     }
 
     /**
@@ -94,7 +102,8 @@ public class FoxItemStorage {
 
         if (tag.contains(ITEM_KEY)) {
             CompoundTag itemTag = tag.getCompound(ITEM_KEY);
-            storage.carriedItem = ItemStack.of(itemTag);
+            HolderLookup.Provider registries = fox.registryAccess();
+            storage.carriedItem = ItemStack.parseOptional(registries, itemTag);
         }
 
         return storage;
@@ -104,6 +113,7 @@ public class FoxItemStorage {
      * Remove storage from fox (for cleanup).
      */
     public static void remove(Mob fox) {
-        fox.getPersistentData().remove(STORAGE_KEY);
+        EcologyComponent component = ((EcologyAccess) fox).betterEcology$getEcologyComponent();
+        component.setHandleTag(STORAGE_KEY, new CompoundTag());
     }
 }

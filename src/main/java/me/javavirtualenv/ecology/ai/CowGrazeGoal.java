@@ -1,6 +1,8 @@
 package me.javavirtualenv.ecology.ai;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -141,7 +143,7 @@ public class CowGrazeGoal extends Goal {
                     BlockState blockState = level.getBlockState(pos);
 
                     if (isGrassBlock(blockState)) {
-                        double distance = mob.distSqr(pos);
+                        double distance = mob.blockPosition().distSqr(pos);
                         if (distance < nearestDistance && distance < searchRadiusSq) {
                             nearestDistance = distance;
                             nearestGrass = pos;
@@ -177,7 +179,7 @@ public class CowGrazeGoal extends Goal {
 
             // Play eating sound
             level.playSound(null, mob.getX(), mob.getY(), mob.getZ(),
-                    SoundEvents.COW_EAT, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                    SoundEvents.COW_AMBIENT, SoundSource.NEUTRAL, 1.0F, 1.0F);
 
             // Trigger game event
             level.gameEvent(mob, GameEvent.EAT, targetGrassPos);
@@ -193,13 +195,14 @@ public class CowGrazeGoal extends Goal {
      * Spawn block break particles when eating grass.
      */
     private void spawnEatParticles(ServerLevel serverLevel, BlockPos pos) {
+        BlockState blockState = level.getBlockState(pos);
         for (int i = 0; i < 8; i++) {
             double offsetX = serverLevel.getRandom().nextDouble() * 0.5 - 0.25;
             double offsetY = serverLevel.getRandom().nextDouble() * 0.5;
             double offsetZ = serverLevel.getRandom().nextDouble() * 0.5 - 0.25;
 
             serverLevel.sendParticles(
-                    net.minecraft.core.particles.BlockParticle.BLOCK,
+                    new BlockParticleOption(ParticleTypes.BLOCK, blockState),
                     pos.getX() + 0.5 + offsetX,
                     pos.getY() + 1.0 + offsetY,
                     pos.getZ() + 0.5 + offsetZ,
