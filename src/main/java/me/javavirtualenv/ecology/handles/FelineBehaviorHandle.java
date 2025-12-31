@@ -1,8 +1,6 @@
 package me.javavirtualenv.ecology.handles;
 
-import me.javavirtualenv.behavior.ai.SteeringBehaviorGoal;
 import me.javavirtualenv.behavior.feline.*;
-import me.javavirtualenv.behavior.predation.HuntingState;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
@@ -19,12 +17,18 @@ import net.minecraft.world.entity.animal.Ocelot;
  * - Hunting behaviors (stalking, pouncing, creeping)
  * - Stealth behaviors (quiet movement, squeezing through gaps)
  * - Social behaviors (purring, hissing, rubbing affection)
- * - Gift giving behavior
+ * - Gift giving behavior (tamed cats)
  * - Creeper detection and phantom repelling
+ * - Play behavior (kittens and bored cats)
+ * - Climbing behavior (ocelots)
+ * - Sleep behavior (cats on furniture)
+ * - Fall damage reduction (cats land on feet)
  */
 public class FelineBehaviorHandle implements EcologyHandle {
 
     private static final String AFFECTION_KEY = "affection";
+    private static final String IS_SLEEPING_KEY = "is_sleeping";
+    private static final String IS_CLIMBING_KEY = "is_climbing";
 
     @Override
     public String id() {
@@ -34,47 +38,29 @@ public class FelineBehaviorHandle implements EcologyHandle {
     @Override
     public boolean supports(EcologyProfile profile) {
         String entityType = profile.getString("entity_type", "");
-        return entityType.equals("cat") || entityType.equals("ocelot");
+        return "cat".equals(entityType) || "ocelot".equals(entityType);
     }
 
     @Override
     public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-        // Register feline-specific goals
-        int priority = profile.getInt("feline.priority", 1);
+        // Create affection component for social behaviors
+        CatAffectionComponent affection = loadOrCreateAffection(mob, component);
 
-        // Stalk behavior goal
-        StalkBehavior stalkBehavior = new StalkBehavior(
-            profile.getDouble("feline.stalk_speed", 0.3),
-            profile.getDouble("feline.stalk_detection_range", 16.0),
-            profile.getDouble("feline.pounce_distance", 3.0),
-            profile.getDouble("feline.give_up_angle", 45.0)
-        );
+        // Register the main feline behavior goal
+        FelineBehaviorGoal felineGoal = new FelineBehaviorGoal(mob, affection);
+        int priority = profile.getInt("feline.priority", 2);
 
-        // Pounce behavior goal
-        PounceBehavior pounceBehavior = new PounceBehavior(
-            profile.getDouble("feline.pounce_speed", 1.5),
-            profile.getDouble("feline.pounce_range", 4.0),
-            profile.getDouble("feline.pounce_cooldown", 60.0),
-            profile.getDouble("feline.pounce_force", 0.8)
-        );
-
-        // Gift giving goal (tamed cats only)
-        if (mob instanceof Cat) {
-            GiftGivingBehavior giftBehavior = new GiftGivingBehavior(
-                profile.getInt("feline.gift_cooldown", 24000),
-                profile.getDouble("feline.gift_trust_threshold", 0.7),
-                profile.getInt("feline.gift_search_range", 32)
-            );
-        }
-
-        // Register goals through goal selector
-        // Note: Full goal registration would be handled in a separate FelineBehaviorGoal class
+        MobAccessor accessor = (MobAccessor) mob;
+        accessor.betterEcology$getGoalSelector().addGoal(priority, felineGoal);
     }
 
     @Override
     public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
-        // Update feline behaviors each tick
-        // This is where behavior state would be updated
+        // Update feline state each tick
+        CompoundTag tag = component.getHandleTag(id());
+
+        // Fall damage is handled in the behavior goal
+        // Additional tick-based updates can go here
     }
 
     @Override
@@ -84,8 +70,17 @@ public class FelineBehaviorHandle implements EcologyHandle {
             CatAffectionComponent affection = new CatAffectionComponent();
             affection.fromNbt(affectionTag);
 
-            // Store affection component in entity data
-            // This would need a proper attachment mechanism
+            // Store affection in entity data for later retrieval
+            storeAffectionComponent(mob, component, affection);
+        }
+
+        // Read sleeping and climbing states
+        CompoundTag felineTag = component.getHandleTag(id());
+        if (tag.contains(IS_SLEEPING_KEY)) {
+            felineTag.putBoolean(IS_SLEEPING_KEY, tag.getBoolean(IS_SLEEPING_KEY));
+        }
+        if (tag.contains(IS_CLIMBING_KEY)) {
+            felineTag.putBoolean(IS_CLIMBING_KEY, tag.getBoolean(IS_CLIMBING_KEY));
         }
     }
 
@@ -93,25 +88,106 @@ public class FelineBehaviorHandle implements EcologyHandle {
     public void writeNbt(Mob mob, EcologyComponent component, EcologyProfile profile, CompoundTag tag) {
         CompoundTag handleTag = component.getHandleTag(id());
 
-        // Save affection data if it exists
-        // This would retrieve the CatAffectionComponent and serialize it
+        // Save affection data
+        CatAffectionComponent affection = getAffectionComponent(mob, component);
+        if (affection != null) {
+            CompoundTag affectionTag = new CompoundTag();
+            affection.toNbt(affectionTag);
+            tag.put(AFFECTION_KEY, affectionTag);
+        }
 
-        tag.put(id(), handleTag.copy());
+        // Save sleeping and climbing states
+        tag.put(IS_SLEEPING_KEY, handleTag.copy());
+        tag.put(IS_CLIMBING_KEY, handleTag.copy());
     }
 
     /**
-     * Get or create the affection component for a cat.
+     * Load or create the affection component for a cat.
      */
-    public static CatAffectionComponent getAffectionComponent(Mob mob) {
-        // This would retrieve the stored affection component
-        // For now, return a new one
+    private CatAffectionComponent loadOrCreateAffection(Mob mob, EcologyComponent component) {
+        // Try to load from existing data
+        CatAffectionComponent affection = getAffectionComponent(mob, component);
+        if (affection == null) {
+            affection = new CatAffectionComponent();
+            storeAffectionComponent(mob, component, affection);
+        }
+        return affection;
+    }
+
+    /**
+     * Store the affection component for persistent access.
+     */
+    private void storeAffectionComponent(Mob mob, EcologyComponent component, CatAffectionComponent affection) {
+        // Store in component data for persistence
+        CompoundTag tag = component.getHandleTag(id());
+        CompoundTag affectionTag = new CompoundTag();
+        affection.toNbt(affectionTag);
+        tag.put(AFFECTION_KEY, affectionTag);
+    }
+
+    /**
+     * Get the affection component for a cat.
+     */
+    public static CatAffectionComponent getAffectionComponent(Mob mob, EcologyComponent component) {
+        if (component == null) {
+            return new CatAffectionComponent();
+        }
+
+        CompoundTag tag = component.getHandleTag("feline_behavior");
+        if (tag != null && tag.contains(AFFECTION_KEY)) {
+            CatAffectionComponent affection = new CatAffectionComponent();
+            affection.fromNbt(tag.getCompound(AFFECTION_KEY));
+            return affection;
+        }
+
         return new CatAffectionComponent();
     }
 
     /**
-     * Save the affection component for a cat.
+     * Check if a cat is currently sleeping.
      */
-    public static void setAffectionComponent(Mob mob, CatAffectionComponent affection) {
-        // This would save the affection component to persistent storage
+    public static boolean isSleeping(Mob mob, EcologyComponent component) {
+        if (component == null) {
+            return false;
+        }
+
+        CompoundTag tag = component.getHandleTag("feline_behavior");
+        return tag != null && tag.getBoolean(IS_SLEEPING_KEY);
+    }
+
+    /**
+     * Set the sleeping state for a cat.
+     */
+    public static void setSleeping(Mob mob, EcologyComponent component, boolean sleeping) {
+        if (component == null) {
+            return;
+        }
+
+        CompoundTag tag = component.getHandleTag("feline_behavior");
+        tag.putBoolean(IS_SLEEPING_KEY, sleeping);
+    }
+
+    /**
+     * Check if an ocelot is currently climbing.
+     */
+    public static boolean isClimbing(Mob mob, EcologyComponent component) {
+        if (component == null) {
+            return false;
+        }
+
+        CompoundTag tag = component.getHandleTag("feline_behavior");
+        return tag != null && tag.getBoolean(IS_CLIMBING_KEY);
+    }
+
+    /**
+     * Set the climbing state for an ocelot.
+     */
+    public static void setClimbing(Mob mob, EcologyComponent component, boolean climbing) {
+        if (component == null) {
+            return;
+        }
+
+        CompoundTag tag = component.getHandleTag("feline_behavior");
+        tag.putBoolean(IS_CLIMBING_KEY, climbing);
     }
 }

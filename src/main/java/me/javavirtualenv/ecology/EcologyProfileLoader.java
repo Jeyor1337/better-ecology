@@ -1,5 +1,8 @@
 package me.javavirtualenv.ecology;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,32 +29,59 @@ public final class EcologyProfileLoader {
 
 	public List<EcologyProfile> loadAll(ResourceManager manager) {
 		Map<String, Object> base = loadYaml(manager, BASE_TEMPLATE);
-		Map<ResourceLocation, Resource> resources = manager.listResources("mobs",
+		Map<ResourceLocation, Resource> yamlResources = manager.listResources("mobs",
 				resourceLocation -> resourceLocation.getPath().endsWith(".yaml") || resourceLocation.getPath().endsWith(".yml"));
+		Map<ResourceLocation, Resource> jsonResources = manager.listResources("mobs",
+				resourceLocation -> resourceLocation.getPath().endsWith(".json"));
+
 		List<EcologyProfile> profiles = new ArrayList<>();
-		for (Map.Entry<ResourceLocation, Resource> entry : resources.entrySet()) {
-			ResourceLocation resourceId = entry.getKey();
-			Map<String, Object> profileMap = loadYaml(entry.getValue(), resourceId);
+
+		for (Map.Entry<ResourceLocation, Resource> entry : yamlResources.entrySet()) {
+			ResourceLocation yamlId = entry.getKey();
+			Map<String, Object> profileMap = loadYaml(entry.getValue(), yamlId);
 			if (profileMap.isEmpty()) {
 				continue;
 			}
+
+			// Find and merge corresponding behaviors.json if exists
+			ResourceLocation jsonId = findBehaviorsJson(yamlId);
+			if (jsonResources.containsKey(jsonId)) {
+				Map<String, Object> jsonData = loadJson(jsonResources.get(jsonId), jsonId);
+				if (!jsonData.isEmpty()) {
+					profileMap = EcologyMerge.merge(profileMap, List.of(jsonData));
+				}
+			}
+
 			List<Map<String, Object>> overlays = new ArrayList<>();
 			overlays.addAll(loadArchetypes(manager, profileMap));
 			overlays.add(profileMap);
 			Map<String, Object> merged = EcologyMerge.merge(base, overlays);
+
 			String mobIdString = readString(merged, "identity.mob_id");
 			if (mobIdString == null || mobIdString.isBlank()) {
-				logger.warn("Better Ecology: profile {} missing identity.mob_id", resourceId);
+				logger.warn("Better Ecology: profile {} missing identity.mob_id", yamlId);
 				continue;
 			}
 			ResourceLocation mobId = ResourceLocation.tryParse(mobIdString);
 			if (mobId == null) {
-				logger.warn("Better Ecology: invalid mob_id '{}' in {}", mobIdString, resourceId);
+				logger.warn("Better Ecology: invalid mob_id '{}' in {}", mobIdString, yamlId);
 				continue;
 			}
 			profiles.add(new EcologyProfile(mobId, merged));
 		}
 		return profiles;
+	}
+
+	/**
+	 * Converts a YAML registry path to the corresponding behaviors.json path.
+	 * Example: better-ecology:mobs/passive/cow/mod_registry.yaml
+	 *          -> better-ecology:mobs/passive/cow/behaviors.json
+	 */
+	private ResourceLocation findBehaviorsJson(ResourceLocation yamlId) {
+		String path = yamlId.getPath();
+		int lastSlash = path.lastIndexOf('/');
+		String dirPath = lastSlash >= 0 ? path.substring(0, lastSlash + 1) : "";
+		return ResourceLocation.fromNamespaceAndPath(yamlId.getNamespace(), dirPath + "behaviors.json");
 	}
 
 	private List<Map<String, Object>> loadArchetypes(ResourceManager manager, Map<String, Object> profileMap) {
@@ -103,6 +133,49 @@ public final class EcologyProfileLoader {
 			logger.warn("Better Ecology: failed to read {} ({})", id, ex.getMessage());
 		}
 		return Map.of();
+	}
+
+	private Map<String, Object> loadJson(Resource resource, ResourceLocation id) {
+		try (BufferedReader reader = resource.openAsReader()) {
+			JsonElement element = JsonParser.parseReader(reader);
+			if (element.isJsonObject()) {
+				return convertJsonToMap(element.getAsJsonObject());
+			}
+		} catch (IOException ex) {
+			logger.warn("Better Ecology: failed to read JSON {} ({})", id, ex.getMessage());
+		}
+		return Map.of();
+	}
+
+	private Map<String, Object> convertJsonToMap(JsonObject jsonObject) {
+		Map<String, Object> result = new LinkedHashMap<>();
+		for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+			result.put(entry.getKey(), convertJsonElement(entry.getValue()));
+		}
+		return result;
+	}
+
+	private Object convertJsonElement(JsonElement element) {
+		if (element.isJsonObject()) {
+			return convertJsonToMap(element.getAsJsonObject());
+		}
+		if (element.isJsonArray()) {
+			List<Object> list = new ArrayList<>();
+			for (JsonElement item : element.getAsJsonArray()) {
+				list.add(convertJsonElement(item));
+			}
+			return list;
+		}
+		if (element.isJsonPrimitive()) {
+			if (element.getAsJsonPrimitive().isBoolean()) {
+				return element.getAsBoolean();
+			}
+			if (element.getAsJsonPrimitive().isNumber()) {
+				return element.getAsNumber();
+			}
+			return element.getAsString();
+		}
+		return null;
 	}
 
 	private Map<String, Object> normalizeMap(Map<?, ?> input) {

@@ -41,6 +41,10 @@ public class FelineBehaviorGoal extends Goal {
     private final GiftGivingBehavior giftGivingBehavior;
     private final CreeperDetectionBehavior creeperDetectionBehavior;
     private final PhantomRepelBehavior phantomRepelBehavior;
+    private final PlayBehavior playBehavior;
+    private final ClimbingBehavior climbingBehavior;
+    private final SleepOnBlocksBehavior sleepOnBlocksBehavior;
+    private final FallDamageReductionBehavior fallDamageReductionBehavior;
 
     // State tracking
     private FelineState currentState = FelineState.IDLE;
@@ -63,6 +67,10 @@ public class FelineBehaviorGoal extends Goal {
         this.giftGivingBehavior = new GiftGivingBehavior();
         this.creeperDetectionBehavior = new CreeperDetectionBehavior();
         this.phantomRepelBehavior = new PhantomRepelBehavior();
+        this.playBehavior = new PlayBehavior();
+        this.climbingBehavior = new ClimbingBehavior();
+        this.sleepOnBlocksBehavior = new SleepOnBlocksBehavior();
+        this.fallDamageReductionBehavior = new FallDamageReductionBehavior();
     }
 
     @Override
@@ -103,19 +111,49 @@ public class FelineBehaviorGoal extends Goal {
      * Update all behaviors and return the movement vector.
      */
     private Vec3d updateBehaviors(BehaviorContext context) {
-        // Priority 1: Detection of threats (creepers, phantoms)
+        // Priority 0: Handle fall damage (always check)
+        fallDamageReductionBehavior.calculate(context);
+
+        // Priority 1: Sleeping behavior (tamed cats on furniture)
+        if (sleepOnBlocksBehavior.isSleeping() || shouldSleep(context)) {
+            currentState = FelineState.SLEEPING;
+            Vec3d sleepMovement = sleepOnBlocksBehavior.calculate(context);
+            if (sleepMovement != null) {
+                return sleepMovement;
+            }
+        }
+
+        // Priority 2: Climbing (ocelots escaping or hunting)
+        if (shouldClimb(context)) {
+            currentState = FelineState.CLIMBING;
+            Vec3d climbMovement = climbingBehavior.calculate(context);
+            if (climbMovement.magnitude() > 0) {
+                return climbMovement;
+            }
+        }
+
+        // Priority 3: Play behavior (kittens and bored cats)
+        if (playBehavior.isPlaying() || shouldPlay(context)) {
+            currentState = FelineState.PLAYING;
+            Vec3d playMovement = playBehavior.calculate(context);
+            if (playMovement.magnitude() > 0) {
+                return playMovement;
+            }
+        }
+
+        // Priority 4: Detection of threats (creepers, phantoms)
         if (shouldDetectCreepers(context)) {
             currentState = FelineState.DETECTING_THREAT;
             return creeperDetectionBehavior.calculate(context);
         }
 
-        // Priority 2: Gift giving (tamed cats only)
+        // Priority 5: Gift giving (tamed cats only)
         if (shouldGiveGift(context)) {
             currentState = FelineState.BRINGING_GIFT;
             return giftGivingBehavior.calculate(context);
         }
 
-        // Priority 3: Hunting (pouncing)
+        // Priority 6: Hunting (pouncing)
         if (pounceBehavior.canPounce()) {
             Vec3d pounce = pounceBehavior.calculate(context);
             if (pounce.magnitude() > 0) {
@@ -124,19 +162,19 @@ public class FelineBehaviorGoal extends Goal {
             }
         }
 
-        // Priority 4: Stalking prey
+        // Priority 7: Stalking prey
         if (stalkBehavior.isStalking()) {
             currentState = FelineState.STALKING;
             return stalkBehavior.calculate(context);
         }
 
-        // Priority 5: Social behaviors (rubbing affection)
+        // Priority 8: Social behaviors (rubbing affection)
         if (rubAffectionBehavior.isRubbing()) {
             currentState = FelineState.SHOWING_AFFECTION;
             return rubAffectionBehavior.calculate(context);
         }
 
-        // Priority 6: Creeping (cautious movement)
+        // Priority 9: Creeping (cautious movement)
         if (creepingBehavior.isCreeping()) {
             currentState = FelineState.CREEPING;
             return creepingBehavior.calculate(context);
@@ -208,6 +246,30 @@ public class FelineBehaviorGoal extends Goal {
         return false;
     }
 
+    private boolean shouldSleep(BehaviorContext context) {
+        if (!(mob instanceof net.minecraft.world.entity.animal.Cat)) {
+            return false;
+        }
+
+        // Check if cat wants to sleep
+        return sleepOnBlocksBehavior.calculate(context).magnitude() > 0;
+    }
+
+    private boolean shouldClimb(BehaviorContext context) {
+        // Only ocelots climb
+        if (!(mob instanceof net.minecraft.world.entity.animal.Ocelot)) {
+            return false;
+        }
+
+        // Check if ocelot should climb
+        return climbingBehavior.calculate(context).magnitude() > 0;
+    }
+
+    private boolean shouldPlay(BehaviorContext context) {
+        // Both cats and ocelots can play
+        return playBehavior.calculate(context).magnitude() > 0;
+    }
+
     private void applyMovement(Vec3d movement) {
         Vec3 mcMovement = movement.toMinecraftVec3();
         Vec3 currentMovement = mob.getDeltaMovement();
@@ -272,6 +334,8 @@ public class FelineBehaviorGoal extends Goal {
         DETECTING_THREAT,
         SHOWING_AFFECTION,
         BRINGING_GIFT,
-        SLEEPING
+        SLEEPING,
+        PLAYING,
+        CLIMBING
     }
 }

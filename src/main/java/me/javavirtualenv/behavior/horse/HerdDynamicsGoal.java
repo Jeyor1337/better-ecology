@@ -1,7 +1,6 @@
 package me.javavirtualenv.behavior.horse;
 
 import me.javavirtualenv.ecology.EcologyComponent;
-import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -110,10 +109,9 @@ public class HerdDynamicsGoal extends Goal {
         Level level = horse.level();
 
         // Find all nearby horses of same type
-        List<AbstractHorse> nearbyHorses = SpatialIndex.getNearbyEntitiesOfClass(
-            horse,
+        List<AbstractHorse> nearbyHorses = level.getNearbyEntitiesOfClass(
             AbstractHorse.class,
-            config.herdRadius
+            horse.getBoundingBox().inflate(config.herdRadius)
         );
 
         // Filter for same type and wild

@@ -1,0 +1,56 @@
+{
+  "minecraft:horse": {
+    "horse_behavior": {
+      "enabled": true,
+      "kick_defense": {
+        "enabled": true,
+        "kick_range": 3.0,
+        "detection_range": 4.0,
+        "kick_warmup_duration": 15,
+        "kick_cooldown": 60,
+        "base_kick_damage": 4.0,
+        "knockback_strength": 0.6
+      },
+      "rearing": {
+        "enabled": true,
+        "base_rear_duration": 30,
+        "rear_cooldown": 200,
+        "predator_rear_chance": 0.7,
+        "hurt_rear_chance": 0.5,
+        "low_health_threshold": 0.3,
+        "low_health_rear_chance": 0.4,
+        "random_rear_chance": 0.005
+      },
+      "bonding": {
+        "enabled": true,
+        "bonding_range": 12.0,
+        "bond_interval": 100,
+        "interaction_bond_gain": 5,
+        "nicker_chance": 0.4,
+        "nicker_cooldown": 200,
+        "max_bond_level": 100,
+        "bond_thresholds": 25
+      },
+      "herd_dynamics": {
+        "enabled": true,
+        "herd_radius": 32.0,
+        "cohesion_distance": 12.0,
+        "min_distance_to_leader": 3.0,
+        "herd_check_interval": 100,
+        "threat_detection_range": 24.0,
+        "protection_range": 16.0,
+        "alarm_call_range": 32.0,
+        "lead_movement_chance": 0.02
+      },
+      "social_grooming": {
+        "enabled": true,
+        "grooming_search_radius": 8.0,
+        "max_grooming_distance": 4.0,
+        "grooming_duration": 200,
+        "grooming_cooldown": 600,
+        "grooming_initiation_chance": 0.15,
+        "mutual_grooming_chance": 0.7
+      }
+    }
+  }
+}

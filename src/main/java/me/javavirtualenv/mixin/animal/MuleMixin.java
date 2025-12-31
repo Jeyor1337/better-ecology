@@ -5,6 +5,7 @@ import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.handles.*;
+import me.javavirtualenv.behavior.horse.HorseBehaviorHandle;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -140,6 +141,9 @@ public abstract class MuleMixin {
         // System 13: Aesthetics & Personality
         // Idle behaviors and personality traits
         handles.add(createBehaviorHandle());
+
+        // Horse-specific behaviors
+        handles.add(new HorseBehaviorHandle());
 
         return handles;
     }

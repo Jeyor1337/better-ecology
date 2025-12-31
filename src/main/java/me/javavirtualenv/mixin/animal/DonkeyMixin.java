@@ -6,6 +6,7 @@ import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.state.EntityState;
+import me.javavirtualenv.behavior.horse.HorseBehaviorHandle;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Mob;
@@ -91,6 +92,8 @@ public abstract class DonkeyMixin extends AnimalMixin {
             .addHandle(new DonkeySpawnHandle())
             // Behavior/steering (YAML lines 744-775)
             .addHandle(new DonkeyBehaviorHandle())
+            // Horse-specific behaviors
+            .addHandle(new HorseBehaviorHandle())
             .build();
 
         AnimalBehaviorRegistry.register(DONKEY_ID, config);

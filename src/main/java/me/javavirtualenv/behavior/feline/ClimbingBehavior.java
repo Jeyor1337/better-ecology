@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.LeavesBlock;
  * - Climb while stalking prey from above
  * - Descend carefully (head first)
  */
-public class ClimingBehavior extends SteeringBehavior {
+public class ClimbingBehavior extends SteeringBehavior {
 
     private final double climbSpeed;
     private final double maxClimbHeight;
@@ -30,7 +30,7 @@ public class ClimingBehavior extends SteeringBehavior {
     private BlockPos climbTarget;
     private ClimbDirection climbDirection;
 
-    public ClimingBehavior(double climbSpeed, double maxClimbHeight, int searchRadius) {
+    public ClimbingBehavior(double climbSpeed, double maxClimbHeight, int searchRadius) {
         super(0.8);
         this.climbSpeed = climbSpeed;
         this.maxClimbHeight = maxClimbHeight;

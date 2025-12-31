@@ -16,6 +16,7 @@ import me.javavirtualenv.ecology.handles.SizeHandle;
 import me.javavirtualenv.ecology.handles.SocialHandle;
 import me.javavirtualenv.ecology.handles.SpawnHandle;
 import me.javavirtualenv.ecology.handles.TemporalHandle;
+import me.javavirtualenv.behavior.horse.HorseBehaviorHandle;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
@@ -106,6 +107,9 @@ public abstract class HorseMixin extends AnimalMixin {
                 // Population and aesthetics
                 .addHandle(new SpawnHandle())
                 .addHandle(new BehaviorHandle())
+
+                // Horse-specific behaviors
+                .addHandle(new HorseBehaviorHandle())
                 .build();
 
         AnimalBehaviorRegistry.register(HORSE_ID.toString(), config);
