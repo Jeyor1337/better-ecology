@@ -1,5 +1,6 @@
-package me.javavirtualenv.ecology.conservation;
+package me.javavirtualenv.mixin.conservation;
 
+import me.javavirtualenv.ecology.conservation.LineageRegistry;
 import net.minecraft.world.entity.animal.Animal;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
