@@ -3,14 +3,16 @@ package me.javavirtualenv.behavior.aquatic;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Pufferfish inflate/deflate behavior.
@@ -21,8 +23,8 @@ import java.util.UUID;
  * and more threatening to predators. They contain tetrodotoxin, a potent neurotoxin.
  */
 public class PufferfishInflateBehavior extends SteeringBehavior {
-    private static final UUID INFLATE_SIZE_MODIFIER_UUID = UUID.fromString("7f101910-8c23-11ee-b9d1-0242ac120002");
-    private static final UUID INFLATE_SPEED_MODIFIER_UUID = UUID.fromString("7f101911-8c23-11ee-b9d1-0242ac120002");
+    private static final ResourceLocation INFLATE_SIZE_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath("better-ecology", "inflate_size");
+    private static final ResourceLocation INFLATE_SPEED_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath("better-ecology", "inflate_slow");
 
     private final AquaticConfig config;
     private boolean isInflated = false;
@@ -30,7 +32,9 @@ public class PufferfishInflateBehavior extends SteeringBehavior {
     private long inflateStartTime = 0;
 
     public PufferfishInflateBehavior(AquaticConfig config) {
-        super(1.2, true);
+        super();
+        setWeight(1.2);
+        setEnabled(true);
         this.config = config;
     }
 
@@ -97,7 +101,7 @@ public class PufferfishInflateBehavior extends SteeringBehavior {
             }
 
             // Aquatic predators
-            String entityId = net.minecraft.core.Registry.ENTITY_TYPE.getKey(entity.getType()).toString();
+            String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
             return entityId.equals("minecraft:drowned") ||
                    entityId.equals("minecraft:guardian") ||
                    entityId.equals("minecraft:elder_guardian");
@@ -136,45 +140,45 @@ public class PufferfishInflateBehavior extends SteeringBehavior {
     private void inflate(Entity self) {
         if (!(self instanceof net.minecraft.world.entity.animal.Pufferfish)) return;
 
+        LivingEntity living = (LivingEntity) self;
         isInflated = true;
         inflateStartTime = self.level().getGameTime();
         lastInflateTime = inflateStartTime;
 
         // Apply size increase
-        if (self.getAttribute(Attributes.SCALE) != null) {
+        if (living.getAttribute(Attributes.SCALE) != null) {
             AttributeModifier sizeModifier = new AttributeModifier(
-                INFLATE_SIZE_MODIFIER_UUID,
-                "Inflated size",
+                INFLATE_SIZE_MODIFIER_ID,
                 1.5,
                 AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             );
-            self.getAttribute(Attributes.SCALE).addPermanentModifier(sizeModifier);
+            living.getAttribute(Attributes.SCALE).addPermanentModifier(sizeModifier);
         }
 
         // Apply speed decrease
-        if (self.getAttribute(Attributes.MOVEMENT_SPEED) != null) {
+        if (living.getAttribute(Attributes.MOVEMENT_SPEED) != null) {
             AttributeModifier speedModifier = new AttributeModifier(
-                INFLATE_SPEED_MODIFIER_UUID,
-                "Inflated slow",
+                INFLATE_SPEED_MODIFIER_ID,
                 -0.5,
                 AttributeModifier.Operation.ADD_MULTIPLIED_BASE
             );
-            self.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(speedModifier);
+            living.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(speedModifier);
         }
     }
 
     private void deflate(Entity self) {
         if (!(self instanceof net.minecraft.world.entity.animal.Pufferfish)) return;
 
+        LivingEntity living = (LivingEntity) self;
         isInflated = false;
 
         // Remove modifiers
-        if (self.getAttribute(Attributes.SCALE) != null) {
-            self.getAttribute(Attributes.SCALE).removeModifier(INFLATE_SIZE_MODIFIER_UUID);
+        if (living.getAttribute(Attributes.SCALE) != null) {
+            living.getAttribute(Attributes.SCALE).removeModifier(INFLATE_SIZE_MODIFIER_ID);
         }
 
-        if (self.getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-            self.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(INFLATE_SPEED_MODIFIER_UUID);
+        if (living.getAttribute(Attributes.MOVEMENT_SPEED) != null) {
+            living.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(INFLATE_SPEED_MODIFIER_ID);
         }
     }
 
@@ -190,7 +194,7 @@ public class PufferfishInflateBehavior extends SteeringBehavior {
     public boolean isPoisonousTo(Entity entity) {
         if (!isInflated) return false;
 
-        String entityId = net.minecraft.core.Registry.ENTITY_TYPE.getKey(entity.getType()).toString();
+        String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
         // Pufferfish are poisonous to most entities except guardians and drowned
         return !entityId.equals("minecraft:guardian") &&
                !entityId.equals("minecraft:elder_guardian") &&

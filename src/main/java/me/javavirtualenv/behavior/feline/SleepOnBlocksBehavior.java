@@ -40,7 +40,8 @@ public class SleepOnBlocksBehavior extends SteeringBehavior {
     private SleepBlockType currentBlockType;
 
     public SleepOnBlocksBehavior(double searchRange, int sleepDuration, double wakeDistance) {
-        super(0.6);
+        super();
+        setWeight(0.6);
         this.searchRange = searchRange;
         this.sleepDuration = sleepDuration;
         this.wakeDistance = wakeDistance;

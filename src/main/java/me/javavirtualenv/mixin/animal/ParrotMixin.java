@@ -112,7 +112,6 @@ public abstract class ParrotMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -138,8 +137,7 @@ public abstract class ParrotMixin extends AnimalMixin {
             // Parrot-specific special behaviors (mimic, dance, perch, music)
             .addHandle(new ParrotBehaviorHandle())
 
-            // General behaviors - flocking, flying, parental
-            .addHandle(new BehaviorHandle())
+            // Note: BehaviorHandle comes from profile via mergeHandles
 
             .build();
 

@@ -1,6 +1,7 @@
 package me.javavirtualenv.behavior.camel;
 
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -8,10 +9,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Spit projectile fired by camels as a defense mechanism.
@@ -24,7 +29,6 @@ import net.minecraft.world.phys.Vec3;
  */
 public class CamelSpitEntity extends Projectile {
 
-    private static final float GRAVITY = 0.05f;
     private float damage = 1.0f;
     private int slowDuration = 100;
 
@@ -43,25 +47,44 @@ public class CamelSpitEntity extends Projectile {
     }
 
     @Override
+    protected double getDefaultGravity() {
+        return 0.06;
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        // No data to define
+    }
+
+    @Override
     public void tick() {
         super.tick();
 
-        // Apply gravity
         Vec3 velocity = getDeltaMovement();
-        setDeltaMovement(
-            velocity.x * 0.99,
-            velocity.y * 0.99 - GRAVITY,
-            velocity.z * 0.99
-        );
+        HitResult hitResult = ProjectileUtil.getHitResultOnMoveVector(this, this::canHitEntity);
+        hitTargetOrDeflectSelf(hitResult);
+
+        double newX = getX() + velocity.x;
+        double newY = getY() + velocity.y;
+        double newZ = getZ() + velocity.z;
+
+        updateRotation();
+
+        // Check if inside blocks or in water
+        if (level().getBlockStates(getBoundingBox()).anyMatch(state -> !state.isAir())) {
+            discard();
+        } else if (isInWaterOrBubble()) {
+            discard();
+        } else {
+            // Apply air resistance and gravity
+            setDeltaMovement(velocity.x * 0.99, velocity.y * 0.99, velocity.z * 0.99);
+            applyGravity();
+            setPos(newX, newY, newZ);
+        }
 
         // Spawn trail particles
         if (level().isClientSide) {
             spawnTrailParticles();
-        }
-
-        // Check if in ground or too slow
-        if (isInGround() || getDeltaMovement().lengthSqr() < 0.01) {
-            discard();
         }
     }
 
@@ -82,15 +105,24 @@ public class CamelSpitEntity extends Projectile {
         discard();
     }
 
+    @Override
+    protected void onHitBlock(BlockHitResult blockHitResult) {
+        super.onHitBlock(blockHitResult);
+        if (!level().isClientSide) {
+            discard();
+        }
+    }
+
     /**
      * Handles hitting an entity.
      */
     private void onEntityHit(EntityHitResult entityHit) {
         Entity target = entityHit.getEntity();
+        Entity owner = getOwner();
 
-        if (target instanceof LivingEntity livingTarget) {
-            // Apply damage
-            DamageSource damageSource = damageSources().mobProjectile(this, getOwner());
+        if (target instanceof LivingEntity livingTarget && owner instanceof LivingEntity livingOwner) {
+            // Apply damage using spit damage source
+            DamageSource damageSource = damageSources().mobProjectile(this, livingOwner);
             livingTarget.hurt(damageSource, damage);
 
             // Apply slow effect

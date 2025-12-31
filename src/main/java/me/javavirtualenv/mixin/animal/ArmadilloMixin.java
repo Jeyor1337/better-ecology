@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -67,7 +68,6 @@ public abstract class ArmadilloMixin extends Mob {
             .addHandle(new ArmadilloEnergyHandle())
             .addHandle(new ArmadilloAgeHandle())
             .addHandle(new ArmadilloHealthHandle())
-            .addHandle(new ArmadilloSizeHandle())
             .addHandle(new ArmadilloMovementHandle())
             .addHandle(new ArmadilloTemporalHandle())
             .addHandle(new ArmadilloDietHandle())
@@ -79,25 +79,22 @@ public abstract class ArmadilloMixin extends Mob {
     }
 
     /**
-     * Inject into hurt method to apply damage reduction when rolled up.
+     * Modify damage amount before vanilla processing.
+     * This allows vanilla's isScared() logic to apply, and stacks additional reduction
+     * when the ecology rolled state is active.
      */
-    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
-    private void onHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @ModifyArg(method = "hurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)
+    private float betterEcology$modifyHurtDamage(float originalAmount, DamageSource source) {
         EcologyComponent component = getEcologyComponent();
         if (component != null) {
             ArmadilloComponent armadilloComponent = new ArmadilloComponent(component.getHandleTag("armadillo"));
 
-            // While rolled up, reduce damage by 80%
+            // While rolled up, reduce damage by additional 80% (on top of vanilla's isScared() reduction)
             if (armadilloComponent.isRolled()) {
-                // Reduce damage
-                float reducedDamage = amount * 0.2f;
-
-                // Apply the reduced damage
-                boolean result = super.hurt(source, reducedDamage);
-                cir.setReturnValue(result);
-                cir.cancel();
+                return originalAmount * 0.2f;
             }
         }
+        return originalAmount;
     }
 
     /**
@@ -420,38 +417,6 @@ public abstract class ArmadilloMixin extends Mob {
             if (healthAttribute != null) {
                 healthAttribute.setBaseValue(BASE_HEALTH);
             }
-        }
-    }
-
-    /**
-     * Size handle with armadillo-specific values.
-     */
-    private static final class ArmadilloSizeHandle extends CodeBasedHandle {
-
-        private static final float WIDTH = 0.7f;
-        private static final float HEIGHT = 0.65f;
-        private static final float BABY_SCALE = 0.5f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            float finalWidth = WIDTH;
-            float finalHeight = HEIGHT;
-
-            if (mob.isBaby()) {
-                finalWidth *= BABY_SCALE;
-                finalHeight *= BABY_SCALE;
-            }
-
-            CompoundTag sizeTag = component.getHandleTag(id());
-            sizeTag.putFloat("width", finalWidth);
-            sizeTag.putFloat("height", finalHeight);
-
-            mob.refreshDimensions();
         }
     }
 

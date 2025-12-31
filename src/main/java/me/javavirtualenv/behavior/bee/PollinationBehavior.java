@@ -1,8 +1,9 @@
 package me.javavirtualenv.behavior.bee;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.ecology.spatial.BlockSpatialCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
@@ -115,6 +116,7 @@ public class PollinationBehavior extends SteeringBehavior {
 
     /**
      * Finds the best pollination target (flowers or crops) near the bee.
+     * Uses optimized chunk-based search with caching to avoid O(n³) performance.
      */
     private BlockPos findPollinationTarget(Level level, Vec3d position, Bee bee) {
         BlockPos beePos = new BlockPos((int) position.x, (int) position.y, (int) position.z);
@@ -133,33 +135,74 @@ public class PollinationBehavior extends SteeringBehavior {
             }
         }
 
-        // Search for new flowers or crops
+        // Use optimized cache-based search for flowers and crops
+        // This reduces from O(22³) = 10,648 block checks to O(chunks) ~ 64 chunks
+        List<Block> targetBlocks = getPollinationTargetBlocks(level);
+        List<BlockPos> nearbyTargets = BlockSpatialCache.findBlocksOfType(
+                level,
+                beePos,
+                (int) FLOWER_SEARCH_RADIUS,
+                targetBlocks
+        );
+
+        // Find closest target
         BlockPos closestTarget = null;
         double closestDistance = Double.MAX_VALUE;
 
-        int searchRadius = (int) FLOWER_SEARCH_RADIUS;
-
-        for (int x = -searchRadius; x <= searchRadius; x++) {
-            for (int y = -3; y <= 3; y++) {
-                for (int z = -searchRadius; z <= searchRadius; z++) {
-                    BlockPos testPos = beePos.offset(x, y, z);
-                    if (isValidPollinationTarget(level, testPos)) {
-                        Vec3d testPosVec = new Vec3d(
-                            testPos.getX() + 0.5,
-                            testPos.getY(),
-                            testPos.getZ() + 0.5
-                        );
-                        double distance = position.distanceTo(testPosVec);
-                        if (distance < closestDistance && distance <= FLOWER_SEARCH_RADIUS) {
-                            closestDistance = distance;
-                            closestTarget = testPos;
-                        }
-                    }
+        for (BlockPos testPos : nearbyTargets) {
+            if (isValidPollinationTarget(level, testPos)) {
+                Vec3d testPosVec = new Vec3d(
+                    testPos.getX() + 0.5,
+                    testPos.getY(),
+                    testPos.getZ() + 0.5
+                );
+                double distance = position.distanceTo(testPosVec);
+                if (distance < closestDistance && distance <= FLOWER_SEARCH_RADIUS) {
+                    closestDistance = distance;
+                    closestTarget = testPos;
                 }
             }
         }
 
         return closestTarget;
+    }
+
+    /**
+     * Get list of blocks that are valid pollination targets.
+     * Used for cache-based block searching.
+     */
+    private List<Block> getPollinationTargetBlocks(Level level) {
+        // Return common flowers and crops
+        // The cache will filter to actual valid targets during search
+        List<Block> targets = new ArrayList<>();
+
+        // Add common flowers
+        targets.add(Blocks.DANDELION);
+        targets.add(Blocks.POPPY);
+        targets.add(Blocks.BLUE_ORCHID);
+        targets.add(Blocks.ALLIUM);
+        targets.add(Blocks.AZURE_BLUET);
+        targets.add(Blocks.RED_TULIP);
+        targets.add(Blocks.ORANGE_TULIP);
+        targets.add(Blocks.WHITE_TULIP);
+        targets.add(Blocks.PINK_TULIP);
+        targets.add(Blocks.OXEYE_DAISY);
+        targets.add(Blocks.CORNFLOWER);
+        targets.add(Blocks.LILY_OF_THE_VALLEY);
+        targets.add(Blocks.SUNFLOWER);
+        targets.add(Blocks.LILAC);
+        targets.add(Blocks.PEONY);
+        targets.add(Blocks.ROSE_BUSH);
+
+        // Add crops
+        targets.add(Blocks.WHEAT);
+        targets.add(Blocks.CARROTS);
+        targets.add(Blocks.POTATOES);
+        targets.add(Blocks.BEETROOTS);
+        targets.add(Blocks.PUMPKIN_STEM);
+        targets.add(Blocks.MELON_STEM);
+
+        return targets;
     }
 
     /**

@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.ai.RefugeAwareTargetGoal;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -144,7 +145,7 @@ public final class PredationHandle implements EcologyHandle {
 
 	private void registerHuntClass(Mob mob, MobAccessor accessor, Class<? extends LivingEntity> entityClass, PredationCache cache) {
 		accessor.betterEcology$getTargetSelector().addGoal(HUNT_PRIORITY,
-			new NearestAttackableTargetGoal<>(mob, entityClass, false));
+			new RefugeAwareTargetGoal(mob, entityClass, false));
 	}
 
 	private void registerHuntTag(Mob mob, MobAccessor accessor, TagKey<EntityType<?>> tagId, PredationCache cache) {
@@ -156,7 +157,7 @@ public final class PredationHandle implements EcologyHandle {
 		};
 
 		accessor.betterEcology$getTargetSelector().addGoal(HUNT_PRIORITY,
-			new NearestAttackableTargetGoal<>(mob, LivingEntity.class, false, predicate));
+			new RefugeAwareTargetGoal(mob, LivingEntity.class, 0, false, false, predicate));
 	}
 
 	private static final class PredationCache {

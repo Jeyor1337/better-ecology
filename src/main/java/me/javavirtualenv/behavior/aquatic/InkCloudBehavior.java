@@ -3,6 +3,7 @@ package me.javavirtualenv.behavior.aquatic;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -10,6 +11,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -37,7 +39,9 @@ public class InkCloudBehavior extends SteeringBehavior {
     private static final int BLINDNESS_DURATION = 80; // 4 seconds of blindness
 
     public InkCloudBehavior(AquaticConfig config) {
-        super(1.5, true);
+        super();
+        setWeight(1.5);
+        setEnabled(true);
         this.config = config;
     }
 
@@ -107,7 +111,7 @@ public class InkCloudBehavior extends SteeringBehavior {
             }
 
             // Common aquatic predators
-            String entityId = net.minecraft.core.Registry.ENTITY_TYPE.getKey(entity.getType()).toString();
+            String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
             return entityId.equals("minecraft:dolphin") ||
                    entityId.equals("minecraft:drowned") ||
                    entityId.equals("minecraft:guardian") ||
@@ -167,7 +171,7 @@ public class InkCloudBehavior extends SteeringBehavior {
             double offsetZ = (Math.random() - 0.5) * config.getInkCloudRadius();
 
             serverLevel.sendParticles(
-                self instanceof net.minecraft.world.entity.animal.GlowSquid
+                self instanceof GlowSquid
                     ? ParticleTypes.GLOW
                     : ParticleTypes.SQUID_INK,
                 mcPos.x + offsetX,

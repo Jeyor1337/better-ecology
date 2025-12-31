@@ -3,10 +3,13 @@ package me.javavirtualenv.behavior.feline;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
+import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
 
 /**
  * Pounce behavior for feline predators.
@@ -34,7 +37,8 @@ public class PounceBehavior extends SteeringBehavior {
 
     public PounceBehavior(double pounceSpeed, double pounceRange,
                           double pounceCooldown, double pounceForce) {
-        super(1.0);
+        super();
+        setWeight(1.0);
         this.pounceSpeed = pounceSpeed;
         this.pounceRange = pounceRange;
         this.pounceCooldown = pounceCooldown;
@@ -132,27 +136,39 @@ public class PounceBehavior extends SteeringBehavior {
         pounceDirection = null;
     }
 
+    /**
+     * Finds nearby entities to pounce on using SpatialIndex for efficient queries.
+     * Uses AABB intersection for early culling and distance-based filtering.
+     */
     private Entity findPounceTarget(Mob mob) {
-        // Find nearby small prey
+        // Get nearby mobs using SpatialIndex for O(1) + O(k) performance
+        List<Mob> nearbyMobs = SpatialIndex.getNearbyMobs(mob, (int) pounceRange);
+
         Entity nearestTarget = null;
         double nearestDistance = Double.MAX_VALUE;
 
-        for (Entity entity : mob.level().getEntitiesOfClass(
-                net.minecraft.world.entity.LivingEntity.class,
-                mob.getBoundingBox().inflate(pounceRange))) {
-            if (entity.equals(mob)) {
+        for (Mob candidate : nearbyMobs) {
+            if (candidate.equals(mob)) {
                 continue;
             }
 
-            if (!isValidPounceTarget(mob, entity)) {
+            // AABB intersection for early culling
+            if (!mob.getBoundingBox().inflate(pounceRange).intersects(candidate.getBoundingBox())) {
                 continue;
             }
 
-            double distance = mob.position().distanceTo(entity.position());
-            if (distance < nearestDistance && distance <= pounceRange) {
-                nearestDistance = distance;
-                nearestTarget = entity;
+            // Distance-based filtering before type checks
+            double distance = mob.position().distanceTo(candidate.position());
+            if (distance > pounceRange || distance >= nearestDistance) {
+                continue;
             }
+
+            if (!isValidPounceTarget(mob, candidate)) {
+                continue;
+            }
+
+            nearestDistance = distance;
+            nearestTarget = candidate;
         }
 
         return nearestTarget;

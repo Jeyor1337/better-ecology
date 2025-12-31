@@ -73,7 +73,6 @@ public abstract class BeeMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -98,8 +97,7 @@ public abstract class BeeMixin extends AnimalMixin {
             // Production - honey production
             .addHandle(new ResourceProductionHandle())
 
-            // Behaviors - pollination, hive behaviors, swarming
-            .addHandle(new BehaviorHandle())
+            // Note: BehaviorHandle comes from profile via mergeHandles
 
             .build();
 

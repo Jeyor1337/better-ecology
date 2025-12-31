@@ -1,10 +1,13 @@
 package me.javavirtualenv.ecology.ai;
 
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.EcologyHooks;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -148,9 +151,12 @@ public class HerdCohesionGoal extends Goal {
             }
         }
 
-        // Update cohesion status in persistent data
+        // Update cohesion status in component data
         boolean isCohesive = distanceToLeader < cohesionRange * cohesionRange;
-        mob.getPersistentData().putBoolean("better-ecology:herd_cohesive", isCohesive);
+        EcologyComponent component = getEcologyComponent(mob);
+        if (component != null) {
+            component.getHandleTag("herd").putBoolean("cohesive", isCohesive);
+        }
     }
 
     /**
@@ -231,7 +237,11 @@ public class HerdCohesionGoal extends Goal {
         int bestDominance = -1;
 
         for (Mob member : herdMembers) {
-            int dominance = member.getPersistentData().getInt("better-ecology:dominance_score");
+            EcologyComponent memberComponent = getEcologyComponent(member);
+            int dominance = 0;
+            if (memberComponent != null) {
+                dominance = memberComponent.getHandleTag("social").getInt("dominance_score");
+            }
 
             if (dominance > bestDominance) {
                 bestDominance = dominance;
@@ -246,6 +256,14 @@ public class HerdCohesionGoal extends Goal {
 
         herdLeader = bestLeader;
         leaderUuid = herdLeader.getUUID();
+    }
+
+    /**
+     * Get EcologyComponent from a Mob entity.
+     */
+    @Nullable
+    private EcologyComponent getEcologyComponent(Mob mob) {
+        return EcologyHooks.getEcologyComponent(mob);
     }
 
     /**

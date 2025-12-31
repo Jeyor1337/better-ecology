@@ -65,7 +65,7 @@ public class ArmadilloPredatorAvoidance implements BehaviorRule {
         }
 
         // Calculate flee direction (away from predator)
-        Vec3d fleeDirection = position.sub(predatorPos);
+        Vec3d fleeDirection = Vec3d.sub(position, predatorPos);
         fleeDirection.normalize();
 
         // Scale by distance (stronger when closer)

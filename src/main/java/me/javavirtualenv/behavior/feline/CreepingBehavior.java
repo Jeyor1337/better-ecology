@@ -25,7 +25,8 @@ public class CreepingBehavior extends SteeringBehavior {
     private int creepTicks = 0;
 
     public CreepingBehavior(double creepSpeed, double alertThreshold, double creepDuration) {
-        super(0.8);
+        super();
+        setWeight(0.8);
         this.creepSpeed = creepSpeed;
         this.alertThreshold = alertThreshold;
         this.creepDuration = creepDuration;

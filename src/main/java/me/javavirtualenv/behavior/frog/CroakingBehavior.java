@@ -43,7 +43,8 @@ public class CroakingBehavior extends SteeringBehavior {
     }
 
     public CroakingBehavior(int baseCroakInterval) {
-        super(1.0); // Low weight as this doesn't affect movement
+        super();
+        setWeight(1.0); // Low weight as this doesn't affect movement
         this.baseCroakInterval = baseCroakInterval;
         this.croakTimer = getRandomizedInterval();
     }

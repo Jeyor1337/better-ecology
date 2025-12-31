@@ -40,7 +40,6 @@ public abstract class AxolotlMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -65,8 +64,7 @@ public abstract class AxolotlMixin extends AnimalMixin {
             // Production - slime production
             .addHandle(new ResourceProductionHandle())
 
-            // Behaviors
-            .addHandle(new BehaviorHandle())
+            // Behaviors - Note: BehaviorHandle comes from profile via mergeHandles
 
             .build();
 

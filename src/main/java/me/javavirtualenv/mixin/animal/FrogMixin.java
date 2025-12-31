@@ -16,7 +16,6 @@ import me.javavirtualenv.ecology.handles.EggLayerHandle;
 import me.javavirtualenv.ecology.handles.EnergyHandle;
 import me.javavirtualenv.ecology.handles.HungerHandle;
 import me.javavirtualenv.ecology.handles.MovementHandle;
-import me.javavirtualenv.ecology.handles.SizeHandle;
 import me.javavirtualenv.ecology.handles.SocialHandle;
 import me.javavirtualenv.ecology.handles.TemporalHandle;
 import net.minecraft.resources.ResourceLocation;
@@ -78,7 +77,6 @@ public abstract class FrogMixin extends AnimalMixin {
 
                 // Physical capabilities
                 .addHandle(new MovementHandle())
-                .addHandle(new SizeHandle())
 
                 // Behavioral systems
                 .addHandle(new DietHandle())
@@ -88,7 +86,7 @@ public abstract class FrogMixin extends AnimalMixin {
 
                 // Frog-specific behaviors
                 .addHandle(new FrogHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle comes from profile via mergeHandles
 
                 // Build configuration
                 .build();

@@ -166,7 +166,7 @@ public class FoxPursuitBehavior extends SteeringBehavior {
 
         // Calculate pounce trajectory
         Vec3d toPrey = Vec3d.sub(preyPos, foxPos);
-        pounceTarget = preyPos.copy();
+        pounceTarget = preyPos.toMinecraftVec3();
 
         // Launch fox toward prey with leap
         Vec3 pounceVec = new Vec3(toPrey.x, pounceHeight, toPrey.z);

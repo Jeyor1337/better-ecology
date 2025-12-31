@@ -161,7 +161,7 @@ public class HerdDynamicsGoal extends Goal {
         } else {
             // Lead the herd to food/water
             if (horse.getRandom().nextFloat() < config.leadMovementChance) {
-                Vec3 targetPos = find grazingTarget();
+                Vec3 targetPos = findGrazingTarget();
                 if (targetPos != null) {
                     horse.getNavigation().moveTo(
                         targetPos.x,

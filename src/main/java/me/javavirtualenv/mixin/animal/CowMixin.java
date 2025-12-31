@@ -15,7 +15,6 @@ import me.javavirtualenv.ecology.ai.CowGrazeGoal;
 import me.javavirtualenv.ecology.ai.CowProtectCalfGoal;
 import me.javavirtualenv.ecology.ai.HerdCohesionGoal;
 import me.javavirtualenv.ecology.handles.AgeHandle;
-import me.javavirtualenv.ecology.handles.BehaviorHandle;
 import me.javavirtualenv.ecology.handles.BreedingHandle;
 import me.javavirtualenv.ecology.handles.ConditionHandle;
 import me.javavirtualenv.ecology.handles.DietHandle;
@@ -24,12 +23,12 @@ import me.javavirtualenv.ecology.handles.HungerHandle;
 import me.javavirtualenv.ecology.handles.HungerThirstTriggerHandle;
 import me.javavirtualenv.ecology.handles.MovementHandle;
 import me.javavirtualenv.ecology.handles.PredationHandle;
-import me.javavirtualenv.ecology.handles.SizeHandle;
 import me.javavirtualenv.ecology.handles.SocialHandle;
 import me.javavirtualenv.ecology.handles.TemporalHandle;
 import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
 import me.javavirtualenv.ecology.state.EntityState;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -100,7 +99,6 @@ public abstract class CowMixin extends AnimalMixin {
 
                 // Physical capabilities
                 .addHandle(new CowMovementHandle())
-                .addHandle(new CowSizeHandle())
 
                 // Behavioral systems
                 .addHandle(new CowDietHandle())
@@ -113,7 +111,7 @@ public abstract class CowMixin extends AnimalMixin {
 
                 // Cow-specific behaviors
                 .addHandle(new GrazingHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle is NOT added here - it comes from profile via mergeHandles
                 .build();
 
         AnimalBehaviorRegistry.register(COW_ID.toString(), config);
@@ -520,26 +518,6 @@ public abstract class CowMixin extends AnimalMixin {
             if (AVOIDS_CLIFFS) {
                 mob.setPathfindingMalus(PathType.DANGER_OTHER, (float) CLIFF_THRESHOLD);
             }
-        }
-    }
-
-    /**
-     * Size system for cows.
-     */
-    private static final class CowSizeHandle extends CodeBasedHandle {
-        private static final float WIDTH = 0.9f;
-        private static final float HEIGHT = 1.4f;
-        private static final float BABY_SCALE = 0.5f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            // Size handling for baby cows is managed by Minecraft's age system
-            // Cow automatically handles baby scaling
         }
     }
 

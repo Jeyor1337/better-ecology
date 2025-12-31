@@ -97,6 +97,29 @@ public class Vec3d {
     }
 
     /**
+     * Static addition returning a new vector.
+     */
+    public static Vec3d add(Vec3d a, Vec3d b) {
+        return new Vec3d(a.x + b.x, a.y + b.y, a.z + b.z);
+    }
+
+    /**
+     * Static scalar multiplication returning a new vector.
+     */
+    public static Vec3d mult(Vec3d v, double scalar) {
+        return new Vec3d(v.x * scalar, v.y * scalar, v.z * scalar);
+    }
+
+    /**
+     * Returns a normalized copy of this vector.
+     */
+    public Vec3d normalized() {
+        Vec3d result = new Vec3d(this.x, this.y, this.z);
+        result.normalize();
+        return result;
+    }
+
+    /**
      * Multiplies all components by a scalar (mutates this vector).
      */
     public void mult(double scalar) {

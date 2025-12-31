@@ -28,7 +28,7 @@ public class SchoolingBehavior extends SteeringBehavior {
     private final CenterAttraction centerAttraction;
 
     public SchoolingBehavior(AquaticConfig config) {
-        super(config.getSchoolSeparationWeight(), true);
+        super();
         this.config = config;
         this.separation = new SeparationBehavior(
             config.getSeparationDistance(),
@@ -65,12 +65,24 @@ public class SchoolingBehavior extends SteeringBehavior {
         Vec3d centerForce = centerAttraction.calculate(context, school);
 
         Vec3d totalForce = new Vec3d();
-        totalForce.add(separationForce.mult(config.getSchoolSeparationWeight()));
-        totalForce.add(alignmentForce.mult(config.getSchoolAlignmentWeight()));
-        totalForce.add(cohesionForce.mult(config.getSchoolCohesionWeight()));
-        totalForce.add(centerForce.mult(0.3));
+        Vec3d sepWeighted = separationForce.copy();
+        sepWeighted.mult(config.getSchoolSeparationWeight());
+        totalForce.add(sepWeighted);
 
-        return limitForce(totalForce, config.getMaxForce());
+        Vec3d alignWeighted = alignmentForce.copy();
+        alignWeighted.mult(config.getSchoolAlignmentWeight());
+        totalForce.add(alignWeighted);
+
+        Vec3d cohWeighted = cohesionForce.copy();
+        cohWeighted.mult(config.getSchoolCohesionWeight());
+        totalForce.add(cohWeighted);
+
+        Vec3d centerWeighted = centerForce.copy();
+        centerWeighted.mult(0.3);
+        totalForce.add(centerWeighted);
+
+        totalForce.limit(config.getMaxForce());
+        return totalForce;
     }
 
     private List<Entity> findSchool(BehaviorContext context) {
@@ -145,7 +157,7 @@ public class SchoolingBehavior extends SteeringBehavior {
                 steering.normalize();
                 steering.mult(maxSpeed);
                 steering.sub(context.getVelocity());
-                limitForce(steering, maxForce);
+                steering.limit(maxForce);
             }
 
             return steering;
@@ -230,13 +242,6 @@ public class SchoolingBehavior extends SteeringBehavior {
             desired.mult(maxSpeed);
             Vec3d steer = Vec3d.sub(desired, currentVelocity);
             return steer;
-        }
-
-        private void limitForce(Vec3d force, double max) {
-            if (force.magnitude() > max) {
-                force.normalize();
-                force.mult(max);
-            }
         }
     }
 

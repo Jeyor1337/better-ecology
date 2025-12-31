@@ -31,9 +31,10 @@ public class LevelChunkMixin implements ChunkPersistentData {
 
     /**
      * Load spawn data from chunk NBT when chunk is loaded from disk.
+     * Targets the correct load method signature in 1.21.1 Mojmap.
      */
-    @Inject(method = "loadAll", at = @At("RETURN"))
-    private void betterEcology$onLoadAll(CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "load", at = @At("RETURN"))
+    private void betterEcology$onLoad(CompoundTag tag, CallbackInfo ci) {
         if (tag.contains(BETTER_ECOLOGY_DATA_KEY)) {
             CompoundTag ecologyTag = tag.getCompound(BETTER_ECOLOGY_DATA_KEY);
             ChunkSpawnData spawnData = ChunkSpawnData.fromNbt(ecologyTag);
@@ -47,9 +48,10 @@ public class LevelChunkMixin implements ChunkPersistentData {
 
     /**
      * Save spawn data to chunk NBT when chunk is saved to disk.
+     * Targets the correct write method signature in 1.21.1 Mojmap.
      */
-    @Inject(method = "saveAll", at = @At("RETURN"))
-    private void betterEcology$onSaveAll(CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "write", at = @At("RETURN"))
+    private void betterEcology$onWrite(CompoundTag tag, CallbackInfo ci) {
         LevelChunk chunk = (LevelChunk) (Object) this;
         ChunkSpawnData spawnData = ChunkSpawnDataStorage.get(chunk);
 

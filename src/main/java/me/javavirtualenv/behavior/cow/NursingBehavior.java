@@ -193,8 +193,8 @@ public class NursingBehavior extends SteeringBehavior {
     private Vec3d seekMother(BehaviorContext context, Vec3d calfPos, double distanceToMother) {
         // Calculate target position (stay close but don't crowd)
         double targetDistance = 4.0;
-        Vec3d direction = lastMotherPosition.subtract(calfPos).normalize();
-        Vec3d targetPos = lastMotherPosition.subtract(direction.mult(targetDistance));
+        Vec3d direction = Vec3d.sub(lastMotherPosition, calfPos).normalized();
+        Vec3d targetPos = Vec3d.sub(lastMotherPosition, Vec3d.mult(direction, targetDistance));
 
         double seekSpeed = 0.35;
         return seek(calfPos, context.getVelocity(), targetPos, seekSpeed);

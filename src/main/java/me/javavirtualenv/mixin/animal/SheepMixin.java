@@ -71,8 +71,6 @@ public abstract class SheepMixin extends AnimalMixin {
             .addHandle(new SheepSocialHandle())
             // Movement system (lines 54-69)
             .addHandle(new SheepMovementHandle())
-            // Size system (lines 43-46)
-            .addHandle(new SheepSizeHandle())
             // Health system (lines 38-40)
             .addHandle(new SheepHealthHandle())
             // Breeding system (lines 371-469)
@@ -547,41 +545,6 @@ public abstract class SheepMixin extends AnimalMixin {
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(goalPriority,
                 new EweProtectLambGoal(pathfinderMob, 24.0, 12.0, 1.0));
-        }
-    }
-
-    /**
-     * Size handle with sheep-specific values.
-     * YAML: physical.size (lines 43-46)
-     */
-    private static final class SheepSizeHandle extends CodeBasedHandle {
-        private static final String HANDLE_TAG_KEY = "size";
-
-        // Configuration from YAML
-        private static final float WIDTH = 0.9f;
-        private static final float HEIGHT = 1.3f;
-        private static final float BABY_SCALE = 0.5f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            float finalWidth = WIDTH;
-            float finalHeight = HEIGHT;
-
-            if (mob.isBaby()) {
-                finalWidth *= BABY_SCALE;
-                finalHeight *= BABY_SCALE;
-            }
-
-            CompoundTag sizeTag = component.getHandleTag(HANDLE_TAG_KEY);
-            sizeTag.putFloat("width", finalWidth);
-            sizeTag.putFloat("height", finalHeight);
-
-            mob.refreshDimensions();
         }
     }
 

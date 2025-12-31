@@ -4,6 +4,7 @@ import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.api.EcologyAccess;
+import me.javavirtualenv.ecology.seasonal.SeasonalContext;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.Mob;
@@ -43,7 +44,12 @@ public final class HungerHandle implements EcologyHandle {
 		// If 100 ticks have passed since last update, decay 100x
 		long elapsedTicks = component.elapsedTicks();
 		long effectiveTicks = Math.max(1, elapsedTicks); // At least 1 tick of decay
-		long scaledDecay = cache.decayRate() * effectiveTicks;
+		long baseDecay = cache.decayRate() * effectiveTicks;
+
+		// Apply seasonal modifier to hunger burn rate
+		double seasonalMultiplier = getSeasonalHungerMultiplier(mob);
+		long scaledDecay = (long) (baseDecay * seasonalMultiplier);
+
 		int newHunger = (int) (currentHunger - scaledDecay);
 
 		// Prevent jarring death: clamp to safe minimum during catch-up
@@ -128,6 +134,21 @@ public final class HungerHandle implements EcologyHandle {
 
 	private void applyStarvationDamage(Mob mob, HungerCache cache) {
 		mob.hurt(mob.level().damageSources().starve(), cache.damageAmount());
+	}
+
+	/**
+	 * Get seasonal hunger multiplier for an entity.
+	 * Applies seasonal modifiers to hunger burn rate.
+	 *
+	 * @param mob The entity
+	 * @return Hunger multiplier (1.0 = normal, higher = faster burn)
+	 */
+	private double getSeasonalHungerMultiplier(Mob mob) {
+		SeasonalContext.Season season = SeasonalHandle.getSeason(mob);
+		if (season == null) {
+			return 1.0;
+		}
+		return SeasonalContext.getSeasonalHungerMultiplier(season);
 	}
 
 	/**

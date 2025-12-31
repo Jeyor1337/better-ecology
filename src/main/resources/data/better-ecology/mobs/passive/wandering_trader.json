@@ -11,13 +11,34 @@
       "price_discount_per_reputation": 0.001,
       "max_discount": 0.3,
       "special_deal_chance": 0.02,
-      "rare_deal_chance": 0.01
+      "rare_deal_chance": 0.01,
+      "supply_demand_enabled": true,
+      "supply_regen_rate": 3,
+      "demand_decay_rate": 0.97
     },
     "gossip": {
       "enabled": true,
       "spread_chance": 0.2,
       "decay_time_days": 7,
-      "max_gossip_per_type": 10
+      "max_gossip_per_type": 10,
+      "village_interaction_range": 16.0
+    },
+    "village_seeking": {
+      "enabled": true,
+      "search_cooldown_ticks": 600,
+      "village_detection_range": 64,
+      "preferred_distance_from_bell": 8.0
+    },
+    "socialization": {
+      "enabled": true,
+      "socialize_duration_ticks": 200,
+      "socialize_range": 16.0,
+      "villager_interaction_chance": 0.02
+    },
+    "preferential_trading": {
+      "enabled": true,
+      "preferred_customer_range": 8.0,
+      "reputation_threshold": 50
     }
   },
   "weights": {

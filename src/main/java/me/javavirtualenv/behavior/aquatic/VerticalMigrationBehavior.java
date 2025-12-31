@@ -20,7 +20,9 @@ public class VerticalMigrationBehavior extends SteeringBehavior {
     private long lastMigrationCheck = 0;
 
     public VerticalMigrationBehavior(AquaticConfig config) {
-        super(0.8, true);
+        super();
+        setWeight(0.8);
+        setEnabled(true);
         this.config = config;
     }
 

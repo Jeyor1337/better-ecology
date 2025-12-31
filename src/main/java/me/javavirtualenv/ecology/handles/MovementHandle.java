@@ -4,6 +4,7 @@ import java.util.Map;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.seasonal.SeasonalContext;
 import me.javavirtualenv.mixin.MobAccessor;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -29,6 +30,11 @@ public final class MovementHandle implements EcologyHandle {
 	}
 
 	@Override
+	public int tickInterval() {
+		return 100; // Update movement speed every 5 seconds
+	}
+
+	@Override
 	public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
 		MovementCache cache = profile.cached(CACHE_KEY, () -> buildCache(profile));
 		if (cache == null) {
@@ -39,6 +45,17 @@ public final class MovementHandle implements EcologyHandle {
 		configurePathfinding(mob, cache);
 		registerStrollGoal(mob, cache);
 		registerFloatGoal(mob);
+	}
+
+	@Override
+	public void tick(Mob mob, EcologyComponent component, EcologyProfile profile) {
+		MovementCache cache = profile.cached(CACHE_KEY, () -> buildCache(profile));
+		if (cache == null) {
+			return;
+		}
+
+		// Update movement speed based on seasonal modifiers
+		applySeasonalMovementSpeed(mob, cache);
 	}
 
 	private MovementCache buildCache(EcologyProfile profile) {
@@ -67,6 +84,24 @@ public final class MovementHandle implements EcologyHandle {
 				movementAttribute.setBaseValue(cache.walkSpeed);
 			}
 		}
+	}
+
+	private void applySeasonalMovementSpeed(Mob mob, MovementCache cache) {
+		AttributeInstance movementAttribute = mob.getAttribute(Attributes.MOVEMENT_SPEED);
+		if (movementAttribute == null) {
+			return;
+		}
+
+		SeasonalContext.Season season = SeasonalHandle.getSeason(mob);
+		if (season == null) {
+			return;
+		}
+
+		double seasonalMultiplier = SeasonalContext.getSeasonalMovementMultiplier(season);
+		double baseSpeed = cache.walkSpeed;
+		double modifiedSpeed = baseSpeed * seasonalMultiplier;
+
+		movementAttribute.setBaseValue(modifiedSpeed);
 	}
 
 	private void configurePathfinding(Mob mob, MovementCache cache) {

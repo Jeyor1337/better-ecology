@@ -12,7 +12,6 @@ import me.javavirtualenv.ecology.handles.HealthHandle;
 import me.javavirtualenv.ecology.handles.HungerHandle;
 import me.javavirtualenv.ecology.handles.MovementHandle;
 import me.javavirtualenv.ecology.handles.PredationHandle;
-import me.javavirtualenv.ecology.handles.SizeHandle;
 import me.javavirtualenv.ecology.handles.SocialHandle;
 import me.javavirtualenv.ecology.handles.SpawnHandle;
 import me.javavirtualenv.ecology.handles.TemporalHandle;
@@ -96,7 +95,6 @@ public abstract class HorseMixin extends AnimalMixin {
                 // Physical capabilities
                 .addHandle(new MovementHandle())
                 .addHandle(new HealthHandle())
-                .addHandle(new SizeHandle())
 
                 // Behavioral systems
                 .addHandle(new DietHandle())
@@ -106,7 +104,7 @@ public abstract class HorseMixin extends AnimalMixin {
 
                 // Population and aesthetics
                 .addHandle(new SpawnHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle comes from profile via mergeHandles
 
                 // Horse-specific behaviors
                 .addHandle(new HorseBehaviorHandle())

@@ -1,11 +1,12 @@
 package me.javavirtualenv.behavior.allay;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -211,8 +212,8 @@ public class ItemCollectingBehavior extends SteeringBehavior {
                 continue;
             }
 
-            ItemEntity item = level.getEntity(memory.itemId);
-            if (!(item instanceof ItemEntity itemEntity) || !itemEntity.isAlive()) {
+            Entity entity = level.getEntity(memory.itemId);
+            if (!(entity instanceof ItemEntity itemEntity) || !itemEntity.isAlive()) {
                 continue;
             }
 
@@ -303,9 +304,10 @@ public class ItemCollectingBehavior extends SteeringBehavior {
      * Finds the appropriate delivery location (player or note block).
      */
     private BlockPos findDeliveryLocation(Allay allay) {
-        // Check if allay has a liked player
-        if (allay.getOwnerUUID() != null) {
-            var player = allay.level().getPlayerByUUID(allay.getOwnerUUID());
+        // Check if allay has a liked player stored in brain memory
+        var likedPlayerUuid = allay.getBrain().getMemory(MemoryModuleType.LIKED_PLAYER);
+        if (likedPlayerUuid.isPresent()) {
+            var player = allay.level().getPlayerByUUID(likedPlayerUuid.get());
             if (player != null && player.isAlive()) {
                 return player.blockPosition();
             }

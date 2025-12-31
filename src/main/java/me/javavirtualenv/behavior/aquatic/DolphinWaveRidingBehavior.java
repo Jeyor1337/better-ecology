@@ -27,7 +27,9 @@ public class DolphinWaveRidingBehavior extends SteeringBehavior {
     private Vec3d leapDirection = new Vec3d();
 
     public DolphinWaveRidingBehavior(AquaticConfig config) {
-        super(1.3, true);
+        super();
+        setWeight(1.3);
+        setEnabled(true);
         this.config = config;
     }
 

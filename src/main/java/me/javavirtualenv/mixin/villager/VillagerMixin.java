@@ -35,6 +35,9 @@ public class VillagerMixin implements EcologyAccess {
     private EnhancedFarming betterEcology$enhancedFarming;
 
     @Unique
+    private VillagerThreatResponse betterEcology$threatResponse;
+
+    @Unique
     private boolean betterEcology$behaviorsInitialized = false;
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -45,6 +48,7 @@ public class VillagerMixin implements EcologyAccess {
         betterEcology$workStationAI = new WorkStationAI(villager);
         betterEcology$dailyRoutine = new DailyRoutine(villager);
         betterEcology$enhancedFarming = new EnhancedFarming(villager);
+        betterEcology$threatResponse = new VillagerThreatResponse(villager);
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
@@ -97,10 +101,16 @@ public class VillagerMixin implements EcologyAccess {
         betterEcology$dailyRoutine.tick();
         betterEcology$workStationAI.tick();
         betterEcology$enhancedFarming.tick();
+        betterEcology$threatResponse.tick();
 
         // Decay gossip periodically
         if (villager.level().getGameTime() % 1200 == 0) {
             betterEcology$gossipSystem.decayGossip();
+        }
+
+        // Update supply/demand periodically
+        if (villager.level().getGameTime() % 600 == 0) {
+            betterEcology$tradingReputation.updateSupplyDemand();
         }
     }
 
@@ -185,6 +195,14 @@ public class VillagerMixin implements EcologyAccess {
     public static EnhancedFarming getEnhancedFarming(Villager villager) {
         if (villager instanceof VillagerMixin mixin) {
             return mixin.betterEcology$enhancedFarming;
+        }
+        return null;
+    }
+
+    @Unique
+    public static VillagerThreatResponse getThreatResponse(Villager villager) {
+        if (villager instanceof VillagerMixin mixin) {
+            return mixin.betterEcology$threatResponse;
         }
         return null;
     }

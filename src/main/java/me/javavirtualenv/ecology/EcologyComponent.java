@@ -5,9 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import me.javavirtualenv.ecology.EcologyHooks.UpdateMode;
+import me.javavirtualenv.ecology.conservation.GeneticDiversityComponent;
+import me.javavirtualenv.ecology.conservation.LineageRegistry;
 import me.javavirtualenv.ecology.state.EntityState;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
@@ -77,6 +81,8 @@ public final class EcologyComponent {
 	private long elapsedTicks = 0; // Ticks since last update (for catch-up simulation)
 	private UpdateMode updateMode = UpdateMode.ACTIVE; // Current update mode
 	private String wakeReason = "unknown"; // Why the entity woke up (for handler logic)
+	@Nullable
+	private GeneticDiversityComponent geneticData; // Genetic tracking data
 
 	public EcologyComponent(Mob mob) {
 		this.mob = mob;
@@ -127,10 +133,13 @@ public final class EcologyComponent {
 		profileGeneration = EcologyProfileRegistry.generation();
 		profile = EcologyProfileRegistry.getForMob(mob);
 
-		// Check code-based registry first, fall back to profile system
+		// Always load the profile first (for behavior configs like steering)
+		// Then merge with code-based handles if present
 		AnimalConfig codeConfig = AnimalBehaviorRegistry.getForMob(mob);
 		if (codeConfig != null) {
-			handles = codeConfig.getHandles();
+			// Merge code-based handles with profile-based handles
+			// Code-based handles override profile-based handles with the same ID
+			handles = mergeHandles(codeConfig.getHandles(), profile);
 		} else {
 			handles = profile == null ? List.of() : EcologyProfileRegistry.getHandles(profile);
 		}
@@ -205,6 +214,46 @@ public final class EcologyComponent {
 		if (!dependencies.isEmpty()) {
 			LOGGER.debug("Loaded {} handle dependencies from profile", dependencies.size());
 		}
+	}
+
+	/**
+	 * Merges code-based handles with profile-based handles.
+	 * Code-based handles override profile-based handles with the same ID.
+	 * This allows code-based entities to still use profile-based features like steering behaviors.
+	 *
+	 * @param codeHandles Handles from code-based config
+	 * @param profile The ecology profile (may be null)
+	 * @return Merged list of handles
+	 */
+	private List<EcologyHandle> mergeHandles(List<EcologyHandle> codeHandles, @Nullable EcologyProfile profile) {
+		if (profile == null) {
+			// No profile, return only code-based handles
+			return codeHandles;
+		}
+
+		// Start with profile-based handles
+		List<EcologyHandle> profileHandles = EcologyProfileRegistry.getHandles(profile);
+		Map<String, EcologyHandle> mergedMap = new java.util.LinkedHashMap<>();
+
+		// Add all profile handles first
+		for (EcologyHandle handle : profileHandles) {
+			mergedMap.put(handle.id(), handle);
+		}
+
+		// Override with code-based handles (code takes precedence)
+		for (EcologyHandle handle : codeHandles) {
+			mergedMap.put(handle.id(), handle);
+		}
+
+		List<EcologyHandle> result = new java.util.ArrayList<>(mergedMap.values());
+
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("Merged {} profile handles with {} code handles for {}",
+					profileHandles.size(), codeHandles.size(),
+					BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()));
+		}
+
+		return result;
 	}
 
 	public boolean hasProfile() {
@@ -596,5 +645,45 @@ public final class EcologyComponent {
 			return true;
 		}
 		return currentVersion > knownVersion;
+	}
+
+	/**
+	 * Gets the genetic diversity data for this entity.
+	 * Creates a new component if it doesn't exist.
+	 *
+	 * @return Genetic diversity component
+	 */
+	public GeneticDiversityComponent getGeneticData() {
+		if (geneticData == null) {
+			CompoundTag tag = getHandleTag("genetic_data");
+			geneticData = new GeneticDiversityComponent(tag);
+			UUID entityUuid = mob.getUUID();
+			LineageRegistry.registerFromNbt(entityUuid, tag);
+		}
+		return geneticData;
+	}
+
+	/**
+	 * Sets the genetic diversity data for this entity.
+	 * Also updates the LineageRegistry with the new data.
+	 *
+	 * @param data Genetic diversity component
+	 */
+	public void setGeneticData(@Nullable GeneticDiversityComponent data) {
+		this.geneticData = data;
+		if (data != null) {
+			CompoundTag tag = getHandleTag("genetic_data");
+			tag.merge(data.getData());
+			LineageRegistry.registerFromNbt(mob.getUUID(), tag);
+		}
+	}
+
+	/**
+	 * Gets the mob entity that this component is attached to.
+	 *
+	 * @return The mob entity
+	 */
+	public Mob getMob() {
+		return mob;
 	}
 }

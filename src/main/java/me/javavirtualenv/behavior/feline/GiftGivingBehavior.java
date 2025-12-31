@@ -60,7 +60,8 @@ public class GiftGivingBehavior extends SteeringBehavior {
     }
 
     public GiftGivingBehavior(int giftCooldown, double trustThreshold, int searchRange) {
-        super(0.5);
+        super();
+        setWeight(0.5);
         this.giftCooldown = giftCooldown;
         this.trustThreshold = trustThreshold;
         this.searchRange = searchRange;

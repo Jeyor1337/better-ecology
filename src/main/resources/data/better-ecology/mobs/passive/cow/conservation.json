@@ -1,0 +1,13 @@
+{
+  "minecraft:cow": {
+    "conservation": {
+      "enabled": true,
+      "mvp_threshold": 15,
+      "emergency_breeding": {
+        "enabled": true,
+        "cooldown": 3000,
+        "move_speed": 1.2
+      }
+    }
+  }
+}

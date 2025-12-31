@@ -202,12 +202,13 @@ public class MilkingGoal extends Goal {
     }
 
     private MilkProductionHandle getMilkProductionHandle(EcologyComponent component) {
-        // Get the handle from the component's profile
-        EcologyProfile profile = component.getProfile();
-        if (!profile.hasHandle("milk_production")) {
-            return null;
+        // Find the milk production handle from component's registered handles
+        for (var handle : component.handles()) {
+            if (handle instanceof MilkProductionHandle milkHandle) {
+                return milkHandle;
+            }
         }
-        return new MilkProductionHandle();
+        return null;
     }
 
     /**

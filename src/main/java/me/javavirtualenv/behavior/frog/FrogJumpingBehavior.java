@@ -43,7 +43,8 @@ public class FrogJumpingBehavior extends SteeringBehavior {
     private int jumpCooldown = 0;
 
     public FrogJumpingBehavior() {
-        super(1.0);
+        super();
+        setWeight(1.0);
     }
 
     @Override

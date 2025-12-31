@@ -22,7 +22,9 @@ public class SalmonUpstreamBehavior extends SteeringBehavior {
     private final AquaticConfig config;
 
     public SalmonUpstreamBehavior(AquaticConfig config) {
-        super(1.3, true);
+        super();
+        setWeight(1.3);
+        setEnabled(true);
         this.config = config;
     }
 

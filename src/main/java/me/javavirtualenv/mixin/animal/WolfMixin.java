@@ -2,6 +2,7 @@ package me.javavirtualenv.mixin.animal;
 
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
+import me.javavirtualenv.ecology.CodeBasedHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.handles.*;
@@ -65,7 +66,6 @@ public abstract class WolfMixin extends AnimalMixin {
             .addHandle(new WolfAgeHandle())
             .addHandle(new WolfSocialHandle())
             .addHandle(new WolfHealthHandle())
-            .addHandle(new WolfSizeHandle())
             .addHandle(new WolfMovementHandle())
             .addHandle(new WolfTemporalHandle())
             .addHandle(new WolfDietHandle())
@@ -440,38 +440,6 @@ public abstract class WolfMixin extends AnimalMixin {
             if (healthAttribute != null) {
                 healthAttribute.setBaseValue(BASE_HEALTH);
             }
-        }
-    }
-
-    /**
-     * Size handle with wolf-specific values.
-     */
-    private static final class WolfSizeHandle extends CodeBasedHandle {
-
-        private static final float WIDTH = 0.6f;
-        private static final float HEIGHT = 0.85f;
-        private static final float BABY_SCALE = 0.5f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            float finalWidth = WIDTH;
-            float finalHeight = HEIGHT;
-
-            if (mob.isBaby()) {
-                finalWidth *= BABY_SCALE;
-                finalHeight *= BABY_SCALE;
-            }
-
-            CompoundTag sizeTag = component.getHandleTag(id());
-            sizeTag.putFloat("width", finalWidth);
-            sizeTag.putFloat("height", finalHeight);
-
-            mob.refreshDimensions();
         }
     }
 

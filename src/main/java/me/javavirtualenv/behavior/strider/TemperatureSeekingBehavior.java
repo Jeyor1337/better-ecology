@@ -5,7 +5,7 @@ import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.Strider;
+import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.FluidState;

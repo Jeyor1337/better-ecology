@@ -2,12 +2,15 @@ package me.javavirtualenv.behavior.cow;
 
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.MushroomCow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.Potions;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Extended milk production for mooshrooms.
@@ -15,26 +18,17 @@ import net.minecraft.world.item.alchemy.Potions;
  * Mooshrooms produce:
  * - Standard milk (with bucket)
  * - Mushroom stew (with bowl)
- * - Suspicious stew (with bowl and flower)
+ * - Suspicious stew (with bowl after feeding flower)
  * <p>
- * Suspicious stew effects vary based on flower type:
- * - Allium: Fire resistance
- * - Azure Bluet: Blindness
- * - Red Tulip: Weakness
- * - Cornflower: Jump boost
- * - Lily of the Valley: Poison
- * - Oxeye Daisy: Regeneration
- * - Poppy: Night vision
- * - Dandelion: Saturation
- * - White Tulip: Weakness
- * - Pink Tulip: Weakness
- * - Orange Tulip: Weakness
- * - Blue Orchid: Saturation
- * - Withers Rose: Wither
+ * Suspicious stew effects vary based on flower type fed to the mooshroom.
+ * This is vanilla behavior with our milk production system integrated.
  */
 public class MooshroomMilkProductionHandle extends MilkProductionHandle {
+    private static final String NBT_STEW_FLOWER = "stewFlower";
+    private static final String NBT_LAST_STEW_TICK = "lastStewTick";
 
-    private static final int SUSPICIOUS_STEW_COOLDOWN = 24000; // 20 minutes
+    private static final int STEW_COOLDOWN = 24000; // 20 minutes
+    private static final int MILK_FOR_STEW = 30; // More milk needed for stew than bucket
 
     @Override
     public String id() {
@@ -48,9 +42,14 @@ public class MooshroomMilkProductionHandle extends MilkProductionHandle {
 
     /**
      * Get milk or stew based on item used.
+     * Called from mooshroom interaction mixin.
      */
-    public ItemStack onMooshroomMilked(Mob mob, EcologyComponent component, ItemStack usedItem) {
+    public ItemStack onMooshroomMilked(Mob mob, @Nullable EcologyComponent component, ItemStack usedItem) {
         if (!(mob instanceof MushroomCow)) {
+            return ItemStack.EMPTY;
+        }
+
+        if (component == null) {
             return ItemStack.EMPTY;
         }
 
@@ -60,83 +59,64 @@ public class MooshroomMilkProductionHandle extends MilkProductionHandle {
         }
 
         // Otherwise return milk bucket
-        return super.onMilked(mob, component, null);
+        return onMilked(mob, component, null);
     }
 
+    /**
+     * Get mushroom stew (regular or suspicious) from mooshroom.
+     */
     private ItemStack getStew(Mob mob, EcologyComponent component) {
         CompoundTag tag = component.getHandleTag(id());
-        int milkAmount = getMilkAmount(tag);
+        int milkAmount = getMilkAmountFromTag(tag);
 
-        if (milkAmount < 30) {
+        if (milkAmount < MILK_FOR_STEW) {
             return ItemStack.EMPTY;
         }
 
-        // Check cooldown for suspicious stew
-        int lastStew = tag.getInt("lastStewTick");
         int currentTick = mob.tickCount;
-
-        boolean canMakeSuspicious = (currentTick - lastStew) >= SUSPICIOUS_STEW_COOLDOWN;
+        int lastStew = tag.getInt(NBT_LAST_STEW_TICK);
+        boolean canMakeSuspicious = (currentTick - lastStew) >= STEW_COOLDOWN;
 
         ItemStack stew;
-        if (canMakeSuspicious && mob.getPersistentData().contains("better-ecology:stewFlower")) {
+        if (canMakeSuspicious && tag.contains(NBT_STEW_FLOWER)) {
             // Create suspicious stew with effect
-            String flowerType = mob.getPersistentData().getString("better-ecology:stewFlower");
+            String flowerType = tag.getString(NBT_STEW_FLOWER);
             stew = createSuspiciousStew(flowerType);
-            tag.putInt("lastStewTick", currentTick);
-            mob.getPersistentData().remove("better-ecology:stewFlower");
+            tag.putInt(NBT_LAST_STEW_TICK, currentTick);
+            tag.remove(NBT_STEW_FLOWER);
         } else {
             // Regular mushroom stew
             stew = new ItemStack(Items.MUSHROOM_STEW);
         }
 
         // Consume milk
-        setMilkAmount(tag, Math.max(0, milkAmount - 30));
-        setLastMilkedTick(tag, currentTick);
+        setMilkAmountInTag(tag, milkAmount - MILK_FOR_STEW);
+        setLastMilkedTickInTag(tag, currentTick);
 
         // Play sound
         mob.level().playSound(null, mob.blockPosition(),
-                net.minecraft.sounds.SoundEvents.MOOSHROOM_MILK,
+                getMilkingSound(mob),
                 net.minecraft.sounds.SoundSource.NEUTRAL, 1.0F, 1.0F);
 
         return stew;
     }
 
-    private ItemStack createSuspiciousStew(String flowerType) {
-        ItemStack stew = new ItemStack(Items.SUSPICIOUS_STEW);
-        net.minecraft.world.item.alchemy.SuspiciousStewEffect.addToStew(stew,
-                getEffectForFlower(flowerType), 160);
-
-        return stew;
-    }
-
-    private net.minecraft.world.effect.MobEffect getEffectForFlower(String flowerType) {
-        return switch (flowerType) {
-            case "minecraft:allium" -> net.minecraft.world.effect.MobEffects.FIRE_RESISTANCE;
-            case "minecraft:azure_bluet" -> net.minecraft.world.effect.MobEffects.BLINDNESS;
-            case "minecraft:red_tulip" -> net.minecraft.world.effect.MobEffects.WEAKNESS;
-            case "minecraft:cornflower" -> net.minecraft.world.effect.MobEffects.JUMP;
-            case "minecraft:lily_of_the_valley" -> net.minecraft.world.effect.MobEffects.POISON;
-            case "minecraft:oxeye_daisy" -> net.minecraft.world.effect.MobEffects.REGENERATION;
-            case "minecraft:poppy" -> net.minecraft.world.effect.MobEffects.NIGHT_VISION;
-            case "minecraft:dandelion" -> net.minecraft.world.effect.MobEffects.SATURATION;
-            case "minecraft:white_tulip", "minecraft:pink_tulip",
-                 "minecraft:orange_tulip" -> net.minecraft.world.effect.MobEffects.WEAKNESS;
-            case "minecraft:blue_orchid" -> net.minecraft.world.effect.MobEffects.SATURATION;
-            case "minecraft:wither_rose" -> net.minecraft.world.effect.MobEffects.WITHER;
-            default -> net.minecraft.world.effect.MobEffects.SATURATION;
-        };
-    }
-
     /**
-     * Feed flower to mooshroom for suspicious stew.
+     * Feed a flower to mooshroom for suspicious stew.
+     * Called from interaction mixin.
      */
-    public boolean onFlowerFed(Mob mob, ItemStack flower) {
+    public boolean onFlowerFed(Mob mob, @Nullable EcologyComponent component, ItemStack flower) {
         if (!isFlower(flower)) {
             return false;
         }
 
-        CompoundTag tag = mob.getPersistentData();
-        tag.putString("better-ecology:stewFlower", flower.getItem().toString());
+        if (component == null) {
+            return false;
+        }
+
+        // Store flower type in component data
+        CompoundTag tag = component.getHandleTag(id());
+        tag.putString(NBT_STEW_FLOWER, flower.getItem().toString());
 
         // Play eating sound
         mob.level().playSound(null, mob.blockPosition(),
@@ -146,6 +126,39 @@ public class MooshroomMilkProductionHandle extends MilkProductionHandle {
         return true;
     }
 
+    /**
+     * Create suspicious stew with effect based on flower.
+     */
+    private ItemStack createSuspiciousStew(String flowerType) {
+        ItemStack stew = new ItemStack(Items.SUSPICIOUS_STEW);
+        MobEffect effect = getEffectForFlower(flowerType);
+        net.minecraft.world.item.alchemy.SuspiciousStewEffect.addToStew(stew, effect, 160);
+        return stew;
+    }
+
+    /**
+     * Get the potion effect for a given flower type.
+     * Matches vanilla suspicious stew brewing.
+     */
+    private MobEffect getEffectForFlower(String flowerType) {
+        return switch (flowerType) {
+            case "minecraft:allium" -> MobEffects.FIRE_RESISTANCE;
+            case "minecraft:azure_bluet" -> MobEffects.BLINDNESS;
+            case "minecraft:red_tulip", "minecraft:white_tulip",
+                 "minecraft:pink_tulip", "minecraft:orange_tulip" -> MobEffects.WEAKNESS;
+            case "minecraft:cornflower" -> MobEffects.JUMP;
+            case "minecraft:lily_of_the_valley" -> MobEffects.POISON;
+            case "minecraft:oxeye_daisy" -> MobEffects.REGENERATION;
+            case "minecraft:poppy" -> MobEffects.NIGHT_VISION;
+            case "minecraft:dandelion", "minecraft:blue_orchid" -> MobEffects.SATURATION;
+            case "minecraft:wither_rose" -> MobEffects.WITHER;
+            default -> MobEffects.SATURATION;
+        };
+    }
+
+    /**
+     * Check if item is a flower that can be fed to mooshroom.
+     */
     private boolean isFlower(ItemStack stack) {
         return stack.is(Items.ALLIUM) ||
                stack.is(Items.AZURE_BLUET) ||
@@ -160,5 +173,18 @@ public class MooshroomMilkProductionHandle extends MilkProductionHandle {
                stack.is(Items.ORANGE_TULIP) ||
                stack.is(Items.BLUE_ORCHID) ||
                stack.is(Items.WITHER_ROSE);
+    }
+
+    // NBT helpers to avoid ambiguity with parent methods
+    private int getMilkAmountFromTag(CompoundTag tag) {
+        return tag.contains(NBT_MILK_AMOUNT) ? tag.getInt(NBT_MILK_AMOUNT) : 0;
+    }
+
+    private void setMilkAmountInTag(CompoundTag tag, int amount) {
+        tag.putInt(NBT_MILK_AMOUNT, amount);
+    }
+
+    private void setLastMilkedTickInTag(CompoundTag tag, int tick) {
+        tag.putInt(NBT_LAST_MILKED, tick);
     }
 }

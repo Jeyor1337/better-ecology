@@ -3,7 +3,6 @@ package me.javavirtualenv.behavior.feline;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.UUIDUtil;
 
 import java.util.HashMap;
 import java.util.Map;

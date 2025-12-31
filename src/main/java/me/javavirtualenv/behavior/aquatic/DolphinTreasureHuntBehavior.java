@@ -32,7 +32,9 @@ public class DolphinTreasureHuntBehavior extends SteeringBehavior {
     private int assistanceTimer = 0;
 
     public DolphinTreasureHuntBehavior(AquaticConfig config) {
-        super(1.0, true);
+        super();
+        setWeight(1.0);
+        setEnabled(true);
         this.config = config;
     }
 
@@ -181,8 +183,7 @@ public class DolphinTreasureHuntBehavior extends SteeringBehavior {
                 BlockState checkBlock = level.getBlockState(checkPos);
 
                 if (checkBlock.is(Blocks.CHEST) ||
-                    checkBlock.is(Blocks.BURIED_TREASURE) ||
-                    checkBlock.is(Blocks.GRAVEL) && y > 2) {
+                    (checkBlock.is(Blocks.GRAVEL) && y > 2)) {
                     return true;
                 }
             }

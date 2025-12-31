@@ -24,7 +24,8 @@ public class QuietMovementBehavior extends SteeringBehavior {
     private boolean isQuiet = true;
 
     public QuietMovementBehavior(double stealthModifier, double soundReduction) {
-        super(0.5);
+        super();
+        setWeight(0.5);
         this.stealthModifier = stealthModifier;
         this.soundReduction = soundReduction;
     }

@@ -56,9 +56,8 @@ public abstract class SquidMixin {
                 .addHandle(new EnergyHandle())
                 .addHandle(new AgeHandle())
                 .addHandle(new MovementHandle())
-                .addHandle(new SizeHandle())
                 .addHandle(new ResourceProductionHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle comes from profile via mergeHandles
                 .build();
 
         AnimalBehaviorRegistry.register(SQUID_ID.toString(), config);

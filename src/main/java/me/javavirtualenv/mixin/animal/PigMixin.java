@@ -69,7 +69,6 @@ public abstract class PigMixin extends AnimalMixin {
      * Key pig configurations:
      * <ul>
      *   <li>Health: 10 (5 hearts), baby multiplier: 0.5</li>
-     *   <li>Size: width 0.9, height 0.9, baby scale 0.38</li>
      *   <li>Movement: walk 0.25, run 0.35</li>
      *   <li>Hunger: max 100, start 75, decay 0.015/tick</li>
      *   <li>Condition: max 100, start 70, affects breeding</li>
@@ -92,7 +91,6 @@ public abstract class PigMixin extends AnimalMixin {
                 .addHandle(new PigSocialHandle())
                 .addHandle(new PigMovementHandle())
                 .addHandle(new PigHealthHandle())
-                .addHandle(new PigSizeHandle())
                 .addHandle(new PigDietHandle())
                 .addHandle(new PigBreedingHandle())
                 .addHandle(new PigBehaviorHandle())
@@ -501,26 +499,6 @@ public abstract class PigMixin extends AnimalMixin {
                 }
                 healthAttribute.setBaseValue(healthValue);
             }
-        }
-    }
-
-    /**
-     * Size system for pigs.
-     * Pigs are 0.9 blocks wide and 0.9 blocks tall.
-     */
-    private static final class PigSizeHandle extends CodeBasedHandle {
-        private static final float WIDTH = 0.9f;
-        private static final float HEIGHT = 0.9f;
-        private static final float BABY_SCALE = 0.38f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            // Size is handled by Minecraft's pig entity
         }
     }
 

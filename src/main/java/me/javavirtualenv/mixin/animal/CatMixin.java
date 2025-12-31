@@ -3,7 +3,6 @@ package me.javavirtualenv.mixin.animal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.handles.*;
-import me.javavirtualenv.ecology.EcologyHandle;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.level.Level;
@@ -12,16 +11,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
 /**
  * Mixin for Cat-specific behavior registration.
  * <p>
  * Cats are tameable, carnivorous predators that hunt phantoms and creepers.
  * They exhibit crepuscular activity patterns, avoid water, and can gift items to players.
  * <p>
- * Key behaviors from YAML:
- * - Hunts rabbits, turtles (specifically babies), phantoms, and creepers
+ * Key behaviors:
+ * - Hunts rabbits, chickens, phantoms, and creepers
  * - Flees from wolves and ocelots
  * - Tameable with cod and salmon
  * - Avoids water and seeks shelter during rain
@@ -34,6 +31,9 @@ import java.util.List;
  * - Creeper detection and deterrence
  * - Phantom repelling while sleeping
  * - Social behaviors (purring, hissing, rubbing affection)
+ * - Sleeping on beds, chests, and furnaces
+ * - Landing on feet (no fall damage)
+ * - Play behavior with items and players
  */
 @Mixin(Cat.class)
 public abstract class CatMixin extends AnimalMixin {
@@ -63,7 +63,6 @@ public abstract class CatMixin extends AnimalMixin {
                 .addHandle(new DietHandle())
                 .addHandle(new PredationHandle())
                 .addHandle(new BreedingHandle())
-                .addHandle(new BehaviorHandle())
                 .addHandle(new FelineBehaviorHandle())
                 .build();
 

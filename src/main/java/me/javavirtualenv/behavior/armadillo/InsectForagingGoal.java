@@ -215,7 +215,7 @@ public class InsectForagingGoal extends Goal {
             ServerLevel serverLevel = (ServerLevel) mob.level();
             BlockState blockState = mob.level().getBlockState(targetBlock);
             serverLevel.sendParticles(
-                net.minecraft.core.particles.BlockParticleOption.BLOCK,
+                new net.minecraft.core.particles.BlockParticleOption(net.minecraft.core.particles.ParticleTypes.BLOCK, blockState),
                 targetBlock.getX() + 0.5,
                 targetBlock.getY() + 0.5,
                 targetBlock.getZ() + 0.5,
@@ -223,8 +223,7 @@ public class InsectForagingGoal extends Goal {
                 0.2,
                 0.2,
                 0.2,
-                0.1,
-                blockState
+                0.1
             );
         }
     }

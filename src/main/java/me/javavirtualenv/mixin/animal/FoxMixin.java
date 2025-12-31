@@ -46,11 +46,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Fox.class)
 public abstract class FoxMixin extends AnimalMixin {
 
-    // Behavior instances (created per fox in registerBehaviors)
+    // Behavior instances (created per fox in registerFoxGoals)
     private FoxPursuitBehavior pursuitBehavior;
-    private FoxBerryForaging berryForagingBehavior;
-    private FoxItemCarry itemCarryBehavior;
-    private FoxSleeping sleepingBehavior;
+    private FoxBerryForagingBehavior berryForagingBehavior;
+    private FoxItemCarryBehavior itemCarryBehavior;
+    private FoxSleepingBehavior sleepingBehavior;
 
     /**
      * Registers fox behaviors from configuration.
@@ -68,7 +68,6 @@ public abstract class FoxMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())

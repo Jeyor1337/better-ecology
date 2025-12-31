@@ -3,6 +3,7 @@ package me.javavirtualenv.behavior.chicken;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.spatial.BlockSpatialCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -133,28 +134,8 @@ public class EggLayingBehavior extends SteeringBehavior {
     }
 
     public BlockPos findNearestNest(Level level, BlockPos center) {
-        BlockPos nearest = null;
-        double minDistSquared = Double.MAX_VALUE;
-        int radius = (int) searchRadius;
-
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -2; y <= 2; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    BlockPos pos = center.offset(x, y, z);
-                    double distSquared = center.distSqr(pos);
-
-                    if (distSquared < minDistSquared && distSquared <= searchRadius * searchRadius) {
-                        BlockState state = level.getBlockState(pos);
-                        if (isPreferredNestingBlock(state.getBlock())) {
-                            nearest = pos;
-                            minDistSquared = distSquared;
-                        }
-                    }
-                }
-            }
-        }
-
-        return nearest;
+        // Use optimized cache-based search instead of O(n³) brute force
+        return BlockSpatialCache.findNearestBlock(level, center, (int) searchRadius, preferredNestingBlocks);
     }
 
     private boolean isPreferredNestingBlock(Block block) {

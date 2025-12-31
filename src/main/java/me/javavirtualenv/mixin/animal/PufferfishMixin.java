@@ -43,8 +43,7 @@ public abstract class PufferfishMixin {
                 .addHandle(new EnergyHandle())
                 .addHandle(new AgeHandle())
                 .addHandle(new MovementHandle())
-                .addHandle(new SizeHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle comes from profile via mergeHandles
                 .build();
 
         AnimalBehaviorRegistry.register(PUFFERFISH_ID.toString(), config);

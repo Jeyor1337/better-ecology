@@ -186,8 +186,8 @@ public class CalfCareBehavior extends SteeringBehavior {
 
     private Vec3d calculateProtectivePosition(Vec3d motherPos, Vec3d calfPos, Vec3d threatPos) {
         // Position halfway between calf and threat, but slightly closer to calf
-        Vec3d calfToThreat = threatPos.subtract(calfPos);
-        Vec3d protectivePos = calfPos.add(calfToThreat.mult(0.3));
+        Vec3d calfToThreat = Vec3d.sub(threatPos, calfPos);
+        Vec3d protectivePos = Vec3d.add(calfPos, Vec3d.mult(calfToThreat, 0.3));
 
         // Ensure protective position is on ground
         protectivePos.y = Math.max(motherPos.y, protectivePos.y);
@@ -196,7 +196,7 @@ public class CalfCareBehavior extends SteeringBehavior {
     }
 
     private boolean shouldNurseCalf(BehaviorContext context, AgeableMob mother, Entity calf) {
-        int currentTick = context.getEntity().tickCount();
+        int currentTick = context.getEntity().tickCount;
 
         // Check cooldown
         if (currentTick - lastNursingTick < nursingCooldown) {
@@ -218,7 +218,7 @@ public class CalfCareBehavior extends SteeringBehavior {
 
         if (distance <= 2.0) {
             // Close enough to nurse
-            lastNursingTick = context.getEntity().tickCount();
+            lastNursingTick = context.getEntity().tickCount;
             onNursedCalf(mother, calf);
             return new Vec3d();
         }
@@ -251,8 +251,8 @@ public class CalfCareBehavior extends SteeringBehavior {
 
         // Move towards calf but don't crowd it
         double targetDistance = followDistance * 0.7;
-        Vec3d directionToCalf = calfPos.subtract(motherPos).normalize();
-        Vec3d targetPos = motherPos.add(directionToCalf.mult(targetDistance));
+        Vec3d directionToCalf = Vec3d.sub(calfPos, motherPos).normalized();
+        Vec3d targetPos = Vec3d.add(motherPos, Vec3d.mult(directionToCalf, targetDistance));
 
         double approachSpeed = mother.getAttributeValue(Attributes.MOVEMENT_SPEED) * 0.6;
         return seek(motherPos, context.getVelocity(), targetPos, approachSpeed);

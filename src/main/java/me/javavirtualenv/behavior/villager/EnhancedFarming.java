@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 
 /**
  * Enhanced farming behavior for farmer villagers.
- * Actually tends crops, harvests, replants, and shares food.
+ * Actually tends crops, harvests, replants, shares food, and expands farms.
  */
 public class EnhancedFarming {
     private final Villager villager;
@@ -26,10 +26,14 @@ public class EnhancedFarming {
     private FarmingState currentState = FarmingState.IDLE;
     private int farmingTicks = 0;
     private int cropsTended = 0;
+    private int expansionCooldown = 0;
+    private BlockPos expansionTarget;
 
     private static final int MAX_FARMS = 10;
     private static final int SEARCH_RADIUS = 32;
     private static final int MAX_CROPS_PER_SESSION = 20;
+    private static final int EXPANSION_COOLDOWN_TICKS = 6000;
+    private static final int EXPANSION_SEARCH_RADIUS = 16;
     private static final Predicate<BlockState> IS_TILLABLE = BlockStatePredicate.forBlock(Blocks.FARMLAND);
     private static final Predicate<BlockState> IS_CROP = state ->
         state.is(Blocks.WHEAT) ||
@@ -38,6 +42,10 @@ public class EnhancedFarming {
         state.is(Blocks.BEETROOTS) ||
         state.is(Blocks.PUMPKIN_STEM) ||
         state.is(Blocks.MELON_STEM);
+    private static final Predicate<BlockState> CAN_TILL = state ->
+        state.is(Blocks.GRASS_BLOCK) ||
+        state.is(Blocks.DIRT) ||
+        state.is(Blocks.COARSE_DIRT);
 
     public EnhancedFarming(Villager villager) {
         this.villager = villager;
@@ -53,9 +61,19 @@ public class EnhancedFarming {
 
         farmingTicks++;
 
+        // Decrease expansion cooldown
+        if (expansionCooldown > 0) {
+            expansionCooldown--;
+        }
+
         // Periodically scan for new farms
         if (farmingTicks % 200 == 0) {
             scanForFarms();
+        }
+
+        // Check for farm expansion opportunities
+        if (expansionCooldown == 0 && farmingTicks % 1000 == 0) {
+            tryExpandFarm();
         }
 
         // Execute current state
@@ -64,6 +82,7 @@ public class EnhancedFarming {
             case MOVING_TO_FARM -> continueMovingToFarm();
             case TENDING_CROPS -> tendCurrentCrop();
             case SHARING_FOOD -> shareFoodWithVillagers();
+            case EXPANDING_FARM -> expandFarmStep();
         }
 
         // Reset after completing work session
@@ -376,6 +395,106 @@ public class EnhancedFarming {
     }
 
     /**
+     * Attempts to expand an existing farm.
+     */
+    private void tryExpandFarm() {
+        if (knownFarms.isEmpty()) {
+            return;
+        }
+
+        // Pick a random farm to expand
+        BlockPos centerFarm = knownFarms.get(villager.getRandom().nextInt(knownFarms.size()));
+
+        // Look for tillable land nearby
+        for (BlockPos pos : BlockPos.betweenClosed(
+            centerFarm.offset(-EXPANSION_SEARCH_RADIUS, -2, -EXPANSION_SEARCH_RADIUS),
+            centerFarm.offset(EXPANSION_SEARCH_RADIUS, 2, EXPANSION_SEARCH_RADIUS)
+        )) {
+            BlockState state = villager.level().getBlockState(pos);
+
+            // Check if this is tillable land
+            if (CAN_TILL.test(state)) {
+                // Check if there's water nearby for farming
+                if (hasWaterNearby(pos)) {
+                    expansionTarget = pos;
+                    currentState = FarmingState.EXPANDING_FARM;
+                    expansionCooldown = EXPANSION_COOLDOWN_TICKS;
+                    moveToFarm(pos);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Executes one step of farm expansion.
+     */
+    private void expandFarmStep() {
+        if (expansionTarget == null) {
+            currentState = FarmingState.IDLE;
+            return;
+        }
+
+        double distance = villager.position().distanceTo(
+            expansionTarget.getX() + 0.5,
+            expansionTarget.getY(),
+            expansionTarget.getZ() + 0.5
+        );
+
+        if (distance < 2.5) {
+            // Till the land
+            BlockState current = villager.level().getBlockState(expansionTarget);
+            if (CAN_TILL.test(current)) {
+                villager.level().setBlock(expansionTarget, Blocks.FARMLAND.defaultBlockState(), 3);
+                spawnTillParticles(expansionTarget);
+
+                // Add to known farms
+                knownFarms.add(expansionTarget.above().immutable());
+
+                cropsTended++;
+            }
+
+            expansionTarget = null;
+            currentState = FarmingState.IDLE;
+        }
+    }
+
+    /**
+     * Checks if there's water nearby for farming.
+     */
+    private boolean hasWaterNearby(BlockPos pos) {
+        for (BlockPos check : BlockPos.betweenClosed(
+            pos.offset(-4, -1, -4),
+            pos.offset(4, 1, 4)
+        )) {
+            BlockState state = villager.level().getBlockState(check);
+            if (state.getFluidState().isSource() && state.getFluidState().getType() == net.minecraft.world.level.material.Fluids.WATER) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Spawns tilling particle effects.
+     */
+    private void spawnTillParticles(BlockPos pos) {
+        if (villager.level().isClientSide) {
+            return;
+        }
+
+        for (int i = 0; i < 3; i++) {
+            villager.level().addParticle(
+                net.minecraft.core.particles.ParticleTypes.BLOCK,
+                pos.getX() + 0.5,
+                pos.getY() + 1.0,
+                pos.getZ() + 0.5,
+                0, 0.1, 0
+            );
+        }
+    }
+
+    /**
      * Serializes farming state to NBT.
      */
     public CompoundTag save() {
@@ -434,6 +553,7 @@ public class EnhancedFarming {
         IDLE,
         MOVING_TO_FARM,
         TENDING_CROPS,
-        SHARING_FOOD
+        SHARING_FOOD,
+        EXPANDING_FARM
     }
 }

@@ -3,8 +3,9 @@ package me.javavirtualenv.behavior.aquatic;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.GlowSquid;
+import net.minecraft.world.entity.GlowSquid;
 import net.minecraft.world.phys.AABB;
 
 import java.util.List;
@@ -20,7 +21,9 @@ public class GlowSquidPreyAttractionBehavior extends SteeringBehavior {
     private final AquaticConfig config;
 
     public GlowSquidPreyAttractionBehavior(AquaticConfig config) {
-        super(0.5, true);
+        super();
+        setWeight(0.5);
+        setEnabled(true);
         this.config = config;
     }
 
@@ -62,7 +65,7 @@ public class GlowSquidPreyAttractionBehavior extends SteeringBehavior {
             if (entity == self) return false;
             if (!entity.isAlive()) return false;
 
-            String entityId = net.minecraft.core.Registry.ENTITY_TYPE.getKey(entity.getType()).toString();
+            String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
 
             // Small fish that are attracted to glow
             return entityId.equals("minecraft:cod") ||

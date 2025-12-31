@@ -1,0 +1,13 @@
+{
+  "minecraft:rabbit": {
+    "conservation": {
+      "enabled": true,
+      "mvp_threshold": 25,
+      "emergency_breeding": {
+        "enabled": true,
+        "cooldown": 3000,
+        "move_speed": 1.2
+      }
+    }
+  }
+}

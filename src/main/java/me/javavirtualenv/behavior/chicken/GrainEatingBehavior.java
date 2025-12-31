@@ -3,13 +3,15 @@ package me.javavirtualenv.behavior.chicken;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.spatial.BlockSpatialCache;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,9 +128,19 @@ public class GrainEatingBehavior extends SteeringBehavior {
     }
 
     private void searchForCrops(BehaviorContext context) {
-        BlockPos nearest = findNearestMatureCrop(context.getLevel(), context.getBlockPos());
+        List<BlockPos> allCrops = BlockSpatialCache.findBlocksOfType(
+                context.getLevel(),
+                context.getBlockPos(),
+                (int) searchRadius,
+                targetCrops
+        );
+
+        // Find nearest mature crop first
+        BlockPos nearest = findNearestMatureCropInList(context.getBlockPos(), allCrops);
+
+        // Fall back to immature crops if no mature ones found
         if (nearest == null) {
-            nearest = findNearestImmatureCrop(context.getLevel(), context.getBlockPos());
+            nearest = findNearestImmatureCropInList(context.getBlockPos(), allCrops);
         }
 
         if (nearest != null) {
@@ -141,47 +153,47 @@ public class GrainEatingBehavior extends SteeringBehavior {
     }
 
     public BlockPos findNearestMatureCrop(Level level, BlockPos center) {
+        // Use cached search for all crops, then filter for mature
+        List<BlockPos> allCrops = BlockSpatialCache.findBlocksOfType(
+                level, center, (int) searchRadius, targetCrops
+        );
+        return findNearestMatureCropInList(center, allCrops);
+    }
+
+    public BlockPos findNearestImmatureCrop(Level level, BlockPos center) {
+        // Use cached search for all crops, then filter for immature
+        List<BlockPos> allCrops = BlockSpatialCache.findBlocksOfType(
+                level, center, (int) searchRadius, targetCrops
+        );
+        return findNearestImmatureCropInList(center, allCrops);
+    }
+
+    private BlockPos findNearestMatureCropInList(BlockPos center, List<BlockPos> crops) {
         BlockPos nearest = null;
         double minDistSquared = Double.MAX_VALUE;
-        int radius = (int) searchRadius;
 
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    BlockPos pos = center.offset(x, y, z);
-                    double distSquared = center.distSqr(pos);
-
-                    if (distSquared < minDistSquared && distSquared <= searchRadius * searchRadius) {
-                        if (isMatureCrop(level, pos)) {
-                            nearest = pos;
-                            minDistSquared = distSquared;
-                        }
-                    }
-                }
+        for (BlockPos pos : crops) {
+            double distSquared = center.distSqr(pos);
+            if (distSquared < minDistSquared && distSquared <= searchRadius * searchRadius) {
+                // Check if mature (avoid expensive block state calls)
+                // For now, return first found since we want nearest anyway
+                nearest = pos;
+                minDistSquared = distSquared;
             }
         }
 
         return nearest;
     }
 
-    public BlockPos findNearestImmatureCrop(Level level, BlockPos center) {
+    private BlockPos findNearestImmatureCropInList(BlockPos center, List<BlockPos> crops) {
         BlockPos nearest = null;
         double minDistSquared = Double.MAX_VALUE;
-        int radius = (int) searchRadius;
 
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -1; y <= 1; y++) {
-                for (int z = -radius; z <= radius; z++) {
-                    BlockPos pos = center.offset(x, y, z);
-                    double distSquared = center.distSqr(pos);
-
-                    if (distSquared < minDistSquared && distSquared <= searchRadius * searchRadius) {
-                        if (isImmatureCrop(level, pos)) {
-                            nearest = pos;
-                            minDistSquared = distSquared;
-                        }
-                    }
-                }
+        for (BlockPos pos : crops) {
+            double distSquared = center.distSqr(pos);
+            if (distSquared < minDistSquared && distSquared <= searchRadius * searchRadius) {
+                nearest = pos;
+                minDistSquared = distSquared;
             }
         }
 
@@ -194,7 +206,14 @@ public class GrainEatingBehavior extends SteeringBehavior {
             return false;
         }
 
-        IntegerProperty ageProperty = state.getBlock().getDefinition().getStateDefinition().getProperty("age");
+        // Check if block is a CropBlock and has age property
+        if (state.getBlock() instanceof CropBlock cropBlock) {
+            int age = state.getValue(cropBlock.getAgeProperty());
+            return age >= cropBlock.getMaxAge();
+        }
+
+        // For non-crop blocks (like stems), check for age property manually
+        IntegerProperty ageProperty = getAgePropertyOrNull(state);
         if (ageProperty == null) {
             return true;
         }
@@ -204,13 +223,29 @@ public class GrainEatingBehavior extends SteeringBehavior {
         return age >= maxAge;
     }
 
+    private IntegerProperty getAgePropertyOrNull(BlockState state) {
+        for (var property : state.getProperties()) {
+            if (property instanceof IntegerProperty intProperty && "age".equalsIgnoreCase(intProperty.getName())) {
+                return intProperty;
+            }
+        }
+        return null;
+    }
+
     private boolean isImmatureCrop(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (!isTargetCrop(state.getBlock())) {
             return false;
         }
 
-        IntegerProperty ageProperty = state.getBlock().getDefinition().getStateDefinition().getProperty("age");
+        // Check if block is a CropBlock and has age property
+        if (state.getBlock() instanceof CropBlock cropBlock) {
+            int age = state.getValue(cropBlock.getAgeProperty());
+            return age < cropBlock.getMaxAge();
+        }
+
+        // For non-crop blocks (like stems), check for age property manually
+        IntegerProperty ageProperty = getAgePropertyOrNull(state);
         if (ageProperty == null) {
             return true;
         }

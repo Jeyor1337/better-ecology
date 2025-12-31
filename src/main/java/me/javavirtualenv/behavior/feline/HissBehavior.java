@@ -30,7 +30,8 @@ public class HissBehavior extends SteeringBehavior {
     private Entity currentThreat;
 
     public HissBehavior(int hissDuration, double threatRange) {
-        super(0.0);
+        super();
+        setWeight(0.0);
         this.hissDuration = hissDuration;
         this.threatRange = threatRange;
     }

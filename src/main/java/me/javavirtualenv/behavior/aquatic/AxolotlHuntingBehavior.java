@@ -4,12 +4,17 @@ import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.predation.PreySelector;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import me.javavirtualenv.ecology.conservation.PreyPopulationManager;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.Axolotl;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.nbt.CompoundTag;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,8 +35,17 @@ public class AxolotlHuntingBehavior extends SteeringBehavior {
     private boolean isAttacking = false;
     private static final UUID ATTACK_SPEED_BOOST_UUID = UUID.fromString("7f101912-8c23-11ee-b9d1-0242ac120003");
 
+    // Sustainability parameters
+    private static final int HANDLING_TIME_TICKS = 600; // 30 seconds handling time after kill
+    private static final int PREY_CONSUMED_FOR_SATIATION = 3; // Stop hunting after consuming 3 prey
+    private int preyConsumedCount = 0;
+    private boolean hasKilledRecently = false;
+    private int handlingTimer = 0;
+
     public AxolotlHuntingBehavior(AquaticConfig config, PreySelector preySelector) {
-        super(1.5, true);
+        super();
+        setWeight(1.5);
+        setEnabled(true);
         this.config = config;
         this.preySelector = preySelector != null ? preySelector : new PreySelector();
     }
@@ -58,9 +72,17 @@ public class AxolotlHuntingBehavior extends SteeringBehavior {
             return new Vec3d();
         }
 
-        // Update attack cooldown
+        // Update handling timer and attack cooldown
+        updateHandlingTimer();
         if (attackCooldown > 0) {
             attackCooldown--;
+        }
+
+        // Check satiation - stop hunting if consumed enough prey
+        if (isSatiated()) {
+            currentPrey = null;
+            isAttacking = false;
+            return new Vec3d();
         }
 
         // Find or validate prey
@@ -157,28 +179,33 @@ public class AxolotlHuntingBehavior extends SteeringBehavior {
         Entity selectedPrey = preySelector.selectPrey(axolotl);
 
         // Filter to axolotl-specific prey
-        if (selectedPrey != null && isValidPrey(selectedPrey)) {
+        if (selectedPrey != null && isValidPrey(axolotl, selectedPrey)) {
             return selectedPrey;
         }
 
         return null;
     }
 
-    private boolean isValidPrey(Entity entity) {
+    private boolean isValidPrey(Axolotl axolotl, Entity entity) {
         if (!entity.isAlive()) {
             return false;
         }
 
-        String entityId = net.minecraft.core.Registry.ENTITY_TYPE.getKey(entity.getType()).toString();
+        String entityId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString();
 
         // Axolotl prey: fish, squid, tadpoles
-        return entityId.equals("minecraft:tropical_fish") ||
+        if (!(entityId.equals("minecraft:tropical_fish") ||
                entityId.equals("minecraft:cod") ||
                entityId.equals("minecraft:salmon") ||
                entityId.equals("minecraft:pufferfish") ||
                entityId.equals("minecraft:squid") ||
                entityId.equals("minecraft:glow_squid") ||
-               entityId.equals("minecraft:tadpole");
+               entityId.equals("minecraft:tadpole"))) {
+            return false;
+        }
+
+        // Check prey population health
+        return preySelector.isPreyPopulationHealthy(axolotl, (net.minecraft.world.entity.LivingEntity) entity);
     }
 
     private void performAttack(Axolotl axolotl, Entity prey) {
@@ -188,13 +215,46 @@ public class AxolotlHuntingBehavior extends SteeringBehavior {
             prey.hurt(axolotl.level().damageSources().mobAttack(axolotl), (float) damage);
         }
 
-        // Set cooldown
-        attackCooldown = 20; // 1 second between attacks
+        // Set cooldown to 30 seconds (handling time)
+        attackCooldown = HANDLING_TIME_TICKS;
+
+        // Track kill for satiation
+        hasKilledRecently = true;
+        handlingTimer = 0;
+        preyConsumedCount++;
+
+        // Reset satiation counter periodically (every 10 prey consumed, reset to allow more hunting)
+        if (preyConsumedCount >= PREY_CONSUMED_FOR_SATIATION * 3) {
+            preyConsumedCount = 0;
+        }
 
         // Play attack sound
         if (!axolotl.level().isClientSide) {
             axolotl.playSound(net.minecraft.sounds.SoundEvents.AXOLOTL_ATTACK, 1.0F, 1.0F);
         }
+    }
+
+    /**
+     * Updates handling timer after successful kills.
+     */
+    private void updateHandlingTimer() {
+        if (hasKilledRecently) {
+            handlingTimer++;
+
+            if (handlingTimer >= HANDLING_TIME_TICKS) {
+                hasKilledRecently = false;
+                handlingTimer = 0;
+                // Reset prey consumed count after handling time
+                preyConsumedCount = Math.max(0, preyConsumedCount - 1);
+            }
+        }
+    }
+
+    /**
+     * Checks if axolotl is satiated and should stop hunting.
+     */
+    private boolean isSatiated() {
+        return preyConsumedCount >= PREY_CONSUMED_FOR_SATIATION;
     }
 
     /**

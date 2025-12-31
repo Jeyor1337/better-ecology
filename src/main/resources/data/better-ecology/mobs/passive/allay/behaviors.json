@@ -31,31 +31,19 @@
     "separation_distress": 0.0
   },
   "hunger": {
-    "enabled": true,
-    "max_value": 100,
-    "starting_value": 85,
-    "decay_rate": 0.5,
-    "damage_threshold": 10,
-    "damage_amount": 1.0,
-    "damage_interval": 400
+    "enabled": false,
+    "comment": "Allays do not eat or have hunger in vanilla"
   },
   "thirst": {
     "enabled": false
   },
   "condition": {
-    "enabled": true,
-    "max_value": 100,
-    "starting_value": 90,
-    "gain_when_satiated": 0.02,
-    "loss_when_hungry": 0.01,
-    "loss_when_starving": 0.05
+    "enabled": false,
+    "comment": "Allays do not have condition needs in vanilla"
   },
   "energy": {
-    "enabled": true,
-    "max_value": 150,
-    "recovery_rate": 0.3,
-    "flying_cost": 0.2,
-    "dancing_cost": 0.1
+    "enabled": false,
+    "comment": "Allays do not have energy system in vanilla"
   },
   "age": {
     "enabled": true,
@@ -63,12 +51,8 @@
     "maturity_age": 0
   },
   "social": {
-    "enabled": true,
-    "max_value": 100,
-    "starting_value": 100,
-    "decay_rate": 0.02,
-    "recovery_rate": 0.2,
-    "loneliness_threshold": 40
+    "enabled": false,
+    "comment": "Allays do not have social needs in vanilla"
   },
   "movement": {
     "walk_speed": 0.15,
@@ -87,9 +71,8 @@
     "baby_scale": 1.0
   },
   "diet": {
-    "is_herbivore": false,
-    "is_carnivore": false,
-    "preferred_items": []
+    "enabled": false,
+    "comment": "Allays do not eat in vanilla"
   },
   "predation": {
     "as_prey": {
@@ -104,10 +87,8 @@
     "rest_end": 23000
   },
   "breeding": {
-    "cooldown": 6000,
-    "min_age": 0,
-    "min_condition": 70,
-    "min_hunger": 60
+    "enabled": false,
+    "comment": "Allays do not breed in vanilla - they duplicate with amethyst shards"
   },
   "item_collection": {
     "enabled": true,
@@ -119,13 +100,7 @@
     "dance_trigger_ticks": 10,
     "duplication_chance_base": 0.1,
     "duplication_chance_max": 0.25,
-    "preferred_items": [
-      "minecraft:apple",
-      "minecraft:diamond",
-      "minecraft:iron_ingot",
-      "minecraft:gold_ingot",
-      "minecraft:emerald"
-    ]
+    "comment": "Allays collect any item in vanilla - no preferred items"
   },
   "sound_following": {
     "enabled": true,

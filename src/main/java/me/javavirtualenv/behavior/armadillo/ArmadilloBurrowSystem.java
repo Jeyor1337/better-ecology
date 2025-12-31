@@ -160,7 +160,7 @@ public class ArmadilloBurrowSystem {
         }
 
         burrow.addOccupant();
-        burrow.setLastUsedTick(level.getGameTime());
+        burrow.setLastUsedTick((int) level.getGameTime());
         saveBurrows();
         return true;
     }
@@ -172,7 +172,7 @@ public class ArmadilloBurrowSystem {
      */
     public void leaveBurrow(Mob entity, ArmadilloBurrow burrow) {
         burrow.removeOccupant();
-        burrow.setLastUsedTick(level.getGameTime());
+        burrow.setLastUsedTick((int) level.getGameTime());
         saveBurrows();
     }
 
@@ -238,8 +238,9 @@ public class ArmadilloBurrowSystem {
     private void spawnDigParticles(Mob entity) {
         if (!entity.level().isClientSide()) {
             ServerLevel serverLevel = (ServerLevel) entity.level();
+            BlockState blockState = serverLevel.getBlockState(entity.blockPosition());
             serverLevel.sendParticles(
-                net.minecraft.core.particles.ParticleTypes.BLOCK,
+                new net.minecraft.core.particles.BlockParticleOption(net.minecraft.core.particles.ParticleTypes.BLOCK, blockState),
                 entity.getX(),
                 entity.getY() + 0.5,
                 entity.getZ(),

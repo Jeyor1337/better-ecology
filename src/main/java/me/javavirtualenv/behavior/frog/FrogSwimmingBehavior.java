@@ -33,7 +33,8 @@ public class FrogSwimmingBehavior extends SteeringBehavior {
     private static final double VEGETATION_ATTRACTION = 0.15;
 
     public FrogSwimmingBehavior() {
-        super(1.0);
+        super();
+        setWeight(1.0);
     }
 
     @Override

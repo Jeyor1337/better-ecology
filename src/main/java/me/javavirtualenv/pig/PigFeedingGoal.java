@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.MoveToBlockGoal;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -17,20 +18,40 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CarrotBlock;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Random;
+import java.util.function.Predicate;
 
 /**
  * Goal for pigs to seek out and eat crops.
- * Pigs will root through crop farms to find food.
+ * Pigs prefer dropped crops over growing crops, giving players time to collect harvests.
+ *
+ * This behavior follows vanilla design principles:
+ * - Bad things happen but are preventable (fences protect crops within 5 blocks)
+ * - Player presence stops the behavior (within 16 blocks)
+ * - Takes time to complete (80 ticks = 4 seconds to eat, player can intervene)
+ * - Pigs prioritize dropped crops over growing crops
+ * - Search range reduced to 8 blocks for more manageable behavior
  */
 public class PigFeedingGoal extends MoveToBlockGoal {
-    private static final int SEARCH_RANGE = 12;
+    private static final int SEARCH_RANGE = 8;
     private static final int SEARCH_VERTICAL_RANGE = 2;
-    private static final int EATING_DURATION = 30;
+    private static final int EATING_DURATION = 80;
+    private static final int PLAYER_DETECTION_RANGE = 16;
+    private static final int FENCE_PROTECTION_RANGE = 5;
     private static final double FEEDING_CHANCE = 0.15;
+    private static final Predicate<BlockState> IS_FENCE = state ->
+        state.is(Blocks.OAK_FENCE) || state.is(Blocks.SPRUCE_FENCE) ||
+        state.is(Blocks.BIRCH_FENCE) || state.is(Blocks.JUNGLE_FENCE) ||
+        state.is(Blocks.ACACIA_FENCE) || state.is(Blocks.DARK_OAK_FENCE) ||
+        state.is(Blocks.CRIMSON_FENCE) || state.is(Blocks.WARPED_FENCE) ||
+        state.is(Blocks.MANGROVE_FENCE) || state.is(Blocks.CHERRY_FENCE) ||
+        state.is(Blocks.BAMBOO_FENCE) || state.is(Blocks.NETHER_BRICK_FENCE) ||
+        state.getBlock() instanceof FenceGateBlock;
 
     private final Pig pig;
     private int eatingTimer;
@@ -48,6 +69,17 @@ public class PigFeedingGoal extends MoveToBlockGoal {
         if (!shouldSeekFood()) {
             return false;
         }
+
+        if (isPlayerNearby()) {
+            return false;
+        }
+
+        boolean hasDroppedFood = hasDroppedCropsNearby();
+
+        if (hasDroppedFood) {
+            return true;
+        }
+
         return super.canUse();
     }
 
@@ -70,6 +102,13 @@ public class PigFeedingGoal extends MoveToBlockGoal {
 
     @Override
     public void tick() {
+        boolean hasDroppedFood = hasDroppedCropsNearby();
+
+        if (hasDroppedFood) {
+            moveToAndEatDroppedCrops();
+            return;
+        }
+
         if (!this.isReachedTarget()) {
             super.tick();
             return;
@@ -80,15 +119,45 @@ public class PigFeedingGoal extends MoveToBlockGoal {
         if (this.eatingTimer >= EATING_DURATION) {
             eatCrop();
             stop();
-        } else if (this.eatingTimer % 10 == 0) {
+        } else if (this.eatingTimer % 20 == 0) {
             playEatingEffects();
+        }
+    }
+
+    private void moveToAndEatDroppedCrops() {
+        List<ItemEntity> items = pig.level().getEntitiesOfClass(
+            ItemEntity.class,
+            pig.getBoundingBox().inflate(SEARCH_RANGE)
+        );
+
+        ItemEntity nearestCrop = null;
+        double nearestDistance = Double.MAX_VALUE;
+
+        for (ItemEntity item : items) {
+            var stack = item.getItem();
+            if (stack.is(Items.CARROT) || stack.is(Items.POTATO) || stack.is(Items.BEETROOT)) {
+                double distance = pig.distanceToSqr(item);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestCrop = item;
+                }
+            }
+        }
+
+        if (nearestCrop != null) {
+            if (nearestDistance < 2.5) {
+                eatDroppedCrop(nearestCrop);
+                stop();
+            } else {
+                pig.getNavigation().moveTo(nearestCrop, 1.0);
+            }
         }
     }
 
     @Override
     protected boolean isValidTarget(LevelReader level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
-        return isEdibleCrop(state);
+        return isEdibleCrop(state) && !isNearFence(level, pos);
     }
 
     private boolean shouldSeekFood() {
@@ -106,6 +175,41 @@ public class PigFeedingGoal extends MoveToBlockGoal {
         }
 
         return random.nextFloat() < FEEDING_CHANCE;
+    }
+
+    private boolean isPlayerNearby() {
+        var nearestPlayer = pig.level().getNearestPlayer(pig, PLAYER_DETECTION_RANGE);
+        return nearestPlayer != null;
+    }
+
+    private boolean isNearFence(LevelReader level, BlockPos pos) {
+        int range = FENCE_PROTECTION_RANGE;
+        for (int dx = -range; dx <= range; dx++) {
+            for (int dz = -range; dz <= range; dz++) {
+                for (int dy = -1; dy <= 2; dy++) {
+                    BlockPos checkPos = pos.offset(dx, dy, dz);
+                    BlockState state = level.getBlockState(checkPos);
+                    if (IS_FENCE.test(state)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasDroppedCropsNearby() {
+        List<ItemEntity> items = pig.level().getEntitiesOfClass(
+            ItemEntity.class,
+            pig.getBoundingBox().inflate(SEARCH_RANGE)
+        );
+
+        return items.stream().anyMatch(item -> {
+            var stack = item.getItem();
+            return stack.is(Items.CARROT) ||
+                   stack.is(Items.POTATO) ||
+                   stack.is(Items.BEETROOT);
+        });
     }
 
     private boolean isHungry() {
@@ -153,6 +257,28 @@ public class PigFeedingGoal extends MoveToBlockGoal {
             0.4f,
             1.1f
         );
+    }
+
+    private void eatDroppedCrop(ItemEntity itemEntity) {
+        var stack = itemEntity.getItem();
+        Block cropBlock = getCropBlockFromItem(stack);
+
+        if (!pig.level().isClientSide()) {
+            itemEntity.discard();
+            feedPig(cropBlock);
+            BetterEcology.LOGGER.debug("Pig ate dropped {} at {}", cropBlock, pig.blockPosition());
+        }
+    }
+
+    private Block getCropBlockFromItem(net.minecraft.world.item.ItemStack stack) {
+        if (stack.is(Items.CARROT)) {
+            return Blocks.CARROTS;
+        } else if (stack.is(Items.POTATO)) {
+            return Blocks.POTATOES;
+        } else if (stack.is(Items.BEETROOT)) {
+            return Blocks.BEETROOTS;
+        }
+        return Blocks.AIR;
     }
 
     private void eatCrop() {

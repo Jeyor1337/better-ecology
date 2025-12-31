@@ -8,7 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.item.v1.FabricItem;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.resources.ResourceLocation;
 
@@ -24,7 +24,7 @@ public final class ModItems {
         throw new AssertionError("ModItems should not be instantiated");
     }
 
-    public static final Item TRUFFLE = new Item(new FabricItemSettings()
+    public static final Item TRUFFLE = new Item(new FabricItem.Settings()
             .rarity(Rarity.RARE)
             .food(new net.minecraft.world.food.FoodProperties.Builder()
                     .nutrition(6)

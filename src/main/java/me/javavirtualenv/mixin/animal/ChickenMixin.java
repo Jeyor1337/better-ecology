@@ -65,7 +65,6 @@ public abstract class ChickenMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -88,8 +87,7 @@ public abstract class ChickenMixin extends AnimalMixin {
             // Diet - seed eaters
             .addHandle(new DietHandle())
 
-            // Behaviors - flocking, fleeing, parental
-            .addHandle(new BehaviorHandle())
+            // Note: BehaviorHandle comes from profile via mergeHandles
 
             // Chicken-specific behaviors - egg laying, seed dropping, grain eating
             .addHandle(new EggLayerHandle())

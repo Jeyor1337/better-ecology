@@ -28,7 +28,8 @@ public class PurrBehavior extends SteeringBehavior {
     private final double affectionThreshold;
 
     public PurrBehavior(int maxPurrDuration, double affectionThreshold) {
-        super(0.0); // This behavior doesn't affect movement
+        super();
+        setWeight(0.0); // This behavior doesn't affect movement
         this.maxPurrDuration = maxPurrDuration;
         this.affectionThreshold = affectionThreshold;
     }

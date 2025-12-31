@@ -1,17 +1,20 @@
 package me.javavirtualenv.behavior.villager;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
+import me.javavirtualenv.mixin.villager.VillagerMixin;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Manages villager work station behavior with visual animations and productivity tracking.
+ * Enhanced with profession-specific work behaviors and effects.
  */
 public class WorkStationAI {
     private final Villager villager;
@@ -20,11 +23,13 @@ public class WorkStationAI {
     private int breakTimeRemaining = 0;
     private boolean isWorking = false;
     private BlockPos workStationPos;
+    private int workSessionTicks = 0;
 
-    private static final int WORK_DURATION = 600; // 30 seconds of work
-    private static final int BREAK_DURATION = 200; // 10 seconds break
+    private static final int WORK_DURATION = 600;
+    private static final int BREAK_DURATION = 200;
     private static final int PRODUCTIVITY_PER_TICK = 1;
     private static final int MAX_PRODUCTIVITY = 1000;
+    private static final int MAX_WORK_SESSION = 2400; // 2 minutes max work session
 
     public WorkStationAI(Villager villager) {
         this.villager = villager;
@@ -52,7 +57,6 @@ public class WorkStationAI {
         );
 
         if (distance > 3.0) {
-            // Too far from work station
             stopWorking();
             return;
         }
@@ -61,13 +65,22 @@ public class WorkStationAI {
         performWork(jobSite);
 
         workTicks++;
+        workSessionTicks++;
+
         if (workTicks >= WORK_DURATION) {
             takeBreak();
+        }
+
+        if (workSessionTicks >= MAX_WORK_SESSION) {
+            // Long work session, take extended break
+            breakTimeRemaining = BREAK_DURATION * 2;
+            workSessionTicks = 0;
+            stopWorking();
         }
     }
 
     /**
-     * Performs work at the station.
+     * Performs work at the station with profession-specific behaviors.
      */
     private void performWork(BlockPos station) {
         if (!isWorking) {
@@ -76,33 +89,132 @@ public class WorkStationAI {
 
         productivity = Math.min(MAX_PRODUCTIVITY, productivity + PRODUCTIVITY_PER_TICK);
 
-        // Visual effects based on work type
         BlockState block = villager.level().getBlockState(station);
-        performWorkAnimation(block);
 
-        // Play work sounds occasionally
+        // Profession-specific work behavior
+        VillagerProfession profession = villager.getVillagerData().getProfession();
+        performProfessionWork(profession, station, block);
+
+        // Visual and audio feedback
+        if (workTicks % 20 == 0) {
+            performWorkAnimation(profession, block);
+        }
+
         if (workTicks % 60 == 0) {
-            playWorkSound(block);
+            playWorkSound(profession);
+        }
+
+        // Special effects based on productivity
+        if (productivity >= 500 && workTicks % 100 == 0) {
+            spawnProductivityEffect(profession);
         }
     }
 
     /**
-     * Plays work animation based on workstation type.
+     * Performs profession-specific work behavior.
      */
-    private void performWorkAnimation(BlockState block) {
-        // Every 20 ticks, show a particle effect
-        if (villager.level().isClientSide || workTicks % 20 != 0) {
+    private void performProfessionWork(VillagerProfession profession, BlockPos station, BlockState block) {
+        if (villager.level().isClientSide) {
             return;
         }
 
-        // Spawn particles to show working
+        switch (profession) {
+            case FARMER -> {
+                // Farmers check nearby crops
+                if (workTicks % 40 == 0) {
+                    checkNearbyCrops(station);
+                }
+            }
+            case LIBRARIAN -> {
+                // Librarians occasionally show enchantment particles
+                if (villager.getRandom().nextDouble() < 0.05) {
+                    spawnEnchantParticles();
+                }
+            }
+            case BLACKSMITH -> {
+                // Blacksmiths have higher productivity
+                productivity += PRODUCTIVITY_PER_TICK;
+            }
+            case PRIEST -> {
+                // Clerics occasionally show holy particles
+                if (workTicks % 80 == 0) {
+                    spawnHolyParticles();
+                }
+            }
+            case FISHERMAN -> {
+                // Fishermen check for water
+                if (workTicks % 60 == 0) {
+                    checkNearbyWater(station);
+                }
+            }
+            case SHEPHERD -> {
+                // Shepherds think about sheep
+                if (workTicks % 50 == 0) {
+                    checkNearbyAnimals(station);
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks nearby crops for farmers.
+     */
+    private void checkNearbyCrops(BlockPos station) {
+        for (BlockPos pos : BlockPos.betweenClosed(
+            station.offset(-3, -1, -3),
+            station.offset(3, 1, 3)
+        )) {
+            BlockState state = villager.level().getBlockState(pos);
+            if (state.is(Blocks.WHEAT) || state.is(Blocks.CARROTS) ||
+                state.is(Blocks.POTATOES) || state.is(Blocks.BEETROOTS)) {
+                // Farmer found crops, small productivity boost
+                productivity = Math.min(MAX_PRODUCTIVITY, productivity + 5);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Checks for nearby water for fishermen.
+     */
+    private void checkNearbyWater(BlockPos station) {
+        for (BlockPos pos : BlockPos.betweenClosed(
+            station.offset(-5, -2, -5),
+            station.offset(5, 2, 5)
+        )) {
+            if (villager.level().getBlockState(pos).getFluidState().isSource()) {
+                productivity = Math.min(MAX_PRODUCTIVITY, productivity + 3);
+                break;
+            }
+        }
+    }
+
+    /**
+     * Checks for nearby animals for shepherds.
+     */
+    private void checkNearbyAnimals(BlockPos station) {
+        // Check if EnhancedFarming exists and has hungry villagers
+        EnhancedFarming farming = VillagerMixin.getEnhancedFarming(villager);
+        if (farming != null && farming.getKnownFarms().size() > 0) {
+            productivity = Math.min(MAX_PRODUCTIVITY, productivity + 5);
+        }
+    }
+
+    /**
+     * Spawns enchantment particles for librarians.
+     */
+    private void spawnEnchantParticles() {
+        if (villager.level().isClientSide) {
+            return;
+        }
+
         for (int i = 0; i < 3; i++) {
-            double offsetX = villager.getRandom().nextGaussian() * 0.2;
+            double offsetX = villager.getRandom().nextGaussian() * 0.3;
             double offsetY = villager.getRandom().nextDouble() * 0.5;
-            double offsetZ = villager.getRandom().nextGaussian() * 0.2;
+            double offsetZ = villager.getRandom().nextGaussian() * 0.3;
 
             villager.level().addParticle(
-                net.minecraft.core.particles.ParticleTypes.HEART,
+                net.minecraft.core.particles.ParticleTypes.ENCHANT,
                 villager.getX() + offsetX,
                 villager.getY() + 1.0 + offsetY,
                 villager.getZ() + offsetZ,
@@ -112,22 +224,110 @@ public class WorkStationAI {
     }
 
     /**
-     * Plays appropriate work sound for the workstation type.
+     * Spawns holy particles for clerics.
      */
-    private void playWorkSound(BlockState block) {
+    private void spawnHolyParticles() {
         if (villager.level().isClientSide) {
             return;
         }
 
-        // Play generic work sound
+        villager.level().addParticle(
+            net.minecraft.core.particles.ParticleTypes.HEART,
+            villager.getX(),
+            villager.getY() + 1.0,
+            villager.getZ(),
+            0, 0.1, 0
+        );
+    }
+
+    /**
+     * Plays work animation based on profession.
+     */
+    private void performWorkAnimation(VillagerProfession profession, BlockState block) {
+        if (villager.level().isClientSide) {
+            return;
+        }
+
+        net.minecraft.core.particles.ParticleType particleType = switch (profession) {
+            case FARMER -> net.minecraft.core.particles.ParticleTypes.COMPOSTER;
+            case LIBRARIAN -> net.minecraft.core.particles.ParticleTypes.ENCHANT;
+            case BLACKSMITH, ARMORER, WEAPON_SMITH -> net.minecraft.core.particles.ParticleTypes.SMOKE;
+            case PRIEST, CLERIC -> net.minecraft.core.particles.ParticleTypes.HEART;
+            case MASON -> net.minecraft.core.particles.ParticleTypes.BLOCK;
+            case CARTOGRAPHER -> net.minecraft.core.particles.ParticleTypes.MAP;
+            default -> net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER;
+        };
+
+        for (int i = 0; i < 2; i++) {
+            double offsetX = villager.getRandom().nextGaussian() * 0.2;
+            double offsetY = villager.getRandom().nextDouble() * 0.5;
+            double offsetZ = villager.getRandom().nextGaussian() * 0.2;
+
+            villager.level().addParticle(
+                particleType,
+                villager.getX() + offsetX,
+                villager.getY() + 1.0 + offsetY,
+                villager.getZ() + offsetZ,
+                0, 0.1, 0
+            );
+        }
+    }
+
+    /**
+     * Plays appropriate work sound for the profession.
+     */
+    private void playWorkSound(VillagerProfession profession) {
+        if (villager.level().isClientSide) {
+            return;
+        }
+
+        SoundEvent sound = switch (profession) {
+            case FARMER -> SoundEvents.VILLAGER_WORK_FARMER;
+            case LIBRARIAN -> SoundEvents.VILLAGER_WORK_LIBRARIAN;
+            case BLACKSMITH, ARMORER, WEAPON_SMITH, TOOL_SMITH -> SoundEvents.VILLAGER_WORK_SMITH;
+            case PRIEST, CLERIC -> SoundEvents.VILLAGER_WORK_CLERIC;
+            case BUTCHER -> SoundEvents.VILLAGER_WORK_BUTCHER;
+            case CARTOGRAPHER -> SoundEvents.VILLAGER_WORK_CARTOGRAPHER;
+            case FISHERMAN -> SoundEvents.VILLAGER_WORK_FISHERMAN;
+            case FLETCHER -> SoundEvents.VILLAGER_WORK_FLETCHER;
+            case LEATHERWORKER -> SoundEvents.VILLAGER_WORK_LEATHERWORKER;
+            case MASON -> SoundEvents.VILLAGER_WORK_MASON;
+            case SHEPHERD -> SoundEvents.VILLAGER_WORK_SHEPHERD;
+            default -> SoundEvents.VILLAGER_WORKING;
+        };
+
         villager.level().playSound(
             null,
             villager.blockPosition(),
-            SoundEvents.VILLAGER_WORKING,
+            sound,
             SoundSource.NEUTRAL,
             0.5f,
             1.0f
         );
+    }
+
+    /**
+     * Spawns special productivity effects.
+     */
+    private void spawnProductivityEffect(VillagerProfession profession) {
+        if (villager.level().isClientSide) {
+            return;
+        }
+
+        // Spawn extra particle effects when highly productive
+        for (int i = 0; i < 5; i++) {
+            double offsetX = villager.getRandom().nextGaussian() * 0.4;
+            double offsetY = villager.getRandom().nextDouble() * 0.8;
+            double offsetZ = villager.getRandom().nextGaussian() * 0.4;
+
+            villager.level().addParticle(
+                net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER,
+                villager.getX() + offsetX,
+                villager.getY() + 1.0 + offsetY,
+                villager.getZ() + offsetZ,
+                0, 0.15, 0
+            );
+        }
     }
 
     /**
@@ -139,7 +339,6 @@ public class WorkStationAI {
             workStationPos = station;
             workTicks = 0;
 
-            // Look at the workstation
             villager.getLookControl().setLookAt(
                 station.getX() + 0.5,
                 station.getY() + 0.5,
@@ -166,7 +365,6 @@ public class WorkStationAI {
         breakTimeRemaining = BREAK_DURATION;
         workTicks = 0;
 
-        // Wander around a bit during break
         if (villager.getRandom().nextDouble() < 0.5) {
             villager.getNavigation().moveTo(
                 villager.getX() + (villager.getRandom().nextDouble() - 0.5) * 4,
@@ -207,10 +405,9 @@ public class WorkStationAI {
 
     /**
      * Gets the trade discount based on productivity.
-     * Higher productivity = better prices.
      */
     public float getProductivityBonus() {
-        return Math.min(0.2f, productivity / 5000.0f); // Max 20% discount
+        return Math.min(0.2f, productivity / 5000.0f);
     }
 
     /**
@@ -222,6 +419,7 @@ public class WorkStationAI {
         tag.putInt("Productivity", productivity);
         tag.putInt("BreakTimeRemaining", breakTimeRemaining);
         tag.putBoolean("IsWorking", isWorking);
+        tag.putInt("WorkSessionTicks", workSessionTicks);
         if (workStationPos != null) {
             tag.putInt("WorkStationX", workStationPos.getX());
             tag.putInt("WorkStationY", workStationPos.getY());
@@ -238,6 +436,7 @@ public class WorkStationAI {
         productivity = tag.getInt("Productivity");
         breakTimeRemaining = tag.getInt("BreakTimeRemaining");
         isWorking = tag.getBoolean("IsWorking");
+        workSessionTicks = tag.getInt("WorkSessionTicks");
 
         if (tag.contains("WorkStationX")) {
             int x = tag.getInt("WorkStationX");

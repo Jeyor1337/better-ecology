@@ -62,7 +62,8 @@ public class RearingGoal extends Goal {
         }
 
         // Stop rearing if too panicked (should flee instead)
-        if (horse.getPersistentData().getBoolean("better-ecology:is_fleeing")) {
+        var component = me.javavirtualenv.ecology.EcologyHooks.getEcologyComponent(horse);
+        if (component != null && component.getHandleTag("fleeing").getBoolean("is_fleeing")) {
             return false;
         }
 

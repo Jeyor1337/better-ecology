@@ -33,7 +33,7 @@
     "enabled": true,
     "max_value": 100,
     "starting_value": 80,
-    "decay_rate": 0.8,
+    "decay_rate": 0.01,
     "damage_threshold": 10,
     "damage_amount": 1.0,
     "damage_interval": 200

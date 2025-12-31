@@ -27,7 +27,8 @@ public class SqueezeThroughGapsBehavior extends SteeringBehavior {
     private BlockPos targetGap;
 
     public SqueezeThroughGapsBehavior(double squeezeRange, double squeezeSpeed) {
-        super(0.9);
+        super();
+        setWeight(0.9);
         this.squeezeRange = squeezeRange;
         this.squeezeSpeed = squeezeSpeed;
     }

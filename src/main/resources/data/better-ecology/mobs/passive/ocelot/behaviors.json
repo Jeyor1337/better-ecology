@@ -1,0 +1,67 @@
+{
+  "entity_type": "ocelot",
+  "feline": {
+    "priority": 2,
+    "stalk_speed": 0.35,
+    "stalk_detection_range": 20.0,
+    "pounce_distance": 3.5,
+    "give_up_angle": 40.0,
+    "pounce_speed": 1.8,
+    "pounce_range": 5.0,
+    "pounce_cooldown": 50.0,
+    "pounce_force": 1.0,
+    "climb_speed": 0.15,
+    "max_climb_height": 8.0,
+    "climb_search_radius": 6,
+    "fall_damage_reduction": true,
+    "max_safe_fall_height": 256.0
+  },
+  "behaviors": {
+    "enabled": true,
+    "priority": 3,
+    "max_force": 0.18,
+    "max_speed": 0.6,
+    "pursuit": 1.5,
+    "evasion": 1.8,
+    "avoidance": 1.2,
+    "attraction": 1.0
+  },
+  "hunting": {
+    "enabled": true,
+    "prey_types": [
+      "minecraft:chicken",
+      "minecraft:rabbit"
+    ],
+    "hunt_chance": 0.2,
+    "stalking_bonus": 0.4,
+    "climb_ambush_bonus": 0.3
+  },
+  "climbing": {
+    "enabled": true,
+    "climb_speed": 0.15,
+    "max_height": 8.0,
+    "search_radius": 6,
+    "climbable_blocks": [
+      "minecraft:logs",
+      "minecraft:leaves",
+      "minecraft:vine",
+      "minecraft:ladder"
+    ]
+  },
+  "shyness": {
+    "enabled": true,
+    "flee_distance": 8.0,
+    "trust_threshold": 0.3,
+    "player_approach_speed": 0.1
+  },
+  "creeper_detection": {
+    "enabled": true,
+    "detection_range": 16.0,
+    "hiss_range": 8.0
+  },
+  "quiet_movement": {
+    "enabled": true,
+    "sound_reduction": 0.9,
+    "detection_radius_modifier": 0.4
+  }
+}

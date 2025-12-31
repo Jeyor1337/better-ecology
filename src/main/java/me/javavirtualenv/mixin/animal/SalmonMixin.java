@@ -44,8 +44,7 @@ public abstract class SalmonMixin {
                 .addHandle(new AgeHandle())
                 .addHandle(new SocialHandle())
                 .addHandle(new MovementHandle())
-                .addHandle(new SizeHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle comes from profile via mergeHandles
                 .build();
 
         AnimalBehaviorRegistry.register(SALMON_ID.toString(), config);

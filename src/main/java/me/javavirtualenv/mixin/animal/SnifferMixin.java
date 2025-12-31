@@ -45,7 +45,6 @@ public abstract class SnifferMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -70,8 +69,7 @@ public abstract class SnifferMixin extends AnimalMixin {
             // Production - ancient seed/moss production
             .addHandle(new ResourceProductionHandle())
 
-            // Behaviors
-            .addHandle(new BehaviorHandle())
+            // Behaviors - Note: BehaviorHandle comes from profile via mergeHandles
 
             .build();
 

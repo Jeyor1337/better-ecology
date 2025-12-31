@@ -87,6 +87,7 @@ public class SpawnDensityTracker {
     /**
      * Check if spawning is allowed based on density limits.
      * Implements soft cap with probability reduction.
+     * Also considers habitat quality (source-sink dynamics).
      */
     public SpawnResult canSpawn(ServerLevel level, BlockPos pos, EntityType<?> type, int cap) {
         ChunkPos chunkPos = new ChunkPos(pos);
@@ -99,15 +100,39 @@ public class SpawnDensityTracker {
 
         // Check soft cap threshold (e.g., at 80% of cap)
         int softCapThreshold = (int) (cap * 0.8);
+        double probabilityMultiplier = 1.0;
+
         if (currentChunkCount >= softCapThreshold) {
             // Calculate spawn probability reduction
             double overage = currentChunkCount - softCapThreshold;
             double reductionZone = cap - softCapThreshold;
-            double probabilityMultiplier = 1.0 - (overage / reductionZone * 0.9);
-            return new SpawnResult(SpawnCapType.SOFT_CAP, probabilityMultiplier);
+            probabilityMultiplier = 1.0 - (overage / reductionZone * 0.9);
         }
 
-        return SpawnResult.ALLOWED;
+        // Apply habitat quality modifier
+        probabilityMultiplier *= getHabitatModifier(level, pos, type);
+
+        return new SpawnResult(SpawnCapType.SOFT_CAP, probabilityMultiplier);
+    }
+
+    /**
+     * Get habitat quality spawn modifier.
+     * Source habitats get +20% bonus, sink habitats get -50% penalty.
+     */
+    private double getHabitatModifier(ServerLevel level, BlockPos pos, EntityType<?> type) {
+        try {
+            me.javavirtualenv.ecology.conservation.HabitatQuality quality =
+                me.javavirtualenv.ecology.conservation.HabitatQuality.evaluateHabitat(level, pos, type);
+
+            return switch (quality) {
+                case SOURCE -> 1.2;
+                case NEUTRAL -> 1.0;
+                case SINK -> 0.5;
+            };
+        } catch (Exception e) {
+            // Default to neutral if habitat evaluation fails
+            return 1.0;
+        }
     }
 
     /**

@@ -72,8 +72,6 @@ public abstract class DonkeyMixin extends AnimalMixin {
             .addHandle(new DonkeySocialHandle())
             // Movement system (YAML lines 48-72)
             .addHandle(new DonkeyMovementHandle())
-            // Size system (YAML lines 38-41)
-            .addHandle(new DonkeySizeHandle())
             // Health system (YAML lines 34-36)
             .addHandle(new DonkeyHealthHandle())
             // Breeding system (YAML lines 383-481)
@@ -613,41 +611,6 @@ public abstract class DonkeyMixin extends AnimalMixin {
             int goalPriority = 0;
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
             accessor.betterEcology$getGoalSelector().addGoal(goalPriority, new FloatGoal(mob));
-        }
-    }
-
-    /**
-     * Size handle with donkey-specific values.
-     * YAML: physical.size (lines 38-41)
-     */
-    private static final class DonkeySizeHandle extends CodeBasedHandle {
-        private static final String HANDLE_TAG_KEY = "size";
-
-        // Configuration from YAML
-        private static final float WIDTH = 1.3965f;
-        private static final float HEIGHT = 1.5f;
-        private static final float BABY_SCALE = 0.5f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            float finalWidth = WIDTH;
-            float finalHeight = HEIGHT;
-
-            if (mob.isBaby()) {
-                finalWidth *= BABY_SCALE;
-                finalHeight *= BABY_SCALE;
-            }
-
-            CompoundTag sizeTag = component.getHandleTag(HANDLE_TAG_KEY);
-            sizeTag.putFloat("width", finalWidth);
-            sizeTag.putFloat("height", finalHeight);
-
-            mob.refreshDimensions();
         }
     }
 

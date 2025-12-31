@@ -4,11 +4,7 @@ import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.Axolotl;
-
-import java.util.UUID;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
 
 /**
  * Axolotl play dead behavior for regeneration and defense.
@@ -18,7 +14,6 @@ import java.util.UUID;
  * In game, playing dead provides a brief period of damage avoidance and regeneration.
  */
 public class AxolotlPlayDeadBehavior extends SteeringBehavior {
-    private static final UUID REGEN_BOOST_UUID = UUID.fromString("7f101913-8c23-11ee-b9d1-0242ac120004");
 
     private final AquaticConfig config;
     private boolean isPlayingDead = false;
@@ -26,7 +21,9 @@ public class AxolotlPlayDeadBehavior extends SteeringBehavior {
     private long lastPlayDeadTime = 0;
 
     public AxolotlPlayDeadBehavior(AquaticConfig config) {
-        super(1.0, true);
+        super();
+        setWeight(1.0);
+        setEnabled(true);
         this.config = config;
     }
 
@@ -74,17 +71,6 @@ public class AxolotlPlayDeadBehavior extends SteeringBehavior {
         playDeadTimer = getPlayDeadDuration();
         lastPlayDeadTime = axolotl.level().getGameTime();
 
-        // Apply regeneration boost
-        if (axolotl.getAttribute(Attributes.REGENERATION) != null) {
-            AttributeModifier regenBoost = new AttributeModifier(
-                REGEN_BOOST_UUID,
-                "Play dead regeneration",
-                2.0,
-                AttributeModifier.Operation.ADD_MULTIPLIED_BASE
-            );
-            axolotl.getAttribute(Attributes.REGENERATION).addPermanentModifier(regenBoost);
-        }
-
         // Play dead sound
         if (!axolotl.level().isClientSide) {
             axolotl.playSound(net.minecraft.sounds.SoundEvents.AXOLOTL_HURT, 1.0F, 0.8F);
@@ -110,11 +96,6 @@ public class AxolotlPlayDeadBehavior extends SteeringBehavior {
     private void stopPlayingDead(Axolotl axolotl) {
         isPlayingDead = false;
         playDeadTimer = 0;
-
-        // Remove regeneration boost
-        if (axolotl.getAttribute(Attributes.REGENERATION) != null) {
-            axolotl.getAttribute(Attributes.REGENERATION).removeModifier(REGEN_BOOST_UUID);
-        }
     }
 
     private int getPlayDeadDuration() {

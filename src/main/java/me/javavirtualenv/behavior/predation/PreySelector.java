@@ -1,6 +1,8 @@
 package me.javavirtualenv.behavior.predation;
 
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.ecology.conservation.PreyPopulationManager;
+import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -41,24 +43,33 @@ public class PreySelector {
 
     /**
      * Selects the best prey from available entities.
+     * Uses SpatialIndex for efficient O(1) + O(k) queries instead of O(n) iteration.
+     * Implements population checking to prevent prey extinction.
      *
      * @param predator The predator doing the hunting
      * @return The selected prey, or null if no valid prey found
      */
     public Entity selectPrey(Mob predator) {
-        List<LivingEntity> nearbyEntities = predator.level().getEntitiesOfClass(
-            LivingEntity.class,
-            predator.getBoundingBox().inflate(maxPreyDistance)
-        );
+        // Use SpatialIndex for efficient entity queries
+        List<Mob> nearbyMobs = SpatialIndex.getNearbyMobs(predator, (int) maxPreyDistance);
 
         List<PreyCandidate> candidates = new ArrayList<>();
 
-        for (LivingEntity entity : nearbyEntities) {
+        for (Mob mob : nearbyMobs) {
+            if (!(mob instanceof LivingEntity entity)) {
+                continue;
+            }
+
             if (entity.equals(predator)) {
                 continue;
             }
 
             if (!isValidPrey(predator, entity)) {
+                continue;
+            }
+
+            // Check prey population health - don't hunt scarce populations
+            if (!isPreyPopulationHealthy(predator, entity)) {
                 continue;
             }
 
@@ -79,6 +90,7 @@ public class PreySelector {
     /**
      * Scores a potential prey item.
      * Lower score = better prey (easier catch, closer).
+     * Includes prey switching logic - alternative prey scored higher when primary is scarce.
      */
     private double scorePrey(Mob predator, LivingEntity prey) {
         double score = 0.0;
@@ -109,6 +121,13 @@ public class PreySelector {
         // Group size cost - lone prey easier than groups
         int nearbyConspecifics = countNearbyConspecifics(prey);
         score += nearbyConspecifics * 2.0;
+
+        // Prey switching bonus - score alternative prey higher when primary is scarce
+        double populationRatio = getPreyPopulationRatio(predator, prey.getClass());
+        if (populationRatio < 0.4) {
+            // Prey is scarce - increase score to discourage hunting
+            score += (1.0 - populationRatio) * 20.0;
+        }
 
         return score;
     }
@@ -146,18 +165,21 @@ public class PreySelector {
 
     /**
      * Counts nearby entities of the same species as the prey.
+     * Uses SpatialIndex for efficient O(1) + O(k) queries.
      * Used to assess group protection benefits.
      */
     private int countNearbyConspecifics(LivingEntity prey) {
-        int count = 0;
         double detectionRange = 16.0;
 
-        List<LivingEntity> nearby = prey.level().getEntitiesOfClass(
-            LivingEntity.class,
-            prey.getBoundingBox().inflate(detectionRange)
-        );
+        if (!(prey instanceof Mob preyMob)) {
+            return 0;
+        }
 
-        for (LivingEntity entity : nearby) {
+        // Use SpatialIndex for efficient same-type queries
+        List<Mob> nearby = SpatialIndex.getNearbySameType(preyMob, (int) detectionRange);
+
+        int count = 0;
+        for (Mob entity : nearby) {
             if (!entity.equals(prey) && entity.getType().equals(prey.getType())) {
                 count++;
             }
@@ -168,16 +190,19 @@ public class PreySelector {
 
     /**
      * Gets all valid prey in range, sorted by preference.
+     * Uses SpatialIndex for efficient O(1) + O(k) queries.
      */
     public List<LivingEntity> getRankedPrey(Mob predator) {
-        List<LivingEntity> nearbyEntities = predator.level().getEntitiesOfClass(
-            LivingEntity.class,
-            predator.getBoundingBox().inflate(maxPreyDistance)
-        );
+        // Use SpatialIndex for efficient entity queries
+        List<Mob> nearbyMobs = SpatialIndex.getNearbyMobs(predator, (int) maxPreyDistance);
 
         List<PreyCandidate> candidates = new ArrayList<>();
 
-        for (LivingEntity entity : nearbyEntities) {
+        for (Mob mob : nearbyMobs) {
+            if (!(mob instanceof LivingEntity entity)) {
+                continue;
+            }
+
             if (entity.equals(predator)) {
                 continue;
             }
@@ -227,6 +252,48 @@ public class PreySelector {
             this.entity = entity;
             this.score = score;
         }
+    }
+
+    /**
+     * Gets the local prey population count for a specific prey type.
+     * Uses PreyPopulationManager for efficient querying.
+     *
+     * @param predator The predator entity
+     * @param preyType The class of prey to count
+     * @return Count of prey in the local area
+     */
+    public int getLocalPreyPopulation(Mob predator, Class<?> preyType) {
+        int searchRadius = (int) maxPreyDistance;
+        return PreyPopulationManager.getPreyCount(predator, preyType, searchRadius);
+    }
+
+    /**
+     * Checks if the prey population is healthy enough to support hunting.
+     * Implements Allee threshold - prevents hunting when population is too low.
+     *
+     * @param predator The predator entity
+     * @param prey The potential prey entity
+     * @return true if prey population is healthy enough to hunt
+     */
+    public boolean isPreyPopulationHealthy(Mob predator, LivingEntity prey) {
+        Class<?> preyType = prey.getClass();
+        int searchRadius = (int) maxPreyDistance;
+
+        // Use PreyPopulationManager to check population health
+        return PreyPopulationManager.isPreyPopulationHealthy(predator, preyType, searchRadius);
+    }
+
+    /**
+     * Gets the population ratio for a prey type (current/expected).
+     * Used for prey switching decisions.
+     *
+     * @param predator The predator entity
+     * @param preyType The class of prey to check
+     * @return Population ratio (0.0 to >1.0)
+     */
+    public double getPreyPopulationRatio(Mob predator, Class<?> preyType) {
+        int searchRadius = (int) maxPreyDistance;
+        return PreyPopulationManager.getPopulationRatio(predator, preyType, searchRadius);
     }
 
     public double getMaxPreyDistance() {

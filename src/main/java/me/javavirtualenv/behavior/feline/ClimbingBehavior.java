@@ -31,13 +31,14 @@ public class ClimbingBehavior extends SteeringBehavior {
     private ClimbDirection climbDirection;
 
     public ClimbingBehavior(double climbSpeed, double maxClimbHeight, int searchRadius) {
-        super(0.8);
+        super();
+        setWeight(0.8);
         this.climbSpeed = climbSpeed;
         this.maxClimbHeight = maxClimbHeight;
         this.searchRadius = searchRadius;
     }
 
-    public ClimingBehavior() {
+    public ClimbingBehavior() {
         this(0.15, 8.0, 6);
     }
 

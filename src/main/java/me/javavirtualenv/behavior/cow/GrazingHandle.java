@@ -6,6 +6,8 @@ import me.javavirtualenv.behavior.foraging.ForagingScheduler;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHandle;
 import me.javavirtualenv.ecology.EcologyProfile;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import me.javavirtualenv.ecology.EcologyHooks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
@@ -15,6 +17,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Cow;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Grazing handle for cows and mooshrooms.
@@ -133,7 +136,8 @@ public class GrazingHandle implements EcologyHandle {
         for (Mob nearby : mob.level().getEntitiesOfClass(mob.getClass(), mob.getBoundingBox().inflate(16.0))) {
             if (!nearby.equals(mob) && nearby.isAlive()) {
                 nearbyCount++;
-                if (nearby.getPersistentData().getBoolean("better-ecology:isGrazing")) {
+                EcologyComponent nearbyComponent = getEcologyComponent(nearby);
+                if (nearbyComponent != null && isGrazing(nearby, nearbyComponent)) {
                     grazingCount++;
                 }
             }
@@ -141,6 +145,14 @@ public class GrazingHandle implements EcologyHandle {
 
         // If 30% or more of nearby herd is grazing, return true
         return nearbyCount > 0 && (double) grazingCount / nearbyCount >= 0.3;
+    }
+
+    /**
+     * Get EcologyComponent from a Mob entity.
+     */
+    @Nullable
+    private EcologyComponent getEcologyComponent(Mob mob) {
+        return EcologyHooks.getEcologyComponent(mob);
     }
 
     private void attemptGraze(Cow cow, BlockPos grassPos, CompoundTag tag, EcologyComponent component, Level level) {
@@ -166,9 +178,6 @@ public class GrazingHandle implements EcologyHandle {
         tag.putInt(NBT_LAST_GRAZE_TIME, cow.tickCount);
         tag.putInt(NBT_GRASS_EATEN_COUNT, grassEaten + 1);
         tag.putBoolean(NBT_IS_GRAZING, true);
-
-        // Store grazing state in entity data for other herd members to see
-        cow.getPersistentData().putBoolean("better-ecology:isGrazing", true);
 
         // Play eating sound
         level.playSound(null, cow.blockPosition(), SoundEvents.COW_EAT, SoundSource.NEUTRAL, 1.0F, 1.0F);
@@ -198,8 +207,6 @@ public class GrazingHandle implements EcologyHandle {
         tag.putInt(NBT_LAST_GRAZE_TIME, cow.tickCount);
         tag.putInt(NBT_GRASS_EATEN_COUNT, grassEaten + 1);
         tag.putBoolean(NBT_IS_GRAZING, true);
-
-        cow.getPersistentData().putBoolean("better-ecology:isGrazing", true);
 
         level.playSound(null, cow.blockPosition(), SoundEvents.COW_EAT, SoundSource.NEUTRAL, 1.0F, 1.2F);
 

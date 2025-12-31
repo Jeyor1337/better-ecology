@@ -1,6 +1,7 @@
 package me.javavirtualenv.ecology;
 
 import me.javavirtualenv.BetterEcology;
+import me.javavirtualenv.ecology.conservation.PopulationRegistry;
 import me.javavirtualenv.ecology.handles.*;
 import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
 import me.javavirtualenv.ecology.handles.production.ResourceProductionHandle;
@@ -46,6 +47,9 @@ public final class EcologyBootstrap {
 		// Parent-child relationship tracking
 		EcologyHandleRegistry.register(new ParentChildHandle());
 
+		// Conservation system
+		EcologyHandleRegistry.register(new ConservationHandle());
+
 		// Reproduction handlers
 		EcologyHandleRegistry.register(new NestBuildingHandle());
 
@@ -65,6 +69,11 @@ public final class EcologyBootstrap {
 		ServerLifecycleEvents.SERVER_STARTING.register(server -> {
 			reloader.onResourceManagerReload(server.getResourceManager());
 			BiomeSpawnModifier.registerAll();
+		});
+
+		// Reset conservation tracking on server shutdown
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			PopulationRegistry.reset();
 		});
 
 		// Initialize spawn density tracker

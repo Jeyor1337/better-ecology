@@ -4,6 +4,7 @@ import me.javavirtualenv.behavior.villager.*;
 import me.javavirtualenv.ecology.api.EcologyAccess;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.npc.WanderingTrader;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -64,6 +65,7 @@ public class WanderingTraderMixin implements EcologyAccess {
 
         // Initialize behaviors if not done
         if (!betterEcology$behaviorsInitialized) {
+            initializeWanderingTraderGoals(trader);
             betterEcology$behaviorsInitialized = true;
         }
 
@@ -71,6 +73,25 @@ public class WanderingTraderMixin implements EcologyAccess {
         if (trader.level().getGameTime() % 2400 == 0) {
             betterEcology$gossipSystem.decayGossip();
         }
+
+        // Update supply/demand periodically
+        if (trader.level().getGameTime() % 600 == 0) {
+            betterEcology$tradingReputation.updateSupplyDemand();
+        }
+    }
+
+    @Unique
+    private void initializeWanderingTraderGoals(WanderingTrader trader) {
+        GoalSelector goalSelector = trader.goalSelector;
+
+        // Register village seeking goal
+        goalSelector.addGoal(3, new SeekVillageGoal(trader));
+
+        // Register socialization goal with villagers
+        goalSelector.addGoal(5, new SocializeWithVillagersGoal(trader, betterEcology$gossipSystem));
+
+        // Register preferential trading goal
+        goalSelector.addGoal(2, new PreferentialTradingGoal(trader, betterEcology$tradingReputation));
     }
 
     // Getter methods for behavior systems

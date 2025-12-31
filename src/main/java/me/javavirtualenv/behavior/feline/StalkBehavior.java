@@ -4,9 +4,13 @@ import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import me.javavirtualenv.behavior.predation.PreySelector;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import me.javavirtualenv.ecology.conservation.PreyPopulationManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * Stalk behavior for feline predators.
@@ -27,6 +31,10 @@ public class StalkBehavior extends SteeringBehavior {
     private final double giveUpAngle;
     private final PreySelector preySelector;
 
+    // Sustainability parameters
+    private static final int HUNGER_TRIGGER_THRESHOLD = 50; // Hunt when hunger < 50%
+    private static final int SATIATION_THRESHOLD = 80; // Stop when hunger > 80%
+
     private Entity currentPrey;
     private boolean isStalking = false;
     private int stalkTicks = 0;
@@ -34,7 +42,8 @@ public class StalkBehavior extends SteeringBehavior {
 
     public StalkBehavior(double stalkSpeed, double detectionRange,
                          double pounceDistance, double giveUpAngle, PreySelector preySelector) {
-        super(1.0);
+        super();
+        setWeight(1.0);
         this.stalkSpeed = stalkSpeed;
         this.detectionRange = detectionRange;
         this.pounceDistance = pounceDistance;
@@ -55,6 +64,20 @@ public class StalkBehavior extends SteeringBehavior {
     public Vec3d calculate(BehaviorContext context) {
         Mob mob = context.getEntity();
         Vec3d position = context.getPosition();
+
+        // Check hunger-based hunting motivation
+        if (!isHungryEnoughToHunt(mob)) {
+            currentPrey = null;
+            isStalking = false;
+            return new Vec3d();
+        }
+
+        // Stop hunting if satiated
+        if (isSatiated(mob)) {
+            currentPrey = null;
+            isStalking = false;
+            return new Vec3d();
+        }
 
         // Find or validate prey
         if (currentPrey == null || !currentPrey.isAlive()) {
@@ -189,7 +212,60 @@ public class StalkBehavior extends SteeringBehavior {
             return false;
         }
 
+        // Check prey population health
+        if (!preySelector.isPreyPopulationHealthy(predator, (net.minecraft.world.entity.LivingEntity) entity)) {
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * Checks if predator is hungry enough to hunt.
+     * Felines only hunt when hunger is below 50%.
+     */
+    private boolean isHungryEnoughToHunt(Mob predator) {
+        EcologyComponent component = getEcologyComponent(predator);
+        if (component == null) {
+            return true; // Default to true if no hunger system
+        }
+
+        CompoundTag hungerTag = component.getHandleTag("hunger");
+        if (!hungerTag.contains("hunger")) {
+            return true; // Default to true if no hunger data
+        }
+
+        int currentHunger = hungerTag.getInt("hunger");
+        return currentHunger < HUNGER_TRIGGER_THRESHOLD;
+    }
+
+    /**
+     * Checks if predator is satiated and should stop hunting.
+     * Felines stop hunting when hunger is above 80%.
+     */
+    private boolean isSatiated(Mob predator) {
+        EcologyComponent component = getEcologyComponent(predator);
+        if (component == null) {
+            return false; // Default to false if no hunger system
+        }
+
+        CompoundTag hungerTag = component.getHandleTag("hunger");
+        if (!hungerTag.contains("hunger")) {
+            return false; // Default to false if no hunger data
+        }
+
+        int currentHunger = hungerTag.getInt("hunger");
+        return currentHunger >= SATIATION_THRESHOLD;
+    }
+
+    /**
+     * Gets EcologyComponent from an entity.
+     */
+    private EcologyComponent getEcologyComponent(Mob mob) {
+        if (mob instanceof EcologyAccess access) {
+            return access.betterEcology$getEcologyComponent();
+        }
+        return null;
     }
 
     public Entity getCurrentPrey() {

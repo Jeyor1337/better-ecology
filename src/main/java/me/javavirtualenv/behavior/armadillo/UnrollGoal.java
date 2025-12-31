@@ -161,7 +161,7 @@ public class UnrollGoal extends Goal {
         }
 
         // Check if recently attacked
-        if (mob.getLastHurtByMob() != null || mob.getLastHurtDamageMob() != null) {
+        if (mob.getLastHurtByMob() != null || mob.getLastHurtMob() != null) {
             long lastHurtTime = mob.getLastHurtByMobTimestamp();
             long currentTime = mob.level().getGameTime();
             if (currentTime - lastHurtTime < MIN_ROLL_TIME) {

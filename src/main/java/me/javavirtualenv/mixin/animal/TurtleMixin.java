@@ -71,7 +71,6 @@ public abstract class TurtleMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -94,8 +93,7 @@ public abstract class TurtleMixin extends AnimalMixin {
             // Diet - aquatic herbivores
             .addHandle(new DietHandle())
 
-            // Behaviors - swimming, nesting, homing
-            .addHandle(new BehaviorHandle())
+            // Note: BehaviorHandle comes from profile via mergeHandles
 
             .build();
 

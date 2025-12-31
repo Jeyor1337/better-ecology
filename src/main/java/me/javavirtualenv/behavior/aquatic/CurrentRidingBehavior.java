@@ -24,7 +24,9 @@ public class CurrentRidingBehavior extends SteeringBehavior {
     private int currentRideTimer = 0;
 
     public CurrentRidingBehavior(AquaticConfig config) {
-        super(0.8, true);
+        super();
+        setWeight(0.8);
+        setEnabled(true);
         this.config = config;
     }
 

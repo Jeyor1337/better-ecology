@@ -43,7 +43,8 @@ public class PlayBehavior extends SteeringBehavior {
     private static final Random RANDOM = new Random();
 
     public PlayBehavior(double playRange, int playDuration, double boredomThreshold) {
-        super(0.7);
+        super();
+        setWeight(0.7);
         this.playRange = playRange;
         this.playDuration = playDuration;
         this.boredomThreshold = boredomThreshold;

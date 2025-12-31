@@ -11,7 +11,10 @@
       "price_discount_per_reputation": 0.002,
       "max_discount": 0.5,
       "special_deal_chance": 0.01,
-      "rare_deal_chance": 0.005
+      "rare_deal_chance": 0.005,
+      "supply_demand_enabled": true,
+      "supply_regen_rate": 5,
+      "demand_decay_rate": 0.95
     },
     "gossip": {
       "enabled": true,
@@ -19,7 +22,9 @@
       "decay_time_days": 5,
       "max_gossip_per_type": 20,
       "positive_gossip_strength": 10,
-      "negative_gossip_strength": 20
+      "negative_gossip_strength": 20,
+      "emergency_strength": 20,
+      "threat_strength": 10
     },
     "work_station": {
       "enabled": true,
@@ -28,7 +33,8 @@
       "productivity_per_tick": 1,
       "max_productivity": 1000,
       "productivity_discount_bonus": 0.2,
-      "working_range": 3.0
+      "working_range": 3.0,
+      "max_work_session_ticks": 2400
     },
     "daily_routine": {
       "enabled": true,
@@ -38,7 +44,9 @@
       "socialize_end": 11000,
       "sleep_start": 12500,
       "sleep_end": 1000,
-      "meeting_point_search_radius": 32
+      "meeting_point_search_radius": 32,
+      "socialize_duration_ticks": 200,
+      "socialize_range": 8.0
     },
     "farming": {
       "enabled": true,
@@ -46,7 +54,19 @@
       "search_radius": 32,
       "max_crops_per_session": 20,
       "harvest_particle_count": 5,
-      "gossip_sharing_range": 16.0
+      "gossip_sharing_range": 16.0,
+      "expansion_enabled": true,
+      "expansion_cooldown_ticks": 6000,
+      "expansion_search_radius": 16,
+      "expansion_water_range": 4
+    },
+    "threat_response": {
+      "enabled": true,
+      "detection_range": 16.0,
+      "emergency_range": 8.0,
+      "bell_cooldown_ticks": 600,
+      "alert_decay_rate": 1,
+      "panic_speed": 1.0
     }
   },
   "weights": {

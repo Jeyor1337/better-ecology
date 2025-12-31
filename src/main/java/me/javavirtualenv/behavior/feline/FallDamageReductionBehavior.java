@@ -28,7 +28,8 @@ public class FallDamageReductionBehavior extends SteeringBehavior {
     private int fallTicks = 0;
 
     public FallDamageReductionBehavior(double maxSafeFallHeight, boolean noFallDamage) {
-        super(0.0);
+        super();
+        setWeight(0.0);
         this.maxSafeFallHeight = maxSafeFallHeight;
         this.noFallDamage = noFallDamage;
     }

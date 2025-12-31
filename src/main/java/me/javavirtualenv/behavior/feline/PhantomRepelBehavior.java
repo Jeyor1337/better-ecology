@@ -26,7 +26,8 @@ public class PhantomRepelBehavior extends SteeringBehavior {
     private boolean isSleeping = false;
 
     public PhantomRepelBehavior(double repelRange, double detectionRange) {
-        super(0.0);
+        super();
+        setWeight(0.0);
         this.repelRange = repelRange;
         this.detectionRange = detectionRange;
     }

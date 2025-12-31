@@ -28,7 +28,8 @@ public class RubAffectionBehavior extends SteeringBehavior {
     private int rubStage = 0; // 0=approach, 1=rub left, 2=behind, 3=rub right, 4=complete
 
     public RubAffectionBehavior(double rubRange, double affectionGain, int rubDuration) {
-        super(0.7);
+        super();
+        setWeight(0.7);
         this.rubRange = rubRange;
         this.affectionGain = affectionGain;
         this.rubDuration = rubDuration;

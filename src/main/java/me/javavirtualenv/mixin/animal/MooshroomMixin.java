@@ -1,6 +1,13 @@
 package me.javavirtualenv.mixin.animal;
 
-import me.javavirtualenv.behavior.cow.*;
+import me.javavirtualenv.behavior.cow.GrazingHandle;
+import me.javavirtualenv.behavior.cow.MooshroomMilkProductionHandle;
+import me.javavirtualenv.ecology.ai.BullCompetitionGoal;
+import me.javavirtualenv.ecology.ai.CalfFollowMotherGoal;
+import me.javavirtualenv.ecology.ai.CowCudChewGoal;
+import me.javavirtualenv.ecology.ai.CowGrazeGoal;
+import me.javavirtualenv.ecology.ai.CowProtectCalfGoal;
+import me.javavirtualenv.ecology.ai.HerdCohesionGoal;
 import me.javavirtualenv.ecology.AnimalBehaviorRegistry;
 import me.javavirtualenv.ecology.AnimalConfig;
 import me.javavirtualenv.ecology.CodeBasedHandle;
@@ -36,7 +43,7 @@ import net.minecraft.world.level.pathfinder.PathType;
  * They graze on mycelium and mushrooms, providing unique milk products.
  *
  * Mooshroom-specific behaviors:
- * - MilkProductionHandle: Extended milk system with mushroom stew (is_mooshroom: true)
+ * - MooshroomMilkProductionHandle: Extended milk system with mushroom stew and suspicious stew
  * - GrazingHandle: Mycelium grazing behavior
  * - CalfCareBehavior: Mothers protect calves in mushroom fields
  * - NursingBehavior: Calves seek mothers for nursing
@@ -81,18 +88,17 @@ public abstract class MooshroomMixin extends AnimalMixin {
                 .addHandle(new MooshroomAgeHandle())
                 .addHandle(new MooshroomSocialHandle())
                 .addHandle(new MooshroomMovementHandle())
-                .addHandle(new MooshroomSizeHandle())
                 .addHandle(new MooshroomDietHandle())
                 .addHandle(new MooshroomPredationHandle())
                 .addHandle(new MooshroomTemporalHandle())
                 .addHandle(new MooshroomBreedingHandle())
 
                 // Production systems (milk with mushroom stew)
-                .addHandle(new MilkProductionHandle())
+                .addHandle(new MooshroomMilkProductionHandle())
 
                 // Mooshroom-specific behaviors
                 .addHandle(new GrazingHandle())
-                .addHandle(new BehaviorHandle())
+                // Note: BehaviorHandle comes from profile via mergeHandles
                 .build();
 
         AnimalBehaviorRegistry.register(MOOSHROOM_ID.toString(), config);
@@ -486,26 +492,6 @@ public abstract class MooshroomMixin extends AnimalMixin {
             if (AVOIDS_CLIFFS) {
                 mob.setPathfindingMalus(PathType.DANGER_OTHER, (float) CLIFF_THRESHOLD);
             }
-        }
-    }
-
-    /**
-     * Size system for Mooshrooms.
-     */
-    private static final class MooshroomSizeHandle extends CodeBasedHandle {
-        private static final float WIDTH = 0.9f;
-        private static final float HEIGHT = 1.4f;
-        private static final float BABY_SCALE = 0.5f;
-
-        @Override
-        public String id() {
-            return "size";
-        }
-
-        @Override
-        public void registerGoals(Mob mob, EcologyComponent component, EcologyProfile profile) {
-            // Size handling for baby mooshrooms is managed by Minecraft's age system
-            // MushroomCow automatically handles baby scaling
         }
     }
 

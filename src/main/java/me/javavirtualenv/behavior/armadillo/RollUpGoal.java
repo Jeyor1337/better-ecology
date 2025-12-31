@@ -3,10 +3,13 @@ package me.javavirtualenv.behavior.armadillo;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.state.EntityState;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.EntityType;
 
@@ -26,6 +29,8 @@ import java.util.EnumSet;
  * - Invulnerable to most attacks
  */
 public class RollUpGoal extends Goal {
+
+    private static final ResourceLocation ROLL_SPEED_MODIFIER_ID = ResourceLocation.fromNamespaceAndPath("better-ecology", "roll_slowdown");
 
     private final Mob mob;
     private final EcologyComponent component;
@@ -106,10 +111,27 @@ public class RollUpGoal extends Goal {
         int currentTicks = armadilloComponent.getRollTicks();
         armadilloComponent.setRollTicks(currentTicks + 1);
 
-        // Slow down movement as rolling progresses
-        double slowdown = 1.0 - ((double) currentTicks / ROLL_DURATION);
-        mob.setAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED,
-            mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).getBaseValue() * slowdown);
+        // Slow down movement as rolling progresses using attribute modifier
+        double progress = (double) currentTicks / ROLL_DURATION;
+        double slowdownFactor = -0.9 * progress; // Reduce speed by up to 90%
+
+        if (mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) != null) {
+            // Remove old modifier if present
+            if (mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                    .getModifier(ROLL_SPEED_MODIFIER_ID) != null) {
+                mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                        .removeModifier(ROLL_SPEED_MODIFIER_ID);
+            }
+
+            // Add new modifier with updated slowdown
+            AttributeModifier speedModifier = new AttributeModifier(
+                    ROLL_SPEED_MODIFIER_ID,
+                    slowdownFactor,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+            );
+            mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                    .addPermanentModifier(speedModifier);
+        }
 
         // Spawn curl particles
         if (currentTicks % 5 == 0 && !mob.level().isClientSide()) {
@@ -151,9 +173,11 @@ public class RollUpGoal extends Goal {
 
     @Override
     public void stop() {
-        // Reset movement speed
-        double baseSpeed = profile.getDouble("movement.base_speed", 0.15);
-        mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED).setBaseValue(baseSpeed);
+        // Remove the speed modifier to restore normal movement
+        if (mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED) != null) {
+            mob.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                    .removeModifier(ROLL_SPEED_MODIFIER_ID);
+        }
     }
 
     /**
@@ -177,6 +201,6 @@ public class RollUpGoal extends Goal {
     private boolean wasRecentlyAttacked() {
         EntityState state = component.state();
         return state.isFleeing() || mob.getLastHurtByMob() != null ||
-               mob.getLastHurtDamageMob() != null;
+               mob.getLastHurtMob() != null;
     }
 }

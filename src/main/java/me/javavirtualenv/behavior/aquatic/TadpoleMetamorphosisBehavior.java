@@ -3,10 +3,13 @@ package me.javavirtualenv.behavior.aquatic;
 import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.FrogVariant;
+import net.minecraft.world.entity.animal.frog.Frog;
+import net.minecraft.world.entity.animal.frog.Tadpole;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -21,7 +24,9 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
     private final AquaticConfig config;
 
     public TadpoleMetamorphosisBehavior(AquaticConfig config) {
-        super(1.0, true);
+        super();
+        setWeight(1.0);
+        setEnabled(true);
         this.config = config;
     }
 
@@ -100,7 +105,7 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
      * This should be called from the entity's tick method.
      */
     public boolean shouldMetamorphose(Entity tadpole, int age) {
-        if (!(tadpole instanceof net.minecraft.world.entity.animal.Tadpole)) {
+        if (!(tadpole instanceof Tadpole)) {
             return false;
         }
 
@@ -112,7 +117,7 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
      * This should be called from the entity's tick method when metamorphosis is ready.
      */
     public Entity metamorphose(Entity tadpole) {
-        if (!(tadpole instanceof net.minecraft.world.entity.animal.Tadpole)) {
+        if (!(tadpole instanceof Tadpole)) {
             return null;
         }
 
@@ -120,14 +125,14 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
             return null;
         }
 
-        net.minecraft.world.entity.animal.Tadpole tadpoleEntity = (net.minecraft.world.entity.animal.Tadpole) tadpole;
+        Tadpole tadpoleEntity = (Tadpole) tadpole;
         ServerLevel level = (ServerLevel) tadpoleEntity.level();
 
         // Determine frog variant based on biome
         FrogVariant variant = determineFrogVariant(level, tadpoleEntity.blockPosition());
 
         // Create frog at tadpole's position
-        net.minecraft.world.entity.animal.Frog frog = EntityType.FROG.create(level);
+        Frog frog = EntityType.FROG.create(level);
         if (frog == null) {
             return null;
         }
@@ -148,19 +153,19 @@ public class TadpoleMetamorphosisBehavior extends SteeringBehavior {
 
     private FrogVariant determineFrogVariant(ServerLevel level, net.minecraft.core.BlockPos pos) {
         // Get temperature at position
-        float temperature = level.getBiome(pos).value().getTemperature();
+        float temperature = level.getBiome(pos).value().getTemperature(pos);
 
         // Cold biome = temperate frog
         if (temperature < 0.5f) {
-            return FrogVariant.TEMPERATE;
+            return BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.TEMPERATE);
         }
         // Warm biome = warm frog
         else if (temperature > 0.8f) {
-            return FrogVariant.WARM;
+            return BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.WARM);
         }
         // Default = cold frog
         else {
-            return FrogVariant.COLD;
+            return BuiltInRegistries.FROG_VARIANT.getOrThrow(FrogVariant.COLD);
         }
     }
 

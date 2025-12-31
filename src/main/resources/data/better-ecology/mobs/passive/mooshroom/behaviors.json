@@ -124,14 +124,14 @@
     "max_grass_per_patch": 20,
     "graze_cooldown": 60
   },
-  "calf_care": {
+  "parental_care": {
     "protection_range": 16.0,
     "nursing_range": 3.0,
     "follow_distance": 8.0,
     "nursing_cooldown": 600,
-    "maternal_aggression": 1.5
+    "parental_protection": 1.5
   },
-  "bull_competition": {
+  "adult_competition": {
     "enabled": true,
     "challenge_range": 20.0,
     "combat_speed": 0.8,

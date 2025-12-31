@@ -4,7 +4,6 @@ import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle;
 import me.javavirtualenv.ecology.handles.reproduction.NestData;
 import me.javavirtualenv.ecology.handles.reproduction.NestBuildingConfig;
-import me.javavirtualenv.ecology.handles.reproduction.NestBuildingHandle.NestBuildingConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.util.RandomPos;

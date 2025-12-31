@@ -1,10 +1,12 @@
 package me.javavirtualenv.behavior.horse;
 
 import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.EcologyHooks;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -43,7 +45,8 @@ public class SocialGroomingGoal extends Goal {
         }
 
         // Cannot groom if panicked
-        if (horse.getPersistentData().getBoolean("better-ecology:is_fleeing")) {
+        EcologyComponent component = EcologyHooks.getEcologyComponent(horse);
+        if (component != null && component.getHandleTag("fleeing").getBoolean("is_fleeing")) {
             return false;
         }
 
@@ -148,7 +151,8 @@ public class SocialGroomingGoal extends Goal {
             }
 
             // Don't groom if panicking
-            if (other.getPersistentData().getBoolean("better-ecology:is_fleeing")) {
+            EcologyComponent otherComponent = EcologyHooks.getEcologyComponent(other);
+            if (otherComponent != null && otherComponent.getHandleTag("fleeing").getBoolean("is_fleeing")) {
                 continue;
             }
 

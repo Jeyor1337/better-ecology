@@ -69,17 +69,19 @@ public abstract class AnimalMixin {
     /**
      * Check if behaviors have been registered for this animal type.
      * This prevents duplicate registrations.
+     * Subclasses can override to provide their own tracking.
      */
     @Unique
-    protected final boolean areBehaviorsRegistered() {
+    protected boolean areBehaviorsRegistered() {
         return behaviorsRegistered;
     }
 
     /**
      * Mark behaviors as registered for this animal type.
+     * Subclasses can override to provide their own tracking.
      */
     @Unique
-    protected final void markBehaviorsRegistered() {
+    protected void markBehaviorsRegistered() {
         behaviorsRegistered = true;
     }
 

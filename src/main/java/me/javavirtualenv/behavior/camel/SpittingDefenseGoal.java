@@ -40,10 +40,6 @@ public class SpittingDefenseGoal extends Goal {
             return false;
         }
 
-        if (!camel.isControllable()) {
-            return false;
-        }
-
         // Check if player is controlling the camel
         if (camel.isVehicle() && camel.getPassengers().stream()
                 .anyMatch(passenger -> passenger instanceof Player)) {

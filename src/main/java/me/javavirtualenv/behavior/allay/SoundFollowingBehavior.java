@@ -1,7 +1,7 @@
 package me.javavirtualenv.behavior.allay;
 
-import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.core.Vec3d;
+import me.javavirtualenv.behavior.steering.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -177,7 +177,7 @@ public class SoundFollowingBehavior extends SteeringBehavior {
         BlockEntity blockEntity = level.getBlockEntity(pos);
 
         if (blockEntity instanceof JukeboxBlockEntity jukebox) {
-            return jukebox.getRecord().getItem() != net.minecraft.world.level.block.Blocks.AIR.asItem();
+            return !jukebox.getTheItem().isEmpty();
         }
 
         return false;

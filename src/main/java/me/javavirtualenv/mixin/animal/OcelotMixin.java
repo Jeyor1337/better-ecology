@@ -22,48 +22,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * - Are distrustful of players and flee from approach
  * - Display stalking and pouncing behaviors
  * <p>
- * This mixin registers all behaviors and configurations defined in the
- * ocelot YAML config at data/better-ecology/mobs/passive/ocelot/mod_registry.yaml
- * <p>
  * Special feline behaviors:
  * - Stalking and pouncing on prey
  * - Creeping through undergrowth
  * - Creeper detection and deterrence
  * - Quiet stealth movement
  * - Squeezing through gaps in vegetation
+ * - Climbing trees to escape threats or ambush prey
+ * - Landing on feet (no fall damage)
+ * - Play behavior with prey and environmental objects
  */
 @Mixin(Ocelot.class)
 public abstract class OcelotMixin extends AnimalMixin {
 
+    private static boolean ocelotBehaviorsRegistered = false;
+
     /**
-     * Registers ocelot behaviors from YAML configuration.
+     * Registers ocelot behaviors from JSON configuration.
      * Creates an AnimalConfig with handles for all ocelot-specific behaviors.
-     * <p>
-     * Handles registered:
-     * - Health: 10 HP base (5 hearts), 0.5x for babies
-     * - Movement: 0.4 walk speed, 0.6 run speed, 1.5 jump height, avoids cliffs and water
-     * - Size: 0.6 width, 0.7 height, 0.5x scale for babies
-     * - Biomass: 50 adult, 15 baby, 0.1 transfer efficiency
-     * - Hunger: 100 max, 80 starting, 0.025 decay rate
-     * - Thirst: Disabled (ocelots don't need water tracking)
-     * - Condition: Body condition starting at 70, affects behavior and breeding
-     * - Energy: Costs for sprinting (0.3), hunting (0.5), fleeing (0.4), swimming (0.3)
-     * - Age: 24000 tick baby duration, no elderly/death from age
-     * - Social: Disabled (ocelots are solitary)
-     * - Breeding: 24000 tick cooldown, min condition 65, sexual reproduction
-     * - Temporal: Crepuscular pattern - active at dawn/dusk (1.0), less active midday (0.2)
-     * - Spatial: Home range 48 blocks, needs jungle canopy, seeks shelter in bad weather
-     * - Habitat: Jungle variants only (jungle, bamboo_jungle, sparse_jungle)
-     * - Predation: Predator of chickens, prey response with fleeing behavior
-     * - Diet: Carnivore - primary prey (chicken), secondary (cod, salmon)
-     * - Foraging: Search radius 16-32 based on hunger, remembers food locations
-     * - Behavior: Sitting, grooming, stalking practice, creeper deterrent
-     * - Feline: Stalking, pouncing, creeping, stealth, creeper detection
-     * - Population: Weight 8 spawning, soft cap per chunk
-     * - Player: Fearful base attitude, no habituation, 6 block flee distance
-     * - Aesthetics: Sit and watch, groom, stalk practice idle behaviors
-     * <p>
-     * All configuration values are loaded from the YAML profile.
      */
     @Override
     protected void registerBehaviors() {
@@ -77,7 +53,6 @@ public abstract class OcelotMixin extends AnimalMixin {
             // Physical attributes
             .addHandle(new HealthHandle())
             .addHandle(new MovementHandle())
-            .addHandle(new SizeHandle())
 
             // Internal state tracking
             .addHandle(new HungerHandle())
@@ -99,10 +74,7 @@ public abstract class OcelotMixin extends AnimalMixin {
             // Diet - carnivorous hunter
             .addHandle(new DietHandle())
 
-            // Behaviors - sitting, stalking, creeper deterrent
-            .addHandle(new BehaviorHandle())
-
-            // Feline behaviors - stalking, pouncing, stealth
+            // Feline behaviors - stalking, pouncing, climbing, stealth
             .addHandle(new FelineBehaviorHandle())
 
             .build();
@@ -113,7 +85,6 @@ public abstract class OcelotMixin extends AnimalMixin {
 
     /**
      * Inject after Ocelot constructor to register behaviors.
-     * Uses TAIL to ensure ocelot is fully initialized.
      */
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {

@@ -28,7 +28,8 @@ public class CreeperDetectionBehavior extends SteeringBehavior {
 
     public CreeperDetectionBehavior(double detectionRange, double deterrenceRange,
                                      double protectionSpeed) {
-        super(1.0);
+        super();
+        setWeight(1.0);
         this.detectionRange = detectionRange;
         this.deterrenceRange = deterrenceRange;
         this.protectionSpeed = protectionSpeed;

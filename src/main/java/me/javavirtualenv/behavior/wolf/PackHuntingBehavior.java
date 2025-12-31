@@ -4,6 +4,11 @@ import me.javavirtualenv.behavior.core.BehaviorContext;
 import me.javavirtualenv.behavior.steering.SteeringBehavior;
 import me.javavirtualenv.behavior.core.Vec3d;
 import me.javavirtualenv.behavior.predation.PreySelector;
+import me.javavirtualenv.ecology.EcologyComponent;
+import me.javavirtualenv.ecology.api.EcologyAccess;
+import me.javavirtualenv.ecology.handles.EnergyHandle;
+import me.javavirtualenv.ecology.handles.HungerHandle;
+import me.javavirtualenv.ecology.spatial.SpatialIndex;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
@@ -11,6 +16,7 @@ import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Fox;
+import net.minecraft.nbt.CompoundTag;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -38,10 +44,23 @@ public class PackHuntingBehavior extends SteeringBehavior {
     private final int minPackSize;
     private final PreySelector preySelector;
 
+    // Sustainability parameters
+    private static final int ENERGY_COST_PER_HUNT = 30; // 30% of energy bar
+    private static final int HANDLING_TIME_TICKS = 600; // 30 seconds after kill
+    private static final int HUNGER_TRIGGER_THRESHOLD = 50; // Hunt when hunger < 50%
+    private static final int SATIATION_THRESHOLD = 80; // Stop when hunger > 80%
+
     private Entity currentPrey;
     private PackHuntingState huntingState = PackHuntingState.IDLE;
     private UUID packId;
     private int huntTimer = 0;
+    private int handlingTimer = 0; // Time since last successful kill
+    private boolean hasKilledRecently = false;
+
+    // Cache for pack sorting optimization
+    private List<Wolf> cachedPackOrder;
+    private long lastCacheTime = 0;
+    private static final long CACHE_TTL_TICKS = 100; // 5 seconds (20 ticks per second)
 
     public PackHuntingBehavior(double maxPursuitSpeed, double maxPursuitForce,
                                double flankingAngle, double coordinationRange, int minPackSize,
@@ -79,6 +98,20 @@ public class PackHuntingBehavior extends SteeringBehavior {
         // Get pack ID from NBT or create new pack
         if (packId == null) {
             packId = getPackId(wolf);
+        }
+
+        // Update handling timer
+        updateHandlingTimer(wolf);
+
+        // Check energy and hunger before hunting
+        if (!hasEnergyForHunt(wolf)) {
+            huntingState = PackHuntingState.RESTING;
+            return new Vec3d();
+        }
+
+        if (!isHungryEnoughToHunt(wolf)) {
+            huntingState = PackHuntingState.IDLE;
+            return new Vec3d();
         }
 
         // Update hunting state
@@ -200,6 +233,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
     /**
      * Find valid prey for the pack to hunt.
      * Uses PreySelector for optimal prey selection, then filters for wolf-specific prey.
+     * Includes prey density checking for sustainability.
      */
     private Entity findPrey(Wolf wolf, BehaviorContext context) {
         // Keep current prey if valid
@@ -213,7 +247,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
         // Use PreySelector to find optimal prey
         Entity selectedPrey = preySelector.selectPrey(wolf);
 
-        // Filter to wolf-specific prey
+        // Filter to wolf-specific prey with density checking
         if (selectedPrey != null && isValidPrey(wolf, selectedPrey)) {
             return selectedPrey;
         }
@@ -223,6 +257,7 @@ public class PackHuntingBehavior extends SteeringBehavior {
 
     /**
      * Checks if an entity is valid prey.
+     * Includes prey density checking for sustainability.
      */
     private boolean isValidPrey(Wolf wolf, Entity entity) {
         if (!entity.isAlive()) {
@@ -248,18 +283,25 @@ public class PackHuntingBehavior extends SteeringBehavior {
             return packId != null && !packId.equals(otherPackId);
         }
 
+        // Check prey density before validating
+        if (!preySelector.isPreyPopulationHealthy(wolf, (net.minecraft.world.entity.LivingEntity) entity)) {
+            return false;
+        }
+
         // Valid prey: sheep, rabbits, foxes
         return entity instanceof Sheep || entity instanceof Rabbit || entity instanceof Fox;
     }
 
     /**
      * Gets all pack members within coordination range.
+     * Uses SpatialIndex for efficient O(1) + O(k) queries instead of iterating all neighbors.
      */
     private List<Wolf> getPackMembers(Wolf wolf, BehaviorContext context) {
         List<Wolf> pack = new ArrayList<>();
+        List<Mob> nearbyWolves = SpatialIndex.getNearbySameType(wolf, (int) coordinationRange);
 
-        for (Entity entity : context.getNeighbors()) {
-            if (!(entity instanceof Wolf otherWolf)) {
+        for (Mob mob : nearbyWolves) {
+            if (!(mob instanceof Wolf otherWolf)) {
                 continue;
             }
 
@@ -279,25 +321,77 @@ public class PackHuntingBehavior extends SteeringBehavior {
     /**
      * Determines this wolf's position in the pack for flanking coordination.
      * Returns index based on distance to prey (closer = lower index).
+     * Uses cached sorted order to avoid re-sorting every tick.
      */
     private int getPackPosition(Wolf self, List<Wolf> packMembers, Vec3d preyPos) {
-        Vec3d selfPos = new Vec3d(self.getX(), self.getY(), self.getZ());
+        long currentTime = System.currentTimeMillis();
 
-        // Sort pack members by distance to prey
-        List<Wolf> sorted = new ArrayList<>(packMembers);
-        sorted.sort(Comparator.comparingDouble(w -> {
+        // Check if cache is valid
+        if (cachedPackOrder != null && !shouldInvalidateCache(packMembers, currentTime)) {
+            // Cache hit - find our index in cached order
+            return findIndexInCachedOrder(self);
+        }
+
+        // Cache miss or invalidated - rebuild cache
+        invalidatePackCache();
+        cachedPackOrder = new ArrayList<>(packMembers);
+        cachedPackOrder.sort(Comparator.comparingDouble(w -> {
             Vec3d wolfPos = new Vec3d(w.getX(), w.getY(), w.getZ());
             return wolfPos.distanceTo(preyPos);
         }));
+        lastCacheTime = currentTime;
 
-        // Find our index
-        for (int i = 0; i < sorted.size(); i++) {
-            if (sorted.get(i).getId().equals(self.getId())) {
+        return findIndexInCachedOrder(self);
+    }
+
+    /**
+     * Checks if the cache should be invalidated based on pack composition or TTL.
+     */
+    private boolean shouldInvalidateCache(List<Wolf> currentPackMembers, long currentTime) {
+        // Check TTL
+        if (currentTime - lastCacheTime > CACHE_TTL_TICKS * 50) {
+            return true;
+        }
+
+        // Check if pack composition changed
+        if (cachedPackOrder == null || cachedPackOrder.size() != currentPackMembers.size()) {
+            return true;
+        }
+
+        // Check if all current members are in cache
+        for (Wolf wolf : currentPackMembers) {
+            if (!cachedPackOrder.contains(wolf)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Finds this wolf's index in the cached pack order.
+     */
+    private int findIndexInCachedOrder(Wolf self) {
+        if (cachedPackOrder == null) {
+            return 0;
+        }
+
+        for (int i = 0; i < cachedPackOrder.size(); i++) {
+            if (cachedPackOrder.get(i).getId().equals(self.getId())) {
                 return i;
             }
         }
 
         return 0;
+    }
+
+    /**
+     * Invalidates the pack order cache.
+     * Call this when pack composition changes.
+     */
+    private void invalidatePackCache() {
+        cachedPackOrder = null;
+        lastCacheTime = 0;
     }
 
     /**
@@ -355,6 +449,85 @@ public class PackHuntingBehavior extends SteeringBehavior {
                 huntTimer = 0;
             }
         }
+    }
+
+    /**
+     * Updates handling timer after successful kills.
+     * Wolves rest after killing to handle prey (eating, resting).
+     */
+    private void updateHandlingTimer(Wolf wolf) {
+        if (hasKilledRecently) {
+            handlingTimer++;
+
+            if (handlingTimer >= HANDLING_TIME_TICKS) {
+                hasKilledRecently = false;
+                handlingTimer = 0;
+            }
+        }
+    }
+
+    /**
+     * Checks if wolf has enough energy to hunt.
+     * Wolves need at least 30% energy to start a hunt.
+     */
+    private boolean hasEnergyForHunt(Wolf wolf) {
+        EcologyComponent component = getEcologyComponent(wolf);
+        if (component == null) {
+            return true; // Default to true if no energy system
+        }
+
+        int energyLevel = EnergyHandle.getEnergyLevel(component);
+        return energyLevel >= ENERGY_COST_PER_HUNT;
+    }
+
+    /**
+     * Checks if wolf is hungry enough to hunt.
+     * Wolves only hunt when hunger is below 50%.
+     */
+    private boolean isHungryEnoughToHunt(Wolf wolf) {
+        EcologyComponent component = getEcologyComponent(wolf);
+        if (component == null) {
+            return true; // Default to true if no hunger system
+        }
+
+        CompoundTag hungerTag = component.getHandleTag("hunger");
+        if (!hungerTag.contains("hunger")) {
+            return true; // Default to true if no hunger data
+        }
+
+        int currentHunger = hungerTag.getInt("hunger");
+        return currentHunger < HUNGER_TRIGGER_THRESHOLD;
+    }
+
+    /**
+     * Gets EcologyComponent from an entity.
+     */
+    private EcologyComponent getEcologyComponent(Wolf wolf) {
+        if (wolf instanceof EcologyAccess access) {
+            return access.betterEcology$getEcologyComponent();
+        }
+        return null;
+    }
+
+    /**
+     * Called when wolf successfully kills prey.
+     * Sets handling timer and reduces energy.
+     */
+    public void onSuccessfulKill(Wolf wolf) {
+        hasKilledRecently = true;
+        handlingTimer = 0;
+
+        // Reduce energy for the hunt
+        EcologyComponent component = getEcologyComponent(wolf);
+        if (component != null) {
+            CompoundTag energyTag = component.getHandleTag("energy");
+            int currentEnergy = energyTag.getInt("energy");
+            int newEnergy = Math.max(0, currentEnergy - ENERGY_COST_PER_HUNT);
+            energyTag.putInt("energy", newEnergy);
+        }
+
+        huntingState = PackHuntingState.RESTING;
+        huntTimer = 0;
     }
 
     /**

@@ -1,0 +1,67 @@
+{
+  "entity_type": "cat",
+  "feline": {
+    "priority": 2,
+    "stalk_speed": 0.3,
+    "stalk_detection_range": 16.0,
+    "pounce_distance": 3.0,
+    "give_up_angle": 45.0,
+    "pounce_speed": 1.5,
+    "pounce_range": 4.0,
+    "pounce_cooldown": 60.0,
+    "pounce_force": 0.8,
+    "gift_cooldown": 24000,
+    "gift_trust_threshold": 0.7,
+    "gift_search_range": 32,
+    "play_range": 8.0,
+    "play_duration": 200,
+    "boredom_threshold": 0.3,
+    "sleep_search_range": 16.0,
+    "sleep_duration": 1200,
+    "wake_distance": 3.0,
+    "fall_damage_reduction": true,
+    "max_safe_fall_height": 256.0
+  },
+  "behaviors": {
+    "enabled": true,
+    "priority": 3,
+    "max_force": 0.15,
+    "max_speed": 0.5,
+    "pursuit": 1.2,
+    "evasion": 1.5,
+    "avoidance": 1.0,
+    "attraction": 0.8
+  },
+  "hunting": {
+    "enabled": true,
+    "prey_types": [
+      "minecraft:rabbit",
+      "minecraft:chicken"
+    ],
+    "hunt_chance": 0.15,
+    "stalking_bonus": 0.3
+  },
+  "social": {
+    "enabled": true,
+    "affection_decay": 0.001,
+    "base_affection_gain": 0.05,
+    "pet_affection_gain": 0.1,
+    "gift_affection_threshold": 0.7,
+    "purr_threshold": 0.5
+  },
+  "creeper_detection": {
+    "enabled": true,
+    "detection_range": 16.0,
+    "hiss_range": 8.0
+  },
+  "phantom_repel": {
+    "enabled": true,
+    "repel_range": 32.0,
+    "required_sleep_ticks": 60
+  },
+  "quiet_movement": {
+    "enabled": true,
+    "sound_reduction": 0.8,
+    "detection_radius_modifier": 0.5
+  }
+}

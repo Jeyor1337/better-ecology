@@ -1,14 +1,18 @@
 package me.javavirtualenv.mixin.animal;
 
+import me.javavirtualenv.behavior.cow.MooshroomMilkProductionHandle;
 import me.javavirtualenv.ecology.EcologyComponent;
 import me.javavirtualenv.ecology.EcologyHooks;
 import me.javavirtualenv.ecology.EcologyProfile;
 import me.javavirtualenv.ecology.handles.production.MilkProductionHandle;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.MushroomCow;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,8 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * Handles:
  * - Bucket milking for cows and mooshrooms
  * - Bowl milking for mooshrooms (mushroom stew)
- * - Integration with milk production handles
- * - Quality-based milk production
+ * - Flower feeding for mooshrooms (suspicious stew)
+ * - Integration with simplified milk production handles
  */
 @Mixin(value = {Cow.class, MushroomCow.class})
 public abstract class CowInteractionMixin {
@@ -31,9 +35,15 @@ public abstract class CowInteractionMixin {
     /**
      * Inject into mobInteract to handle custom milking behavior.
      * This runs before the vanilla milking logic, allowing us to override it.
+     * Only runs on the server side to prevent client/server desync.
      */
     @Inject(method = "mobInteract", at = @At("HEAD"), cancellable = true)
     private void betterEcology$handleMilking(Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+        // Only handle on server side - client will sync from server
+        if (player.level().isClientSide) {
+            return;
+        }
+
         if (!(this instanceof Cow cow)) {
             return;
         }
@@ -46,9 +56,9 @@ public abstract class CowInteractionMixin {
             return;
         }
 
-        // Handle mooshroom-specific interactions with bowl
-        if (cow instanceof MushroomCow mooshroom && heldItem.is(Items.BOWL)) {
-            handleBowlMilking(mooshroom, player, hand, cir);
+        // Handle mooshroom-specific interactions
+        if (cow instanceof MushroomCow mooshroom) {
+            handleMooshroomInteractions(mooshroom, player, hand, heldItem, cir);
         }
     }
 
@@ -56,12 +66,12 @@ public abstract class CowInteractionMixin {
      * Handle bucket milking for both cows and mooshrooms.
      */
     private void handleBucketMilking(Cow cow, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        EcologyComponent component = EcologyHooks.getComponent(cow);
-        if (component == null) {
+        EcologyComponent component = EcologyHooks.getEcologyComponent(cow);
+        if (component == null || !component.hasProfile()) {
             return; // Fall back to vanilla behavior
         }
 
-        EcologyProfile profile = EcologyHooks.getProfile(cow);
+        EcologyProfile profile = component.profile();
         if (profile == null) {
             return;
         }
@@ -73,66 +83,79 @@ public abstract class CowInteractionMixin {
         }
 
         // Check if can be milked
-        if (!milkHandle.canBeMilked(cow, component, profile)) {
+        if (!milkHandle.canBeMilked(cow, component)) {
             return; // Let vanilla handle the failure case
         }
 
         // Perform milking
-        ItemStack milkProduct = milkHandle.milk(cow, player, component, profile);
+        ItemStack milkProduct = milkHandle.onMilked(cow, component, player);
         if (!milkProduct.isEmpty()) {
-            // Give milk product to player
-            if (!player.getAbilities().instabuild) {
-                ItemStack heldItem = player.getItemInHand(hand);
-                heldItem.shrink(1);
-                if (heldItem.isEmpty()) {
-                    player.setItemInHand(hand, milkProduct);
-                } else if (!player.getInventory().add(milkProduct)) {
-                    player.drop(milkProduct, false);
-                }
-            }
+            // Use vanilla ItemUtils pattern for proper inventory handling
+            ItemStack heldItemStack = player.getItemInHand(hand);
+            ItemStack resultStack = ItemUtils.createFilledResult(heldItemStack, player, milkProduct);
 
-            cir.setReturnValue(InteractionResult.SUCCESS);
+            // Play milking sound
+            cow.level().playSound(null, cow, SoundEvents.COW_MILK, SoundSource.NEUTRAL, 1.0F, 1.0F);
+
+            cir.setReturnValue(InteractionResult.CONSUME);
+        }
+    }
+
+    /**
+     * Handle mooshroom-specific interactions (bowl for stew, flowers).
+     */
+    private void handleMooshroomInteractions(MushroomCow mooshroom, Player player, InteractionHand hand,
+                                             ItemStack heldItem, CallbackInfoReturnable<InteractionResult> cir) {
+        EcologyComponent component = EcologyHooks.getEcologyComponent(mooshroom);
+        if (component == null || !component.hasProfile()) {
+            return;
+        }
+
+        EcologyProfile profile = component.profile();
+        if (profile == null) {
+            return;
+        }
+
+        // Handle bowl (stew milking)
+        if (heldItem.is(Items.BOWL)) {
+            handleBowlMilking(mooshroom, player, hand, component, cir);
+            return;
+        }
+
+        // Handle flower feeding
+        MooshroomMilkProductionHandle mooshroomHandle = findMooshroomMilkHandle(component);
+        if (mooshroomHandle != null && mooshroomHandle.onFlowerFed(mooshroom, heldItem)) {
+            // Consume flower
+            if (!player.getAbilities().instabuild) {
+                heldItem.shrink(1);
+            }
+            // Play eating sound
+            mooshroom.level().playSound(null, mooshroom, SoundEvents.MOOSHROOM_EAT,
+                    SoundSource.NEUTRAL, 1.0F, 1.0F);
+            cir.setReturnValue(InteractionResult.CONSUME);
         }
     }
 
     /**
      * Handle bowl milking for mooshrooms (mushroom stew).
      */
-    private void handleBowlMilking(MushroomCow mooshroom, Player player, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
-        EcologyComponent component = EcologyHooks.getComponent(mooshroom);
-        if (component == null) {
+    private void handleBowlMilking(MushroomCow mooshroom, Player player, InteractionHand hand,
+                                   EcologyComponent component, CallbackInfoReturnable<InteractionResult> cir) {
+        MooshroomMilkProductionHandle mooshroomHandle = findMooshroomMilkHandle(component);
+        if (mooshroomHandle == null) {
             return;
         }
 
-        EcologyProfile profile = EcologyHooks.getProfile(mooshroom);
-        if (profile == null) {
-            return;
-        }
-
-        MilkProductionHandle milkHandle = findMilkProductionHandle(component);
-        if (milkHandle == null) {
-            return;
-        }
-
-        // Check if can be milked
-        if (!milkHandle.canBeMilked(mooshroom, component, profile)) {
-            return;
-        }
-
-        // Perform milking (returns mushroom stew for mooshrooms)
-        ItemStack stew = milkHandle.milk(mooshroom, player, component, profile);
+        ItemStack stew = mooshroomHandle.onMooshroomMilked(mooshroom, component, player.getItemInHand(hand));
         if (!stew.isEmpty()) {
-            if (!player.getAbilities().instabuild) {
-                ItemStack heldItem = player.getItemInHand(hand);
-                heldItem.shrink(1);
-                if (heldItem.isEmpty()) {
-                    player.setItemInHand(hand, stew);
-                } else if (!player.getInventory().add(stew)) {
-                    player.drop(stew, false);
-                }
-            }
+            // Use vanilla ItemUtils pattern
+            ItemStack heldItemStack = player.getItemInHand(hand);
+            ItemStack resultStack = ItemUtils.createFilledResult(heldItemStack, player, stew);
 
-            cir.setReturnValue(InteractionResult.SUCCESS);
+            // Play milking sound
+            mooshroom.level().playSound(null, mooshroom, SoundEvents.COW_MILK, SoundSource.NEUTRAL, 1.0F, 1.0F);
+
+            cir.setReturnValue(InteractionResult.CONSUME);
         }
     }
 
@@ -140,10 +163,21 @@ public abstract class CowInteractionMixin {
      * Find the milk production handle from the component.
      */
     private MilkProductionHandle findMilkProductionHandle(EcologyComponent component) {
-        // Check if component has milk production handle registered
         for (var handle : component.handles()) {
             if (handle instanceof MilkProductionHandle milkHandle) {
                 return milkHandle;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find the mooshroom-specific milk handle from the component.
+     */
+    private MooshroomMilkProductionHandle findMooshroomMilkHandle(EcologyComponent component) {
+        for (var handle : component.handles()) {
+            if (handle instanceof MooshroomMilkProductionHandle mooshroomHandle) {
+                return mooshroomHandle;
             }
         }
         return null;

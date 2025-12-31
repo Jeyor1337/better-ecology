@@ -1,0 +1,13 @@
+{
+  "minecraft:sheep": {
+    "conservation": {
+      "enabled": true,
+      "mvp_threshold": 20,
+      "emergency_breeding": {
+        "enabled": true,
+        "cooldown": 3000,
+        "move_speed": 1.2
+      }
+    }
+  }
+}
