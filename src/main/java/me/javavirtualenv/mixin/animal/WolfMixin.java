@@ -533,6 +533,17 @@ public abstract class WolfMixin {
 
             me.javavirtualenv.mixin.MobAccessor accessor = (me.javavirtualenv.mixin.MobAccessor) mob;
 
+            // Register wolf food sharing goals
+            accessor.betterEcology$getGoalSelector().addGoal(3,
+                new me.javavirtualenv.behavior.wolf.WolfPickupItemGoal(wolf));
+
+            accessor.betterEcology$getGoalSelector().addGoal(3,
+                new me.javavirtualenv.behavior.wolf.WolfShareFoodGoal(wolf));
+
+            // Register predator feeding goal (find and eat meat items)
+            accessor.betterEcology$getGoalSelector().addGoal(4,
+                new me.javavirtualenv.behavior.predation.PredatorFeedingGoal(wolf));
+
             // Hunt prey animals
             accessor.betterEcology$getTargetSelector().addGoal(3,
                 new NearestAttackableTargetGoal<>(wolf, net.minecraft.world.entity.animal.Sheep.class, false));
