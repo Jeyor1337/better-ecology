@@ -11,6 +11,7 @@ import me.javavirtualenv.ecology.seasonal.SeasonCommand;
 import me.javavirtualenv.ecology.seasonal.SeasonManager;
 import me.javavirtualenv.ecology.seasonal.SeasonSavedData;
 import me.javavirtualenv.ecology.seasonal.WinterSiegeScheduler;
+import me.javavirtualenv.ecology.seasonal.WolfSiegeCommand;
 import me.javavirtualenv.item.ModItems;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -38,6 +39,7 @@ public class BetterEcology implements ModInitializer {
 				.register((dispatcher, registryAccess, environment) -> {
 					EcologyDebugCommand.register(dispatcher);
 					SeasonCommand.register(dispatcher);
+					WolfSiegeCommand.register(dispatcher);
 				});
 
 		// Initialize debug nametag updater
